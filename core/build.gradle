@@ -1,6 +1,11 @@
 sourceCompatibility = 1.11
 dependencies {
     implementation 'org.jetbrains:annotations-java5:19.0.0'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'org.fusesource.jansi:jansi:2.0.1'
+    implementation 'com.google.guava:guava:30.0-jre'
+    implementation 'commons-io:commons-io:2.8.0'
+    implementation 'io.netty:netty-all:4.1.54.Final'
 }
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 

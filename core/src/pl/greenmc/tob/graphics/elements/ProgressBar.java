@@ -8,38 +8,37 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import pl.greenmc.tob.graphics.Element;
+import pl.greenmc.tob.graphics.GlobalTheme;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
+import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
+
 public class ProgressBar extends Element {
-    private final SpriteBatch batch = new SpriteBatch();
-    private final DecimalFormat decimalFormat = new DecimalFormat("#.0", DecimalFormatSymbols.getInstance(Locale.US));
+    private final DecimalFormat decimalFormat = new DecimalFormat("0.0", DecimalFormatSymbols.getInstance(Locale.US));
     private final FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Regular.ttf"));
     private final FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-    private final ShapeRenderer renderer = new ShapeRenderer();
-    private Color backgroundColor = Color.WHITE;
-    private Color borderColor = Color.BLACK;
+    private Color backgroundColor = GlobalTheme.backgroundColor;
+    private SpriteBatch batch;
+    private Color borderColor = GlobalTheme.textColor;
     private BitmapFont font;
-    private Color foregroundColor = Color.LIGHT_GRAY;
+    private Color foregroundColor = GlobalTheme.foregroundColorDark;
     private GlyphLayout layout;
     private double max = 100;
     private double min = 0;
+    private ShapeRenderer renderer;
     private String text = "";
-    private Color textColor = Color.BLACK;
+    private Color textColor = GlobalTheme.textColor;
     private TextMode textMode = TextMode.FLOAT;
     private double value = 0;
 
-    public ProgressBar() {
+    @Override
+    public void setup() {
+        batch = new SpriteBatch();
+        renderer = new ShapeRenderer();
         setFontSize(12);
-    }
-
-    public void setFontSize(int size) {
-        parameter.size = size;
-        if (font != null) font.dispose();
-        font = generator.generateFont(parameter);
-        layout = new GlyphLayout(font, text);
     }
 
     public String getText() {
@@ -112,6 +111,14 @@ public class ProgressBar extends Element {
 
     public void setValue(double value) {
         this.value = value;
+    }
+
+    public void setFontSize(int size) {
+        parameter.size = size;
+        parameter.characters = LATIN_EXTENDED;
+        if (font != null) font.dispose();
+        font = generator.generateFont(parameter);
+        layout = new GlyphLayout(font, text);
     }
 
     @Override

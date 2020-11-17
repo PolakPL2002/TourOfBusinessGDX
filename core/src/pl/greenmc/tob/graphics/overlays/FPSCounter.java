@@ -14,7 +14,7 @@ import java.util.Locale;
 
 public class FPSCounter extends Overlay {
     private final SpriteBatch batch = new SpriteBatch();
-    private final DecimalFormat decimalFormat = new DecimalFormat("#.0", DecimalFormatSymbols.getInstance(Locale.US));
+    private final DecimalFormat decimalFormat = new DecimalFormat("0.0", DecimalFormatSymbols.getInstance(Locale.US));
     private final FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Regular.ttf"));
     private final int numSamples;
     private final FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
@@ -22,7 +22,7 @@ public class FPSCounter extends Overlay {
     private BitmapFont font;
     private GlyphLayout layout;
     private int sampleID = 0;
-    private Color textColor = Color.BLACK;
+    private Color textColor = Color.LIGHT_GRAY;
 
     public FPSCounter(int fontSize, int numSamples) {
         this.numSamples = numSamples;
