@@ -40,5 +40,6 @@ public class IntroScene extends Scene {
     public void dispose() {
         batch.dispose();
         logo.dispose();
+        progressBar.dispose();
     }
 }

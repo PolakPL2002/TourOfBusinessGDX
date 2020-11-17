@@ -37,6 +37,7 @@ public class ProgressBar extends Element {
 
     public void setFontSize(int size) {
         parameter.size = size;
+        if (font != null) font.dispose();
         font = generator.generateFont(parameter);
         layout = new GlyphLayout(font, text);
     }
@@ -186,6 +187,7 @@ public class ProgressBar extends Element {
         generator.dispose();
         renderer.dispose();
         batch.dispose();
+        font.dispose();
     }
 
     public enum TextMode {

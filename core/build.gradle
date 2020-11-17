@@ -1,4 +1,7 @@
-sourceCompatibility = 1.7
+sourceCompatibility = 1.11
+dependencies {
+    implementation 'org.jetbrains:annotations-java5:19.0.0'
+}
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 sourceSets.main.java.srcDirs = [ "src/" ]
