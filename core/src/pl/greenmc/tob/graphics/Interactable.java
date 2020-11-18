@@ -15,4 +15,8 @@ public interface Interactable {
 
     default void onMouseUp() {
     }
+
+    default void onScroll(float x, float y) {
+
+    }
 }

@@ -36,6 +36,13 @@ public class Menu extends Scene implements Interactable {
     }
 
     @Override
+    public void onScroll(float x, float y) {
+        if (element != null && element instanceof Interactable) {
+            ((Interactable) element).onScroll(x, y);
+        }
+    }
+
+    @Override
     public void render() {
         Gdx.gl.glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling ? GL20.GL_COVERAGE_BUFFER_BIT_NV : 0));

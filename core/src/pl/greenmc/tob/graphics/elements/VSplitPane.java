@@ -1,10 +1,13 @@
 package pl.greenmc.tob.graphics.elements;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.graphics.Element;
 import pl.greenmc.tob.graphics.RectangularHitbox;
+
+import static com.badlogic.gdx.graphics.GL20.GL_SCISSOR_TEST;
 
 public class VSplitPane extends SplitPane {
     @Override
@@ -35,6 +38,8 @@ public class VSplitPane extends SplitPane {
         double pxPerWeight = (w - totalFixedWidth[0]) / totalVariableWeight[0];
         final double[] currentX = {x};
         children.forEach((element) -> {
+            Gdx.gl.glEnable(GL_SCISSOR_TEST);
+            Gdx.gl.glScissor((int) x, (int) y, (int) w, (int) h);
             ElementOptions elementOptions = (ElementOptions) options.get(element);
             float width = (float) (elementOptions.mode == ElementOptions.WidthMode.FIXED ?
                     elementOptions.width :
@@ -42,6 +47,7 @@ public class VSplitPane extends SplitPane {
             element.draw((float) currentX[0], y, width, h);
             currentX[0] += width;
         });
+        Gdx.gl.glDisable(GL_SCISSOR_TEST);
     }
 
     @Override

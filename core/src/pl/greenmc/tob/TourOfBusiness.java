@@ -3,6 +3,7 @@ package pl.greenmc.tob;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.TourOfBusinessGame;
@@ -16,14 +17,15 @@ import pl.greenmc.tob.graphics.scenes.LoadingScene;
 import java.util.ArrayList;
 
 import static com.badlogic.gdx.graphics.GL20.*;
+import static pl.greenmc.tob.game.util.Logger.log;
 
-public class TourOfBusiness extends ApplicationAdapter {
+public class TourOfBusiness extends ApplicationAdapter implements InputProcessor {
     public static TourOfBusiness TOB;
     private final ArrayList<Overlay> overlays = new ArrayList<>();
     private final ArrayList<Runnable> tasksToExecute = new ArrayList<>();
+    private boolean LMBPressed = false;
     private Scene currentScene = null;
     private TourOfBusinessGame game;
-    private boolean LMBPressed = false;
     private Vector2 lastMousePosition = null;
 
     public Scene getScene() {
@@ -42,6 +44,7 @@ public class TourOfBusiness extends ApplicationAdapter {
         changeScene(new LoadingScene());
         addOverlay(new FPSCounter(16, 60));
         game = new TourOfBusinessGame(false);
+        Gdx.input.setInputProcessor(this);
 //        File original = new File("C:\\Users\\Szymon\\IdeaProjects\\TourOfBusinessGDX\\core\\assets\\x.wav");
 //        for (int i = 100; i <110; i++) {
 //            File copied = new File(
@@ -63,6 +66,12 @@ public class TourOfBusiness extends ApplicationAdapter {
         if (currentScene != null) currentScene.dispose();
         currentScene = scene;
         scene.setup();
+
+        int x = Gdx.input.getX();
+        int y = Gdx.input.getY();
+        if (currentScene != null && currentScene instanceof Interactable)
+            ((Interactable) currentScene).onMouseMove(x, y);
+        lastMousePosition = new Vector2(x, y);
     }
 
     public TourOfBusinessGame getGame() {
@@ -111,5 +120,48 @@ public class TourOfBusiness extends ApplicationAdapter {
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
+    }
+
+    @Override
+    public boolean keyDown(int i) {
+        return false;
+    }
+
+    @Override
+    public boolean keyUp(int i) {
+        return false;
+    }
+
+    @Override
+    public boolean keyTyped(char c) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDown(int i, int i1, int i2, int i3) {
+        return false;
+    }
+
+    @Override
+    public boolean touchUp(int i, int i1, int i2, int i3) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int i, int i1, int i2) {
+        return false;
+    }
+
+    @Override
+    public boolean mouseMoved(int i, int i1) {
+        return false;
+    }
+
+    @Override
+    public boolean scrolled(float x, float y) {
+        if (currentScene != null && currentScene instanceof Interactable)
+            ((Interactable) currentScene).onScroll(x, y);
+        log(x + " " + y);
+        return true;
     }
 }

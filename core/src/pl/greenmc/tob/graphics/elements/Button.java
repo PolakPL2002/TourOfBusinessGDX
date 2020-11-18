@@ -30,7 +30,7 @@ public class Button extends Element implements Interactable {
     private GlyphLayout layout;
     private ShapeRenderer renderer;
     private boolean setUp = false;
-    private String text = "";
+    private String text;
     private Color textColor = GlobalTheme.textColor;
 
     public Button(String text) {
@@ -39,7 +39,8 @@ public class Button extends Element implements Interactable {
 
     @Override
     public void onMouseDown() {
-        clicked = true;
+        if (hover)
+            clicked = true;
     }
 
     @Override
@@ -56,8 +57,8 @@ public class Button extends Element implements Interactable {
 
     @Override
     public void onMouseUp() {
+        if (clicked && hover && clickCallback != null) clickCallback.run();
         clicked = false;
-        if (hover && clickCallback != null) clickCallback.run();
     }
 
     public void setClickCallback(Runnable clickCallback) {
@@ -149,10 +150,10 @@ public class Button extends Element implements Interactable {
         //Border
         renderer.setColor(borderColor);
         renderer.set(ShapeRenderer.ShapeType.Line);
-        renderer.line(x, y, x + w - 1, y);
-        renderer.line(x, y, x, y + h - 1);
-        renderer.line(x + w - 1, y, x + w - 1, y + h - 1);
-        renderer.line(x, y + h - 1, x + w - 1, y + h - 1);
+        renderer.line(x, y + 1, x + w, y + 1);
+        renderer.line(x + 1, y + 1, x + 1, y + h);
+        renderer.line(x + w, y + 1, x + w, y + h);
+        renderer.line(x + 1, y + h, x + w, y + h);
 
         renderer.end();
 

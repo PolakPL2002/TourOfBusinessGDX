@@ -1,9 +1,12 @@
 package pl.greenmc.tob.graphics.elements;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.graphics.*;
+
+import static com.badlogic.gdx.graphics.GL20.GL_SCISSOR_TEST;
 
 public class PaddingPane extends Element implements Interactable {
     private final Element child;
@@ -74,6 +77,13 @@ public class PaddingPane extends Element implements Interactable {
         }
     }
 
+    @Override
+    public void onScroll(float x, float y) {
+        if (child instanceof Interactable) {
+            ((Interactable) child).onScroll(x, y);
+        }
+    }
+
     public void setColor(Color color) {
         this.color = color;
         if (background != null) background.setColor(color);
@@ -81,6 +91,7 @@ public class PaddingPane extends Element implements Interactable {
 
     @Override
     public void draw(float x, float y, float w, float h) {
+
         if (hitboxesFor == null ||
                 hitboxesFor.height != h ||
                 hitboxesFor.width != w ||
@@ -89,7 +100,10 @@ public class PaddingPane extends Element implements Interactable {
             hitbox = new RectangularHitbox(x + paddingLeft, y + paddingBottom, w - paddingRight - paddingLeft, h - paddingTop - paddingBottom);
 
         background.draw(x, y, w, h);
+        Gdx.gl.glEnable(GL_SCISSOR_TEST);
+        Gdx.gl.glScissor((int) (x + paddingLeft), (int) (y + paddingBottom), (int) (w - paddingRight - paddingLeft), (int) (h - paddingTop - paddingBottom));
         child.draw(x + paddingLeft, y + paddingBottom, w - paddingRight - paddingLeft, h - paddingTop - paddingBottom);
+        Gdx.gl.glDisable(GL_SCISSOR_TEST);
     }
 
     @Override

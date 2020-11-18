@@ -29,11 +29,11 @@ public class ProgressBar extends Element {
     private double max = 100;
     private double min = 0;
     private ShapeRenderer renderer;
+    private boolean setUp = false;
     private String text = "";
     private Color textColor = GlobalTheme.textColor;
     private TextMode textMode = TextMode.FLOAT;
     private double value = 0;
-    private boolean setUp = false;
 
     @Override
     public void setup() {
@@ -148,10 +148,10 @@ public class ProgressBar extends Element {
         //Border
         renderer.setColor(borderColor);
         renderer.set(ShapeRenderer.ShapeType.Line);
-        renderer.line(x, y, x + w - 1, y);
-        renderer.line(x, y, x, y + h - 1);
-        renderer.line(x + w - 1, y, x + w - 1, y + h - 1);
-        renderer.line(x, y + h - 1, x + w - 1, y + h - 1);
+        renderer.line(x, y + 1, x + w, y + 1);
+        renderer.line(x + 1, y + 1, x + 1, y + h);
+        renderer.line(x + w, y + 1, x + w, y + h);
+        renderer.line(x + 1, y + h, x + w, y + h);
 
         renderer.end();
 
