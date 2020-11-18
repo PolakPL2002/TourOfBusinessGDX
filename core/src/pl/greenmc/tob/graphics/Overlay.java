@@ -1,7 +1,7 @@
 package pl.greenmc.tob.graphics;
 
-public abstract class Overlay {
-    public abstract void draw();
+import com.badlogic.gdx.utils.Disposable;
 
-    public abstract void dispose();
+public abstract class Overlay implements Disposable {
+    public abstract void draw();
 }

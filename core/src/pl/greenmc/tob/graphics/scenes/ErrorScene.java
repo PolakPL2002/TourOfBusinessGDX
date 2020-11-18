@@ -16,6 +16,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
+import static pl.greenmc.tob.game.util.Logger.log;
 import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
 
 public class ErrorScene extends Scene {
@@ -56,12 +57,14 @@ public class ErrorScene extends Scene {
         long timeLeft = timeout - System.currentTimeMillis() + timeStart;
         progressBar.setValue(timeLeft);
         if (timeLeft <= 0) Gdx.app.exit();
+        if (timeLeft < 0) timeLeft = 0;
         progressBar.setText(decimalFormat.format(timeLeft / 1000.0) + "s");
         progressBar.draw((width - size) / 2, (float) (height * 0.3), size, (float) (height / 36.0));
     }
 
     @Override
     public void setup() {
+        log("ErrorScene set up with message '" + error + "' and timeout " + timeout + "ms.");
         batch = new SpriteBatch();
         timeStart = System.currentTimeMillis();
 

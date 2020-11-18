@@ -1,9 +1,9 @@
 package pl.greenmc.tob.graphics;
 
-public abstract class Scene {
+import com.badlogic.gdx.utils.Disposable;
+
+public abstract class Scene implements Disposable {
     public abstract void render();
 
     public abstract void setup();
-
-    public abstract void dispose();
 }

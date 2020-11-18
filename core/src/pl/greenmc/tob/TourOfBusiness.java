@@ -1,8 +1,13 @@
 package pl.greenmc.tob;
 
 import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.math.Vector2;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.TourOfBusinessGame;
+import pl.greenmc.tob.game.util.Logger;
+import pl.greenmc.tob.graphics.Interactable;
 import pl.greenmc.tob.graphics.Overlay;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.overlays.FPSCounter;
@@ -10,12 +15,16 @@ import pl.greenmc.tob.graphics.scenes.LoadingScene;
 
 import java.util.ArrayList;
 
+import static com.badlogic.gdx.graphics.GL20.*;
+
 public class TourOfBusiness extends ApplicationAdapter {
     public static TourOfBusiness TOB;
     private final ArrayList<Overlay> overlays = new ArrayList<>();
     private final ArrayList<Runnable> tasksToExecute = new ArrayList<>();
     private Scene currentScene = null;
     private TourOfBusinessGame game;
+    private boolean LMBPressed = false;
+    private Vector2 lastMousePosition = null;
 
     public Scene getScene() {
         return currentScene;
@@ -56,6 +65,10 @@ public class TourOfBusiness extends ApplicationAdapter {
         scene.setup();
     }
 
+    public TourOfBusinessGame getGame() {
+        return game;
+    }
+
     @Override
     public void render() {
         synchronized (tasksToExecute) {
@@ -63,6 +76,27 @@ public class TourOfBusiness extends ApplicationAdapter {
                 tasksToExecute.remove(0).run();
             }
         }
+        int x = Gdx.input.getX();
+        int y = Gdx.input.getY();
+        if (lastMousePosition == null ||
+                lastMousePosition.x != x ||
+                lastMousePosition.y != y) {
+            if (currentScene != null && currentScene instanceof Interactable)
+                ((Interactable) currentScene).onMouseMove(x, y);
+            lastMousePosition = new Vector2(x, y);
+        }
+
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            if (currentScene != null && currentScene instanceof Interactable)
+                ((Interactable) currentScene).onMouseDown();
+            LMBPressed = true;
+        } else if (!Gdx.input.isButtonPressed(Input.Buttons.LEFT) && LMBPressed) {
+            if (currentScene != null && currentScene instanceof Interactable)
+                ((Interactable) currentScene).onMouseUp();
+            LMBPressed = false;
+        }
+        Gdx.gl.glEnable(GL_BLEND);
+        Gdx.gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         if (currentScene != null) currentScene.render();
         overlays.forEach(Overlay::draw);
     }
@@ -70,6 +104,8 @@ public class TourOfBusiness extends ApplicationAdapter {
     @Override
     public void dispose() {
         if (currentScene != null) currentScene.dispose();
+        overlays.forEach(Overlay::dispose);
+        Logger.flushLog();
     }
 
     @Override

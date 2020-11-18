@@ -2,6 +2,7 @@ package pl.greenmc.tob.graphics.elements;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -9,47 +10,86 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import pl.greenmc.tob.graphics.Element;
 import pl.greenmc.tob.graphics.GlobalTheme;
-
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
+import pl.greenmc.tob.graphics.Interactable;
 
 import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
 
-public class ProgressBar extends Element {
-    private final DecimalFormat decimalFormat = new DecimalFormat("0.0", DecimalFormatSymbols.getInstance(Locale.US));
+public class Button extends Element implements Interactable {
     private final FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Regular.ttf"));
     private final FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-    private Color backgroundColor = GlobalTheme.progressBarBackgroundColor;
+    private Color backgroundColor = GlobalTheme.buttonBackgroundColor;
     private SpriteBatch batch;
-    private Color borderColor = GlobalTheme.progressBarBorderColor;
+    private Color borderColor = GlobalTheme.buttonBorderColor;
+    private Runnable clickCallback = null;
+    private Color clickColor = GlobalTheme.buttonClickColor;
+    private boolean clicked = false;
     private BitmapFont font;
-    private Color foregroundColor = GlobalTheme.progressBarColor;
+    private int fontSize = 12;
+    private boolean hover = false;
+    private Color hoverColor = GlobalTheme.buttonHoverColor;
     private GlyphLayout layout;
-    private double max = 100;
-    private double min = 0;
     private ShapeRenderer renderer;
+    private boolean setUp = false;
     private String text = "";
     private Color textColor = GlobalTheme.textColor;
-    private TextMode textMode = TextMode.FLOAT;
-    private double value = 0;
-    private boolean setUp = false;
+
+    public Button(String text) {
+        this.text = text;
+    }
+
+    @Override
+    public void onMouseDown() {
+        clicked = true;
+    }
+
+    @Override
+    public void onMouseEnter() {
+        hover = true;
+        Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Hand);
+    }
+
+    @Override
+    public void onMouseLeave() {
+        hover = false;
+        Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
+    }
+
+    @Override
+    public void onMouseUp() {
+        clicked = false;
+        if (hover && clickCallback != null) clickCallback.run();
+    }
+
+    public void setClickCallback(Runnable clickCallback) {
+        this.clickCallback = clickCallback;
+    }
+
+    public Color getClickColor() {
+        return clickColor;
+    }
+
+    public void setClickColor(Color clickColor) {
+        this.clickColor = clickColor;
+    }
 
     @Override
     public void setup() {
         if (setUp) return;
         batch = new SpriteBatch();
         renderer = new ShapeRenderer();
-        setFontSize(12);
+        setFontSize(fontSize);
         setUp = true;
     }
 
     public void setFontSize(int size) {
-        parameter.size = size;
-        parameter.characters = LATIN_EXTENDED;
-        if (font != null) font.dispose();
-        font = generator.generateFont(parameter);
-        layout = new GlyphLayout(font, text);
+        fontSize = size;
+        if (renderer != null) {
+            parameter.size = size;
+            parameter.characters = LATIN_EXTENDED;
+            if (font != null) font.dispose();
+            font = generator.generateFont(parameter);
+            layout = new GlyphLayout(font, text);
+        }
     }
 
     public String getText() {
@@ -58,14 +98,6 @@ public class ProgressBar extends Element {
 
     public void setText(String text) {
         this.text = text;
-    }
-
-    public TextMode getTextMode() {
-        return textMode;
-    }
-
-    public void setTextMode(TextMode textMode) {
-        this.textMode = textMode;
     }
 
     public Color getTextColor() {
@@ -92,36 +124,12 @@ public class ProgressBar extends Element {
         this.borderColor = borderColor;
     }
 
-    public Color getForegroundColor() {
-        return foregroundColor;
+    public Color getHoverColor() {
+        return hoverColor;
     }
 
-    public void setForegroundColor(Color foregroundColor) {
-        this.foregroundColor = foregroundColor;
-    }
-
-    public double getMax() {
-        return max;
-    }
-
-    public void setMax(double max) {
-        this.max = max;
-    }
-
-    public double getMin() {
-        return min;
-    }
-
-    public void setMin(double min) {
-        this.min = min;
-    }
-
-    public double getValue() {
-        return value;
-    }
-
-    public void setValue(double value) {
-        this.value = value;
+    public void setHoverColor(Color hoverColor) {
+        this.hoverColor = hoverColor;
     }
 
     @Override
@@ -135,15 +143,8 @@ public class ProgressBar extends Element {
         renderer.set(ShapeRenderer.ShapeType.Filled);
 
         //Background
-        renderer.setColor(backgroundColor);
+        renderer.setColor(hover ? (clicked ? clickColor : hoverColor) : backgroundColor);
         renderer.rect(x, y, w, h);
-
-        //Foreground
-        renderer.setColor(foregroundColor);
-        double prc = (value - min) / (max - min);
-        if (prc > 1) prc = 1;
-        if (prc < 0) prc = 0;
-        renderer.rect(x, y, (float) ((w - 1) * prc), h - 1);
 
         //Border
         renderer.setColor(borderColor);
@@ -157,34 +158,6 @@ public class ProgressBar extends Element {
 
         batch.begin();
         font.setColor(textColor);
-        final String text;
-        switch (textMode) {
-            case FLOAT:
-                text = value + "/" + max;
-                break;
-            case INT:
-                text = (int) value + "/" + (int) max;
-                break;
-            case FLOAT_FLOAT_PRC:
-                text = value + "/" + max + " (" + decimalFormat.format(prc * 100) + "%)";
-                break;
-            case INT_FLOAT_PRC:
-                text = (int) value + "/" + (int) max + " (" + decimalFormat.format(prc * 100) + "%)";
-                break;
-            case FLOAT_INT_PRC:
-                text = value + "/" + max + " (" + (int) (prc * 100) + "%)";
-                break;
-            case INT_INT_PRC:
-                text = (int) value + "/" + (int) max + " (" + (int) (prc * 100) + "%)";
-                break;
-            case CUSTOM:
-                text = this.text;
-                break;
-            case NONE:
-            default:
-                text = "";
-        }
-
         layout.setText(font, text);
 
         final float fontX = x + (w - layout.width) / 2;
@@ -198,16 +171,5 @@ public class ProgressBar extends Element {
         if (renderer != null) renderer.dispose();
         if (batch != null) batch.dispose();
         font.dispose();
-    }
-
-    public enum TextMode {
-        FLOAT,
-        INT,
-        FLOAT_FLOAT_PRC,
-        INT_FLOAT_PRC,
-        FLOAT_INT_PRC,
-        INT_INT_PRC,
-        NONE,
-        CUSTOM
     }
 }

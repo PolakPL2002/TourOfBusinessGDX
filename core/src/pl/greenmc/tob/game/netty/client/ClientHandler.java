@@ -36,6 +36,11 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     private boolean authenticated = false;
     private ChannelHandlerContext ctx;
     private KeyPair keyPair = null;
+    private final Runnable onAuthenticated;
+
+    public ClientHandler(Runnable onAuthenticated) {
+        this.onAuthenticated = onAuthenticated;
+    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
@@ -67,6 +72,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                             public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
                                 log("[Netty] Authenticated!");
                                 authenticated = true;
+                                onAuthenticated.run();
                             }
 
                             @Override

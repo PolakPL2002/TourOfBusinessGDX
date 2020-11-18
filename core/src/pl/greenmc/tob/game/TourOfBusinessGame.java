@@ -9,12 +9,16 @@ import pl.greenmc.tob.game.netty.client.NettyClient;
 import pl.greenmc.tob.game.netty.server.NettyServer;
 import pl.greenmc.tob.graphics.scenes.ErrorScene;
 import pl.greenmc.tob.graphics.scenes.LoadingScene;
+import pl.greenmc.tob.graphics.scenes.menus.MainMenu;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static pl.greenmc.tob.TourOfBusiness.TOB;
 import static pl.greenmc.tob.game.util.Logger.error;
+import static pl.greenmc.tob.game.util.Logger.log;
 
 public class TourOfBusinessGame {
     private final AssetManager assetManager = new AssetManager();
@@ -28,6 +32,11 @@ public class TourOfBusinessGame {
         if (!headless) {
             LoadingScene loading = (LoadingScene) TOB.getScene();
             loading.setGameInstance(this);
+
+            texturesToLoad.add("logo.png");
+
+            musicToLoad.add("music/music1.wav");
+
             loadTextures();
         } else {
             try {
@@ -68,8 +77,15 @@ public class TourOfBusinessGame {
                 break;
             case DONE:
                 if (this.loadState != LoadState.CONNECTING) throw new RuntimeException("Invalid progression");
-//                log("Loading done!");
-//                Gdx.app.exit();
+                log("Loading done!");
+                new Timer().schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        TOB.runOnGLThread(() -> {
+                            TOB.changeScene(new MainMenu());
+                        });
+                    }
+                }, 100); //Delay to show done message
         }
         this.loadState = loadState;
     }
@@ -85,10 +101,7 @@ public class TourOfBusinessGame {
 
     private void connect() {
         connectRetriesLeft--;
-        NettyClient.getInstance().connect(null, () -> {
-            //Connected
-            setLoadState(LoadState.DONE);
-        }, this::connectionLost);
+        NettyClient.getInstance().connect(null, null, this::connectionLost, () -> setLoadState(LoadState.DONE));
     }
 
     private void connectionLost() {

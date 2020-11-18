@@ -72,7 +72,7 @@ public class NettyClient {
      *
      * @param onSSLError Runnable run on SSL error
      */
-    public void connect(@Nullable final Runnable onSSLError, @Nullable final Runnable onConnect, @Nullable final Runnable onDisconnect) {
+    public void connect(@Nullable final Runnable onSSLError, @Nullable final Runnable onConnect, @Nullable final Runnable onDisconnect, @Nullable final Runnable onAuthenticated) {
         // Start the connection attempt.
         new Thread(() -> {
             EventLoopGroup group = new NioEventLoopGroup();
@@ -110,7 +110,7 @@ public class NettyClient {
                             @Override
                             public void initChannel(SocketChannel ch) {
                                 ChannelPipeline p = ch.pipeline();
-                                clientHandler = new ClientHandler();
+                                clientHandler = new ClientHandler(onAuthenticated);
                                 p.addLast();
                                 p.addLast(
                                         sslCtx.newHandler(ch.alloc(), HOST, PORT),

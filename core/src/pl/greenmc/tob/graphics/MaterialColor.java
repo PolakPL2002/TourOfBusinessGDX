@@ -52,72 +52,72 @@ public interface MaterialColor {
     class Amber implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(255, 248, 225, 1f);
+            return new Color(255 / 255f, 248 / 255f, 225 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(255, 236, 179, 1f);
+            return new Color(255 / 255f, 236 / 255f, 179 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(255, 224, 130, 1f);
+            return new Color(255 / 255f, 224 / 255f, 130 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(255, 213, 79, 1f);
+            return new Color(255 / 255f, 213 / 255f, 79 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(255, 202, 40, 1f);
+            return new Color(255 / 255f, 202 / 255f, 40 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(255, 193, 7, 1f);
+            return new Color(255 / 255f, 193 / 255f, 7 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(255, 179, 0, 1f);
+            return new Color(255 / 255f, 179 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(255, 160, 0, 1f);
+            return new Color(255 / 255f, 160 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(255, 143, 0, 1f);
+            return new Color(255 / 255f, 143 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(255, 111, 0, 1f);
+            return new Color(255 / 255f, 111 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(255, 229, 127, 1f);
+            return new Color(255 / 255f, 229 / 255f, 127 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(255, 215, 64, 1f);
+            return new Color(255 / 255f, 215 / 255f, 64 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(255, 196, 0, 1f);
+            return new Color(255 / 255f, 196 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(255, 171, 0, 1f);
+            return new Color(255 / 255f, 171 / 255f, 0 / 255f, 1f);
         }
 
     }
@@ -125,72 +125,72 @@ public interface MaterialColor {
     class Blue implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(227, 242, 253, 1f);
+            return new Color(227 / 255f, 242 / 255f, 253 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(187, 222, 251, 1f);
+            return new Color(187 / 255f, 222 / 255f, 251 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(144, 202, 249, 1f);
+            return new Color(144 / 255f, 202 / 255f, 249 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(100, 181, 246, 1f);
+            return new Color(100 / 255f, 181 / 255f, 246 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(66, 165, 245, 1f);
+            return new Color(66 / 255f, 165 / 255f, 245 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(33, 150, 243, 1f);
+            return new Color(33 / 255f, 150 / 255f, 243 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(30, 136, 229, 1f);
+            return new Color(30 / 255f, 136 / 255f, 229 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(25, 118, 210, 1f);
+            return new Color(25 / 255f, 118 / 255f, 210 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(21, 101, 192, 1f);
+            return new Color(21 / 255f, 101 / 255f, 192 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(13, 71, 161, 1f);
+            return new Color(13 / 255f, 71 / 255f, 161 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(130, 177, 255, 1f);
+            return new Color(130 / 255f, 177 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(68, 138, 255, 1f);
+            return new Color(68 / 255f, 138 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(41, 121, 255, 1f);
+            return new Color(41 / 255f, 121 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(41, 98, 255, 1f);
+            return new Color(41 / 255f, 98 / 255f, 255 / 255f, 1f);
         }
 
     }
@@ -198,72 +198,72 @@ public interface MaterialColor {
     class Cyan implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(224, 247, 250, 1f);
+            return new Color(224 / 255f, 247 / 255f, 250 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(178, 235, 242, 1f);
+            return new Color(178 / 255f, 235 / 255f, 242 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(128, 222, 234, 1f);
+            return new Color(128 / 255f, 222 / 255f, 234 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(77, 208, 225, 1f);
+            return new Color(77 / 255f, 208 / 255f, 225 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(38, 198, 218, 1f);
+            return new Color(38 / 255f, 198 / 255f, 218 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(0, 188, 212, 1f);
+            return new Color(0 / 255f, 188 / 255f, 212 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(0, 172, 193, 1f);
+            return new Color(0 / 255f, 172 / 255f, 193 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(0, 151, 167, 1f);
+            return new Color(0 / 255f, 151 / 255f, 167 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(0, 131, 143, 1f);
+            return new Color(0 / 255f, 131 / 255f, 143 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(0, 96, 100, 1f);
+            return new Color(0 / 255f, 96 / 255f, 100 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(132, 255, 255, 1f);
+            return new Color(132 / 255f, 255 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(24, 255, 255, 1f);
+            return new Color(24 / 255f, 255 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(0, 229, 255, 1f);
+            return new Color(0 / 255f, 229 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(0, 184, 212, 1f);
+            return new Color(0 / 255f, 184 / 255f, 212 / 255f, 1f);
         }
 
     }
@@ -271,72 +271,72 @@ public interface MaterialColor {
     class DeepOrange implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(251, 233, 231, 1f);
+            return new Color(251 / 255f, 233 / 255f, 231 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(255, 204, 188, 1f);
+            return new Color(255 / 255f, 204 / 255f, 188 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(255, 171, 145, 1f);
+            return new Color(255 / 255f, 171 / 255f, 145 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(255, 138, 101, 1f);
+            return new Color(255 / 255f, 138 / 255f, 101 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(255, 112, 67, 1f);
+            return new Color(255 / 255f, 112 / 255f, 67 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(255, 87, 34, 1f);
+            return new Color(255 / 255f, 87 / 255f, 34 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(244, 81, 30, 1f);
+            return new Color(244 / 255f, 81 / 255f, 30 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(230, 74, 25, 1f);
+            return new Color(230 / 255f, 74 / 255f, 25 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(216, 67, 21, 1f);
+            return new Color(216 / 255f, 67 / 255f, 21 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(191, 54, 12, 1f);
+            return new Color(191 / 255f, 54 / 255f, 12 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(255, 158, 128, 1f);
+            return new Color(255 / 255f, 158 / 255f, 128 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(255, 110, 64, 1f);
+            return new Color(255 / 255f, 110 / 255f, 64 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(255, 61, 0, 1f);
+            return new Color(255 / 255f, 61 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(221, 44, 0, 1f);
+            return new Color(221 / 255f, 44 / 255f, 0 / 255f, 1f);
         }
 
     }
@@ -344,72 +344,72 @@ public interface MaterialColor {
     class DeepPurple implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(237, 231, 246, 1f);
+            return new Color(237 / 255f, 231 / 255f, 246 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(209, 196, 233, 1f);
+            return new Color(209 / 255f, 196 / 255f, 233 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(179, 157, 219, 1f);
+            return new Color(179 / 255f, 157 / 255f, 219 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(149, 117, 205, 1f);
+            return new Color(149 / 255f, 117 / 255f, 205 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(126, 87, 194, 1f);
+            return new Color(126 / 255f, 87 / 255f, 194 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(103, 58, 183, 1f);
+            return new Color(103 / 255f, 58 / 255f, 183 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(94, 53, 177, 1f);
+            return new Color(94 / 255f, 53 / 255f, 177 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(81, 45, 168, 1f);
+            return new Color(81 / 255f, 45 / 255f, 168 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(69, 39, 160, 1f);
+            return new Color(69 / 255f, 39 / 255f, 160 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(49, 27, 146, 1f);
+            return new Color(49 / 255f, 27 / 255f, 146 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(179, 136, 255, 1f);
+            return new Color(179 / 255f, 136 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(124, 77, 255, 1f);
+            return new Color(124 / 255f, 77 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(101, 31, 255, 1f);
+            return new Color(101 / 255f, 31 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(98, 0, 234, 1f);
+            return new Color(98 / 255f, 0 / 255f, 234 / 255f, 1f);
         }
 
     }
@@ -417,72 +417,72 @@ public interface MaterialColor {
     class Green implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(232, 245, 233, 1f);
+            return new Color(232 / 255f, 245 / 255f, 233 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(200, 230, 201, 1f);
+            return new Color(200 / 255f, 230 / 255f, 201 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(165, 214, 167, 1f);
+            return new Color(165 / 255f, 214 / 255f, 167 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(129, 199, 132, 1f);
+            return new Color(129 / 255f, 199 / 255f, 132 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(102, 187, 106, 1f);
+            return new Color(102 / 255f, 187 / 255f, 106 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(76, 175, 80, 1f);
+            return new Color(76 / 255f, 175 / 255f, 80 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(67, 160, 71, 1f);
+            return new Color(67 / 255f, 160 / 255f, 71 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(56, 142, 60, 1f);
+            return new Color(56 / 255f, 142 / 255f, 60 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(46, 125, 50, 1f);
+            return new Color(46 / 255f, 125 / 255f, 50 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(27, 94, 32, 1f);
+            return new Color(27 / 255f, 94 / 255f, 32 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(185, 246, 202, 1f);
+            return new Color(185 / 255f, 246 / 255f, 202 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(105, 240, 174, 1f);
+            return new Color(105 / 255f, 240 / 255f, 174 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(0, 230, 118, 1f);
+            return new Color(0 / 255f, 230 / 255f, 118 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(0, 200, 83, 1f);
+            return new Color(0 / 255f, 200 / 255f, 83 / 255f, 1f);
         }
 
     }
@@ -490,72 +490,72 @@ public interface MaterialColor {
     class Indigo implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(232, 234, 246, 1f);
+            return new Color(232 / 255f, 234 / 255f, 246 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(197, 202, 233, 1f);
+            return new Color(197 / 255f, 202 / 255f, 233 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(159, 168, 218, 1f);
+            return new Color(159 / 255f, 168 / 255f, 218 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(121, 134, 203, 1f);
+            return new Color(121 / 255f, 134 / 255f, 203 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(92, 107, 192, 1f);
+            return new Color(92 / 255f, 107 / 255f, 192 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(63, 81, 181, 1f);
+            return new Color(63 / 255f, 81 / 255f, 181 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(57, 73, 171, 1f);
+            return new Color(57 / 255f, 73 / 255f, 171 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(48, 63, 159, 1f);
+            return new Color(48 / 255f, 63 / 255f, 159 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(40, 53, 147, 1f);
+            return new Color(40 / 255f, 53 / 255f, 147 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(26, 35, 126, 1f);
+            return new Color(26 / 255f, 35 / 255f, 126 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(140, 158, 255, 1f);
+            return new Color(140 / 255f, 158 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(83, 109, 254, 1f);
+            return new Color(83 / 255f, 109 / 255f, 254 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(61, 90, 254, 1f);
+            return new Color(61 / 255f, 90 / 255f, 254 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(48, 79, 254, 1f);
+            return new Color(48 / 255f, 79 / 255f, 254 / 255f, 1f);
         }
 
     }
@@ -563,72 +563,72 @@ public interface MaterialColor {
     class LightBlue implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(225, 245, 254, 1f);
+            return new Color(225 / 255f, 245 / 255f, 254 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(179, 229, 252, 1f);
+            return new Color(179 / 255f, 229 / 255f, 252 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(129, 212, 250, 1f);
+            return new Color(129 / 255f, 212 / 255f, 250 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(79, 195, 247, 1f);
+            return new Color(79 / 255f, 195 / 255f, 247 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(41, 182, 246, 1f);
+            return new Color(41 / 255f, 182 / 255f, 246 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(3, 169, 244, 1f);
+            return new Color(3 / 255f, 169 / 255f, 244 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(3, 155, 229, 1f);
+            return new Color(3 / 255f, 155 / 255f, 229 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(2, 136, 209, 1f);
+            return new Color(2 / 255f, 136 / 255f, 209 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(2, 119, 189, 1f);
+            return new Color(2 / 255f, 119 / 255f, 189 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(1, 87, 155, 1f);
+            return new Color(1 / 255f, 87 / 255f, 155 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(128, 216, 255, 1f);
+            return new Color(128 / 255f, 216 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(64, 196, 255, 1f);
+            return new Color(64 / 255f, 196 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(0, 176, 255, 1f);
+            return new Color(0 / 255f, 176 / 255f, 255 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(0, 145, 234, 1f);
+            return new Color(0 / 255f, 145 / 255f, 234 / 255f, 1f);
         }
 
     }
@@ -636,72 +636,72 @@ public interface MaterialColor {
     class LightGreen implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(241, 248, 233, 1f);
+            return new Color(241 / 255f, 248 / 255f, 233 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(220, 237, 200, 1f);
+            return new Color(220 / 255f, 237 / 255f, 200 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(197, 225, 165, 1f);
+            return new Color(197 / 255f, 225 / 255f, 165 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(174, 213, 129, 1f);
+            return new Color(174 / 255f, 213 / 255f, 129 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(156, 204, 101, 1f);
+            return new Color(156 / 255f, 204 / 255f, 101 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(139, 195, 74, 1f);
+            return new Color(139 / 255f, 195 / 255f, 74 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(124, 179, 66, 1f);
+            return new Color(124 / 255f, 179 / 255f, 66 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(104, 159, 56, 1f);
+            return new Color(104 / 255f, 159 / 255f, 56 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(85, 139, 47, 1f);
+            return new Color(85 / 255f, 139 / 255f, 47 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(51, 105, 30, 1f);
+            return new Color(51 / 255f, 105 / 255f, 30 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(204, 255, 144, 1f);
+            return new Color(204 / 255f, 255 / 255f, 144 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(178, 255, 89, 1f);
+            return new Color(178 / 255f, 255 / 255f, 89 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(118, 255, 3, 1f);
+            return new Color(118 / 255f, 255 / 255f, 3 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(100, 221, 23, 1f);
+            return new Color(100 / 255f, 221 / 255f, 23 / 255f, 1f);
         }
 
     }
@@ -709,72 +709,72 @@ public interface MaterialColor {
     class Lime implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(249, 251, 231, 1f);
+            return new Color(249 / 255f, 251 / 255f, 231 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(240, 244, 195, 1f);
+            return new Color(240 / 255f, 244 / 255f, 195 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(230, 238, 156, 1f);
+            return new Color(230 / 255f, 238 / 255f, 156 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(220, 231, 117, 1f);
+            return new Color(220 / 255f, 231 / 255f, 117 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(212, 225, 87, 1f);
+            return new Color(212 / 255f, 225 / 255f, 87 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(205, 220, 57, 1f);
+            return new Color(205 / 255f, 220 / 255f, 57 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(192, 202, 51, 1f);
+            return new Color(192 / 255f, 202 / 255f, 51 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(175, 180, 43, 1f);
+            return new Color(175 / 255f, 180 / 255f, 43 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(158, 157, 36, 1f);
+            return new Color(158 / 255f, 157 / 255f, 36 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(130, 119, 23, 1f);
+            return new Color(130 / 255f, 119 / 255f, 23 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(244, 255, 129, 1f);
+            return new Color(244 / 255f, 255 / 255f, 129 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(238, 255, 65, 1f);
+            return new Color(238 / 255f, 255 / 255f, 65 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(198, 255, 0, 1f);
+            return new Color(198 / 255f, 255 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(174, 234, 0, 1f);
+            return new Color(174 / 255f, 234 / 255f, 0 / 255f, 1f);
         }
 
     }
@@ -782,72 +782,72 @@ public interface MaterialColor {
     class Orange implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(255, 243, 224, 1f);
+            return new Color(255 / 255f, 243 / 255f, 224 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(255, 224, 178, 1f);
+            return new Color(255 / 255f, 224 / 255f, 178 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(255, 204, 128, 1f);
+            return new Color(255 / 255f, 204 / 255f, 128 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(255, 183, 77, 1f);
+            return new Color(255 / 255f, 183 / 255f, 77 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(255, 167, 38, 1f);
+            return new Color(255 / 255f, 167 / 255f, 38 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(255, 152, 0, 1f);
+            return new Color(255 / 255f, 152 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(251, 140, 0, 1f);
+            return new Color(251 / 255f, 140 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(245, 124, 0, 1f);
+            return new Color(245 / 255f, 124 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(239, 108, 0, 1f);
+            return new Color(239 / 255f, 108 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(230, 81, 0, 1f);
+            return new Color(230 / 255f, 81 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(255, 209, 128, 1f);
+            return new Color(255 / 255f, 209 / 255f, 128 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(255, 171, 64, 1f);
+            return new Color(255 / 255f, 171 / 255f, 64 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(255, 145, 0, 1f);
+            return new Color(255 / 255f, 145 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(255, 109, 0, 1f);
+            return new Color(255 / 255f, 109 / 255f, 0 / 255f, 1f);
         }
 
     }
@@ -855,72 +855,72 @@ public interface MaterialColor {
     class Pink implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(252, 228, 236, 1f);
+            return new Color(252 / 255f, 228 / 255f, 236 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(248, 187, 208, 1f);
+            return new Color(248 / 255f, 187 / 255f, 208 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(244, 143, 177, 1f);
+            return new Color(244 / 255f, 143 / 255f, 177 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(240, 98, 146, 1f);
+            return new Color(240 / 255f, 98 / 255f, 146 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(236, 64, 122, 1f);
+            return new Color(236 / 255f, 64 / 255f, 122 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(233, 30, 99, 1f);
+            return new Color(233 / 255f, 30 / 255f, 99 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(216, 27, 96, 1f);
+            return new Color(216 / 255f, 27 / 255f, 96 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(194, 24, 91, 1f);
+            return new Color(194 / 255f, 24 / 255f, 91 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(173, 20, 87, 1f);
+            return new Color(173 / 255f, 20 / 255f, 87 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(136, 14, 79, 1f);
+            return new Color(136 / 255f, 14 / 255f, 79 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(255, 128, 171, 1f);
+            return new Color(255 / 255f, 128 / 255f, 171 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(255, 64, 129, 1f);
+            return new Color(255 / 255f, 64 / 255f, 129 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(245, 0, 87, 1f);
+            return new Color(245 / 255f, 0 / 255f, 87 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(197, 17, 98, 1f);
+            return new Color(197 / 255f, 17 / 255f, 98 / 255f, 1f);
         }
 
     }
@@ -928,72 +928,72 @@ public interface MaterialColor {
     class Purple implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(243, 229, 245, 1f);
+            return new Color(243 / 255f, 229 / 255f, 245 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(225, 190, 231, 1f);
+            return new Color(225 / 255f, 190 / 255f, 231 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(206, 147, 216, 1f);
+            return new Color(206 / 255f, 147 / 255f, 216 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(186, 104, 200, 1f);
+            return new Color(186 / 255f, 104 / 255f, 200 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(171, 71, 188, 1f);
+            return new Color(171 / 255f, 71 / 255f, 188 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(156, 39, 176, 1f);
+            return new Color(156 / 255f, 39 / 255f, 176 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(142, 36, 170, 1f);
+            return new Color(142 / 255f, 36 / 255f, 170 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(123, 31, 162, 1f);
+            return new Color(123 / 255f, 31 / 255f, 162 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(106, 27, 154, 1f);
+            return new Color(106 / 255f, 27 / 255f, 154 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(74, 20, 140, 1f);
+            return new Color(74 / 255f, 20 / 255f, 140 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(234, 128, 252, 1f);
+            return new Color(234 / 255f, 128 / 255f, 252 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(224, 64, 251, 1f);
+            return new Color(224 / 255f, 64 / 255f, 251 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(213, 0, 249, 1f);
+            return new Color(213 / 255f, 0 / 255f, 249 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(170, 0, 255, 1f);
+            return new Color(170 / 255f, 0 / 255f, 255 / 255f, 1f);
         }
 
     }
@@ -1001,72 +1001,72 @@ public interface MaterialColor {
     class Red implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(255, 235, 238, 1f);
+            return new Color(255 / 255f, 235 / 255f, 238 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(255, 205, 210, 1f);
+            return new Color(255 / 255f, 205 / 255f, 210 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(239, 154, 154, 1f);
+            return new Color(239 / 255f, 154 / 255f, 154 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(229, 115, 115, 1f);
+            return new Color(229 / 255f, 115 / 255f, 115 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(239, 83, 80, 1f);
+            return new Color(239 / 255f, 83 / 255f, 80 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(244, 67, 54, 1f);
+            return new Color(244 / 255f, 67 / 255f, 54 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(229, 57, 53, 1f);
+            return new Color(229 / 255f, 57 / 255f, 53 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(211, 47, 47, 1f);
+            return new Color(211 / 255f, 47 / 255f, 47 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(198, 40, 40, 1f);
+            return new Color(198 / 255f, 40 / 255f, 40 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(183, 28, 28, 1f);
+            return new Color(183 / 255f, 28 / 255f, 28 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(255, 138, 128, 1f);
+            return new Color(255 / 255f, 138 / 255f, 128 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(255, 82, 82, 1f);
+            return new Color(255 / 255f, 82 / 255f, 82 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(255, 23, 68, 1f);
+            return new Color(255 / 255f, 23 / 255f, 68 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(213, 0, 0, 1f);
+            return new Color(213 / 255f, 0 / 255f, 0 / 255f, 1f);
         }
 
     }
@@ -1074,72 +1074,72 @@ public interface MaterialColor {
     class Teal implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(224, 242, 241, 1f);
+            return new Color(224 / 255f, 242 / 255f, 241 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(178, 223, 219, 1f);
+            return new Color(178 / 255f, 223 / 255f, 219 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(128, 203, 196, 1f);
+            return new Color(128 / 255f, 203 / 255f, 196 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(77, 182, 172, 1f);
+            return new Color(77 / 255f, 182 / 255f, 172 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(38, 166, 154, 1f);
+            return new Color(38 / 255f, 166 / 255f, 154 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(0, 150, 136, 1f);
+            return new Color(0 / 255f, 150 / 255f, 136 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(0, 137, 123, 1f);
+            return new Color(0 / 255f, 137 / 255f, 123 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(0, 121, 107, 1f);
+            return new Color(0 / 255f, 121 / 255f, 107 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(0, 105, 92, 1f);
+            return new Color(0 / 255f, 105 / 255f, 92 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(0, 77, 64, 1f);
+            return new Color(0 / 255f, 77 / 255f, 64 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(167, 255, 235, 1f);
+            return new Color(167 / 255f, 255 / 255f, 235 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(100, 255, 218, 1f);
+            return new Color(100 / 255f, 255 / 255f, 218 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(29, 233, 182, 1f);
+            return new Color(29 / 255f, 233 / 255f, 182 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(0, 191, 165, 1f);
+            return new Color(0 / 255f, 191 / 255f, 165 / 255f, 1f);
         }
 
     }
@@ -1147,72 +1147,72 @@ public interface MaterialColor {
     class Yellow implements MaterialColor {
         @Override
         public Color color50() {
-            return new Color(255, 253, 231, 1f);
+            return new Color(255 / 255f, 253 / 255f, 231 / 255f, 1f);
         }
 
         @Override
         public Color color100() {
-            return new Color(255, 249, 196, 1f);
+            return new Color(255 / 255f, 249 / 255f, 196 / 255f, 1f);
         }
 
         @Override
         public Color color200() {
-            return new Color(255, 245, 157, 1f);
+            return new Color(255 / 255f, 245 / 255f, 157 / 255f, 1f);
         }
 
         @Override
         public Color color300() {
-            return new Color(255, 241, 118, 1f);
+            return new Color(255 / 255f, 241 / 255f, 118 / 255f, 1f);
         }
 
         @Override
         public Color color400() {
-            return new Color(255, 238, 88, 1f);
+            return new Color(255 / 255f, 238 / 255f, 88 / 255f, 1f);
         }
 
         @Override
         public Color color500() {
-            return new Color(255, 235, 59, 1f);
+            return new Color(255 / 255f, 235 / 255f, 59 / 255f, 1f);
         }
 
         @Override
         public Color color600() {
-            return new Color(253, 216, 53, 1f);
+            return new Color(253 / 255f, 216 / 255f, 53 / 255f, 1f);
         }
 
         @Override
         public Color color700() {
-            return new Color(251, 192, 45, 1f);
+            return new Color(251 / 255f, 192 / 255f, 45 / 255f, 1f);
         }
 
         @Override
         public Color color800() {
-            return new Color(249, 168, 37, 1f);
+            return new Color(249 / 255f, 168 / 255f, 37 / 255f, 1f);
         }
 
         @Override
         public Color color900() {
-            return new Color(245, 127, 23, 1f);
+            return new Color(245 / 255f, 127 / 255f, 23 / 255f, 1f);
         }
 
         @Override
         public Color colorA100() {
-            return new Color(255, 255, 141, 1f);
+            return new Color(255 / 255f, 255 / 255f, 141 / 255f, 1f);
         }
 
         @Override
         public Color colorA200() {
-            return new Color(255, 255, 0, 1f);
+            return new Color(255 / 255f, 255 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color colorA400() {
-            return new Color(255, 234, 0, 1f);
+            return new Color(255 / 255f, 234 / 255f, 0 / 255f, 1f);
         }
 
         @Override
         public Color colorA700() {
-            return new Color(255, 214, 0, 1f);
+            return new Color(255 / 255f, 214 / 255f, 0 / 255f, 1f);
         }
 
     }
