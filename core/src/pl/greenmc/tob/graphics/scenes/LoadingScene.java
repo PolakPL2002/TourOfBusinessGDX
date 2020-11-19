@@ -3,12 +3,16 @@ package pl.greenmc.tob.graphics.scenes;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import pl.greenmc.tob.game.TourOfBusinessGame;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.elements.ProgressBar;
+
+import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 
 public class LoadingScene extends Scene {
     private final Color backgroundColor = GlobalTheme.backgroundColor;
@@ -17,6 +21,7 @@ public class LoadingScene extends Scene {
     private TourOfBusinessGame game = null;
     private Texture logo;
     private ProgressBar progressBar = new ProgressBar();
+    private FrameBuffer frameBuffer;
 
     public void setConnectRetriesLeft(int connectRetriesLeft) {
         this.connectRetriesLeft = connectRetriesLeft;
@@ -53,9 +58,9 @@ public class LoadingScene extends Scene {
             }
         }
 
+        frameBuffer.begin();
         Gdx.gl.glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-//        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling ? GL20.GL_COVERAGE_BUFFER_BIT_NV : 0));
         batch.begin();
         int height = Gdx.graphics.getHeight();
         int width = Gdx.graphics.getWidth();
@@ -63,10 +68,17 @@ public class LoadingScene extends Scene {
         batch.draw(logo, (width - size) / 2, (height - size) / 2, size, size);
         batch.end();
         progressBar.draw((width - size) / 2, (float) (height * 0.3), size, (float) (height / 36.0));
+        frameBuffer.end();
+        Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        Gdx.gl.glClear(GL_COLOR_BUFFER_BIT);
+        batch.begin();
+        batch.draw(frameBuffer.getColorBufferTexture(), 0, Gdx.graphics.getHeight(), Gdx.graphics.getWidth(), -Gdx.graphics.getHeight());
+        batch.end();
     }
 
     @Override
     public void setup() {
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
         batch = new SpriteBatch();
         logo = new Texture("logo.png");
         progressBar.setup();
@@ -77,6 +89,7 @@ public class LoadingScene extends Scene {
 
     @Override
     public void dispose() {
+        frameBuffer.dispose();
         batch.dispose();
         logo.dispose();
         progressBar.dispose();

@@ -3,10 +3,12 @@ package pl.greenmc.tob.graphics.scenes;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.utils.Align;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.Scene;
@@ -16,6 +18,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
+import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static pl.greenmc.tob.game.util.Logger.log;
 import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
 
@@ -32,6 +35,7 @@ public class ErrorScene extends Scene {
     private ProgressBar progressBar = new ProgressBar();
     private Color textColor = GlobalTheme.textColor;
     private long timeStart;
+    private FrameBuffer frameBuffer;
 
     public ErrorScene(String error, long timeout) {
         this.error = error;
@@ -40,8 +44,9 @@ public class ErrorScene extends Scene {
 
     @Override
     public void render() {
+        frameBuffer.begin();
         Gdx.gl.glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling ? GL20.GL_COVERAGE_BUFFER_BIT_NV : 0));
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         batch.begin();
         font.setColor(textColor);
@@ -60,11 +65,18 @@ public class ErrorScene extends Scene {
         if (timeLeft < 0) timeLeft = 0;
         progressBar.setText(decimalFormat.format(timeLeft / 1000.0) + "s");
         progressBar.draw((width - size) / 2, (float) (height * 0.3), size, (float) (height / 36.0));
+        frameBuffer.end();
+        Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        Gdx.gl.glClear(GL_COLOR_BUFFER_BIT);
+        batch.begin();
+        batch.draw(frameBuffer.getColorBufferTexture(), 0, Gdx.graphics.getHeight(), Gdx.graphics.getWidth(), -Gdx.graphics.getHeight());
+        batch.end();
     }
 
     @Override
     public void setup() {
         log("ErrorScene set up with message '" + error + "' and timeout " + timeout + "ms.");
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
         batch = new SpriteBatch();
         timeStart = System.currentTimeMillis();
 
@@ -84,6 +96,7 @@ public class ErrorScene extends Scene {
 
     @Override
     public void dispose() {
+        frameBuffer.dispose();
         progressBar.dispose();
         generator.dispose();
         font.dispose();

@@ -10,6 +10,7 @@ import static pl.greenmc.tob.TourOfBusiness.TOB;
 public class ProfileMenu extends Menu {
     @Override
     public void setup() {
+        super.setup();
         Button button1 = new Button("Zapisz");
         Button button2 = new Button("Wróć");
         button1.setFontSize(20);

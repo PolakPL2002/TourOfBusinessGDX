@@ -12,6 +12,7 @@ import static pl.greenmc.tob.TourOfBusiness.TOB;
 public class MainMenu extends Menu {
     @Override
     public void setup() {
+        super.setup();
         Button button1 = new Button("Graj");
         Button button2 = new Button("Profil");
         Button button3 = new Button("Opcje");

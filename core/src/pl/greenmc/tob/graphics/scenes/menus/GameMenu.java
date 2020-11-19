@@ -3,6 +3,7 @@ package pl.greenmc.tob.graphics.scenes.menus;
 import com.badlogic.gdx.graphics.Color;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.elements.*;
+import pl.greenmc.tob.graphics.scenes.GameScene;
 import pl.greenmc.tob.graphics.scenes.Menu;
 
 import static pl.greenmc.tob.TourOfBusiness.TOB;
@@ -10,6 +11,7 @@ import static pl.greenmc.tob.TourOfBusiness.TOB;
 public class GameMenu extends Menu {
     @Override
     public void setup() {
+        super.setup();
         Button button1 = new Button("Stwórz nową grę");
         Button button2 = new Button("Dołącz do istniejącej gry");
         Button button3 = new Button("Wróć");
@@ -85,7 +87,7 @@ public class GameMenu extends Menu {
     }
 
     private void onNew() {
-
+        TOB.runOnGLThread(() -> TOB.changeScene(new GameScene()));
     }
 
     private void onJoin() {

@@ -21,6 +21,7 @@ import static pl.greenmc.tob.game.util.Logger.log;
 
 public class TourOfBusiness extends ApplicationAdapter implements InputProcessor {
     public static TourOfBusiness TOB;
+    private final int GL_MULTISAMPLE = 32925;
     private final ArrayList<Overlay> overlays = new ArrayList<>();
     private final ArrayList<Runnable> tasksToExecute = new ArrayList<>();
     private boolean LMBPressed = false;

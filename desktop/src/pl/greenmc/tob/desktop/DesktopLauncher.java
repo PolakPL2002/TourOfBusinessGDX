@@ -25,6 +25,7 @@ public class DesktopLauncher {
             config.height = dimension.height;
             config.width = dimension.width;
             config.pauseWhenMinimized = false;
+            config.samples = 16;
             new LwjglApplication(new TourOfBusiness(), config);
         }
     }
