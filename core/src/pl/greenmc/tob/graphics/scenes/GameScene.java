@@ -46,7 +46,7 @@ public class GameScene extends Scene {
     @Override
     public void setup() {
         modelBatch = new ModelBatch();
-        cam = new OrthographicCamera(8f, 8f * Gdx.graphics.getHeight() / Gdx.graphics.getWidth());
+        cam = new OrthographicCamera(4.5f / Gdx.graphics.getHeight() * Gdx.graphics.getWidth(), 4.5f);
         cam.position.set(-10f, 10f, 10f);
         cam.lookAt(0, 0, 0);
         cam.near = 1f;

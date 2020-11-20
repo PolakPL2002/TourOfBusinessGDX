@@ -13,14 +13,27 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.jetbrains.annotations.Nullable;
 
+import javax.net.ssl.SSLException;
 import java.io.File;
-import java.io.IOException;
+import java.math.BigInteger;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.HashMap;
 
-import static pl.greenmc.tob.game.util.Logger.log;
-import static pl.greenmc.tob.game.util.Logger.warning;
+import static pl.greenmc.tob.game.util.Logger.*;
 
 /**
  * Server
@@ -28,20 +41,22 @@ import static pl.greenmc.tob.game.util.Logger.warning;
 public class NettyServer {
     private final static NettyServer singleton = new NettyServer();
     private final int PORT = 2137;
+    private final File certChainFile = new File("certificate/cert.crt");
+    private final File certKeyFile = new File("certificate/cert.key");
     private final HashMap<String, ChannelHandlerContext> clients = new HashMap<>();
+    private SslContext sslCtx = null;
 
     private NettyServer() {
+
     }
 
     /**
      * Starts the server
      *
      * @param onInterrupted Called when server is interrupted
-     * @throws IOException On SSL cert loading error
      */
-    public void start(Runnable onInterrupted) throws IOException {
-        final SslContext sslCtx;
-        sslCtx = SslContextBuilder.forServer(new File("certificate/cert.crt"), new File("certificate/cert.key")).build();
+    public void start(Runnable onInterrupted) {
+        if (sslCtx == null) loadCertificate();
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
@@ -70,6 +85,55 @@ public class NettyServer {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
+    }
+
+    private void loadCertificate() {
+        if (!certKeyFile.exists() || !certChainFile.exists()) {
+            try {
+                generateSelfSignedCert();
+            } catch (NoSuchProviderException | OperatorCreationException | CertificateException | SSLException | NoSuchAlgorithmException e) {
+                error("Failed to generate self-signed certificate!");
+                fatal(e);
+            }
+        } else {
+            try {
+                log("Loading certificate from file...");
+                sslCtx = SslContextBuilder.forServer(certChainFile, certKeyFile).build();
+                log("Certificate loaded!");
+            } catch (SSLException e) {
+                error("Failed to load certificate!");
+                error(e);
+                try {
+                    generateSelfSignedCert();
+                } catch (NoSuchProviderException | OperatorCreationException | CertificateException | SSLException | NoSuchAlgorithmException e2) {
+                    error("Failed to generate self-signed certificate!");
+                    fatal(e2);
+                }
+            }
+        }
+    }
+
+    private void generateSelfSignedCert() throws NoSuchProviderException, NoSuchAlgorithmException, OperatorCreationException, CertificateException, SSLException {
+        log("Generating self-signed certificate...");
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null)
+            Security.addProvider(new BouncyCastleProvider());
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME);
+        keyPairGenerator.initialize(2048);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        X500Name dnName = new X500Name("CN=TOB");
+        BigInteger certSerialNumber = BigInteger.valueOf(System.currentTimeMillis());
+        String signatureAlgorithm = "SHA256WithRSA";
+        ContentSigner contentSigner = new JcaContentSignerBuilder(signatureAlgorithm)
+                .build(keyPair.getPrivate());
+        Instant startDate = Instant.now();
+        Instant endDate = startDate.plus(2 * 365, ChronoUnit.DAYS);
+        JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(
+                dnName, certSerialNumber, Date.from(startDate), Date.from(endDate), dnName,
+                keyPair.getPublic());
+        X509Certificate certificate = new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME)
+                .getCertificate(certBuilder.build(contentSigner));
+        sslCtx = SslContextBuilder.forServer(keyPair.getPrivate(), certificate).build();
+        log("Generated self-signed certificate!");
     }
 
     /**

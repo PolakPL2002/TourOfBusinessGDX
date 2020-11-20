@@ -12,7 +12,6 @@ import pl.greenmc.tob.graphics.scenes.ErrorScene;
 import pl.greenmc.tob.graphics.scenes.LoadingScene;
 import pl.greenmc.tob.graphics.scenes.menus.MainMenu;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -53,11 +52,7 @@ public class TourOfBusinessGame {
 
             loadTextures();
         } else {
-            try {
-                NettyServer.getInstance().start(null);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            NettyServer.getInstance().start(null);
         }
     }
 

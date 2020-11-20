@@ -64,7 +64,7 @@ public class LoadingScene extends Scene {
         batch.begin();
         int height = Gdx.graphics.getHeight();
         int width = Gdx.graphics.getWidth();
-        float size = Math.max(width / 2, height / 2);
+        float size = Math.min(width / 2, height / 2);
         batch.draw(logo, (width - size) / 2, (height - size) / 2, size, size);
         batch.end();
         progressBar.draw((width - size) / 2, (float) (height * 0.3), size, (float) (height / 36.0));

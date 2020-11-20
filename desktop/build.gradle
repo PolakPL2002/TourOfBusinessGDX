@@ -1,5 +1,5 @@
 sourceCompatibility = 1.11
-sourceSets.main.java.srcDirs = [ "src/" ]
+sourceSets.main.java.srcDirs = ["src/"]
 sourceSets.main.resources.srcDirs = ["../core/assets"]
 
 project.ext.mainClassName = "pl.greenmc.tob.desktop.DesktopLauncher"
@@ -39,6 +39,7 @@ task dist(type: Jar) {
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
     with jar
 }
 

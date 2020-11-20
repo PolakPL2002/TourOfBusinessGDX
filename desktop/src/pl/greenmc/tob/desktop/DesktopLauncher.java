@@ -7,6 +7,8 @@ import pl.greenmc.tob.game.TourOfBusinessGame;
 
 import java.awt.*;
 
+import static pl.greenmc.tob.game.util.Logger.log;
+
 public class DesktopLauncher {
     public static void main(String[] arg) {
         boolean server = false;
@@ -24,6 +26,7 @@ public class DesktopLauncher {
             Dimension dimension = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
             config.height = dimension.height;
             config.width = dimension.width;
+            log("Setting resolution to " + dimension.width + "x" + dimension.height);
             config.pauseWhenMinimized = false;
             config.samples = 16;
             new LwjglApplication(new TourOfBusiness(), config);
