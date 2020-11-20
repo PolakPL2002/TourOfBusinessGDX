@@ -40,17 +40,41 @@ public class TourOfBusinessGame {
             //Default map
             texturesToLoad.add("textures/maps/default/board.png");
             texturesToLoad.add("textures/maps/default/chance.png");
+            texturesToLoad.add("textures/maps/default/city1.png");
+            texturesToLoad.add("textures/maps/default/city2.png");
+            texturesToLoad.add("textures/maps/default/city3.png");
+            texturesToLoad.add("textures/maps/default/city4.png");
+            texturesToLoad.add("textures/maps/default/city5.png");
+            texturesToLoad.add("textures/maps/default/city6.png");
+            texturesToLoad.add("textures/maps/default/city7.png");
+            texturesToLoad.add("textures/maps/default/city8.png");
+            texturesToLoad.add("textures/maps/default/city9.png");
+            texturesToLoad.add("textures/maps/default/city10.png");
+            texturesToLoad.add("textures/maps/default/city11.png");
+            texturesToLoad.add("textures/maps/default/city12.png");
+            texturesToLoad.add("textures/maps/default/city13.png");
+            texturesToLoad.add("textures/maps/default/city14.png");
+            texturesToLoad.add("textures/maps/default/city15.png");
+            texturesToLoad.add("textures/maps/default/city16.png");
+            texturesToLoad.add("textures/maps/default/city17.png");
+            texturesToLoad.add("textures/maps/default/city18.png");
+            texturesToLoad.add("textures/maps/default/city19.png");
+            texturesToLoad.add("textures/maps/default/city20.png");
+            texturesToLoad.add("textures/maps/default/city21.png");
+            texturesToLoad.add("textures/maps/default/city22.png");
             texturesToLoad.add("textures/maps/default/communityChest.png");
+            texturesToLoad.add("textures/maps/default/electricCompany.png");
             texturesToLoad.add("textures/maps/default/goToJail.png");
-            texturesToLoad.add("textures/maps/default/group1.png");
-            texturesToLoad.add("textures/maps/default/group2.png");
-            texturesToLoad.add("textures/maps/default/group3.png");
-            texturesToLoad.add("textures/maps/default/group4.png");
             texturesToLoad.add("textures/maps/default/incomeTax.png");
             texturesToLoad.add("textures/maps/default/jail.png");
+            texturesToLoad.add("textures/maps/default/luxuryTax.png");
             texturesToLoad.add("textures/maps/default/parking.png");
             texturesToLoad.add("textures/maps/default/start.png");
-            texturesToLoad.add("textures/maps/default/station.png");
+            texturesToLoad.add("textures/maps/default/station1.png");
+            texturesToLoad.add("textures/maps/default/station2.png");
+            texturesToLoad.add("textures/maps/default/station3.png");
+            texturesToLoad.add("textures/maps/default/station4.png");
+            texturesToLoad.add("textures/maps/default/waterWorks.png");
 
             //Game UI
             texturesToLoad.add("textures/ui/game/player1.png");
