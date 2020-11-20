@@ -80,7 +80,8 @@ public class LoadingScene extends Scene {
     public void setup() {
         frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
         batch = new SpriteBatch();
-        logo = new Texture("logo.png");
+        logo = new Texture(Gdx.files.internal("logo.png"), true);
+        logo.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         progressBar.setup();
         progressBar.setMax(1);
         progressBar.setFontSize((int) (Gdx.graphics.getHeight() / 72.0));

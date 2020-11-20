@@ -1,6 +1,7 @@
 package pl.greenmc.tob.game;
 
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
@@ -34,8 +35,21 @@ public class TourOfBusinessGame {
             loading.setGameInstance(this);
 
             texturesToLoad.add("logo.png");
+            texturesToLoad.add("textures/maps/default/board.png");
+            texturesToLoad.add("textures/maps/default/chance.png");
+            texturesToLoad.add("textures/maps/default/communityChest.png");
+            texturesToLoad.add("textures/maps/default/goToJail.png");
+            texturesToLoad.add("textures/maps/default/group1.png");
+            texturesToLoad.add("textures/maps/default/group2.png");
+            texturesToLoad.add("textures/maps/default/group3.png");
+            texturesToLoad.add("textures/maps/default/group4.png");
+            texturesToLoad.add("textures/maps/default/incomeTax.png");
+            texturesToLoad.add("textures/maps/default/jail.png");
+            texturesToLoad.add("textures/maps/default/parking.png");
+            texturesToLoad.add("textures/maps/default/start.png");
+            texturesToLoad.add("textures/maps/default/station.png");
 
-            musicToLoad.add("music/music1.wav");
+//            musicToLoad.add("music/music1.wav");
 
             loadTextures();
         } else {
@@ -48,7 +62,9 @@ public class TourOfBusinessGame {
     }
 
     private void loadTextures() {
-        texturesToLoad.forEach(texture -> assetManager.load(texture, Texture.class));
+        TextureLoader.TextureParameter textureParameter = new TextureLoader.TextureParameter();
+        textureParameter.genMipMaps = true;
+        texturesToLoad.forEach(texture -> assetManager.load(texture, Texture.class, textureParameter));
     }
 
     public int getNumTextures() {
@@ -81,9 +97,7 @@ public class TourOfBusinessGame {
                 new Timer().schedule(new TimerTask() {
                     @Override
                     public void run() {
-                        TOB.runOnGLThread(() -> {
-                            TOB.changeScene(new MainMenu());
-                        });
+                        TOB.runOnGLThread(() -> TOB.changeScene(new MainMenu()));
                     }
                 }, 100); //Delay to show done message
         }

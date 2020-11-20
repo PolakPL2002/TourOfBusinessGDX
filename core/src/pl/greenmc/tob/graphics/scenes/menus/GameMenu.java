@@ -1,6 +1,7 @@
 package pl.greenmc.tob.graphics.scenes.menus;
 
 import com.badlogic.gdx.graphics.Color;
+import pl.greenmc.tob.game.map.DefaultMap;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.elements.*;
 import pl.greenmc.tob.graphics.scenes.GameScene;
@@ -87,7 +88,7 @@ public class GameMenu extends Menu {
     }
 
     private void onNew() {
-        TOB.runOnGLThread(() -> TOB.changeScene(new GameScene()));
+        TOB.runOnGLThread(() -> TOB.changeScene(new GameScene(new DefaultMap())));
     }
 
     private void onJoin() {
