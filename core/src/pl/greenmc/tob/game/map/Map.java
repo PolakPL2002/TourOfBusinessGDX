@@ -43,6 +43,7 @@ public class Map {
         // - Each GO_TO_JAIL has exactly 1 JAIL in group
         // - No group contains more that one type of following: CITY, STATION, UTILITY
         // - No group that contains JAIL, GO_TO_JAIL cannot contain CITY, STATION, UTILITY and vice versa
+        // - No tile is duplicated
         if (tiles.size() % 4 != 0 || tiles.size() > 40 || tiles.size() < 8)
             throw new RuntimeException("Number of tiles is invalid.");
         int numStart = 0;
@@ -84,6 +85,11 @@ public class Map {
                     if (tile1.getType() != Tile.TileType.UTILITY)
                         throw new RuntimeException("Group of UTILITY contains non-UTILITY tile.");
                 }
+            }
+            int numEquals = 0;
+            for (Tile tile1 : tiles) {
+                if (tile == tile1) numEquals++;
+                if (numEquals > 1) throw new RuntimeException("A tile is duplicated.");
             }
         }
         if (numStart != 1) throw new RuntimeException("There is invalid number of START.");

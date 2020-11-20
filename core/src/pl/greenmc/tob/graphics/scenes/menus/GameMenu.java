@@ -4,8 +4,8 @@ import com.badlogic.gdx.graphics.Color;
 import pl.greenmc.tob.game.map.DefaultMap;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.elements.*;
-import pl.greenmc.tob.graphics.scenes.GameScene;
 import pl.greenmc.tob.graphics.scenes.Menu;
+import pl.greenmc.tob.graphics.scenes.game.GameScene;
 
 import static pl.greenmc.tob.TourOfBusiness.TOB;
 

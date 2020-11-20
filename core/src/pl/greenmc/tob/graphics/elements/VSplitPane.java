@@ -20,10 +20,12 @@ public class VSplitPane extends SplitPane {
                 || children.size() != hitboxes.size())
             updateHitboxes(x, y, w, h);
 
-        renderer.begin(ShapeRenderer.ShapeType.Filled);
-        renderer.setColor(backgroundColor);
-        renderer.rect(x, y, w, h);
-        renderer.end();
+        if (drawBackground) {
+            renderer.begin(ShapeRenderer.ShapeType.Filled);
+            renderer.setColor(backgroundColor);
+            renderer.rect(x, y, w, h);
+            renderer.end();
+        }
 
         final double[] totalFixedWidth = {0};
         final double[] totalVariableWeight = {0};

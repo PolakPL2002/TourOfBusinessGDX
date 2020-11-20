@@ -61,6 +61,7 @@ public class TourOfBusiness extends ApplicationAdapter implements InputProcessor
 
     public void addOverlay(@NotNull Overlay overlay) {
         overlays.add(overlay);
+        overlay.setup();
     }
 
     public void changeScene(@NotNull Scene scene) {
@@ -121,6 +122,9 @@ public class TourOfBusiness extends ApplicationAdapter implements InputProcessor
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
+        if (currentScene != null) currentScene.resize(width, height);
+        overlays.forEach(overlay -> overlay.resize(width, height));
+        log("Viewport resized to " + width + "x" + height);
     }
 
     @Override

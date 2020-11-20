@@ -32,7 +32,7 @@ public class ErrorScene extends Scene {
     private SpriteBatch batch;
     private BitmapFont font;
     private GlyphLayout layout;
-    private ProgressBar progressBar = new ProgressBar();
+    private ProgressBar progressBar;
     private Color textColor = GlobalTheme.textColor;
     private long timeStart;
     private FrameBuffer frameBuffer;
@@ -80,6 +80,7 @@ public class ErrorScene extends Scene {
         batch = new SpriteBatch();
         timeStart = System.currentTimeMillis();
 
+        progressBar = new ProgressBar();
         progressBar.setup();
         progressBar.setFontSize(Gdx.graphics.getHeight() / 72);
         progressBar.setMax(timeout);
@@ -95,12 +96,23 @@ public class ErrorScene extends Scene {
     }
 
     @Override
+    public void resize(int width, int height) {
+        frameBuffer.dispose();
+        batch.dispose();
+
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+        batch = new SpriteBatch();
+        timeStart = System.currentTimeMillis();
+
+        progressBar.resize(width, height);
+    }
+
+    @Override
     public void dispose() {
         frameBuffer.dispose();
         progressBar.dispose();
         generator.dispose();
         font.dispose();
         batch.dispose();
-
     }
 }

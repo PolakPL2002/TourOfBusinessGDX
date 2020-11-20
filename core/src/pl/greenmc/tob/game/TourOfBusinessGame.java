@@ -33,7 +33,11 @@ public class TourOfBusinessGame {
             LoadingScene loading = (LoadingScene) TOB.getScene();
             loading.setGameInstance(this);
 
+            //Logo
+            texturesToLoad.add("test.png");
             texturesToLoad.add("logo.png");
+
+            //Default map
             texturesToLoad.add("textures/maps/default/board.png");
             texturesToLoad.add("textures/maps/default/chance.png");
             texturesToLoad.add("textures/maps/default/communityChest.png");
@@ -47,6 +51,19 @@ public class TourOfBusinessGame {
             texturesToLoad.add("textures/maps/default/parking.png");
             texturesToLoad.add("textures/maps/default/start.png");
             texturesToLoad.add("textures/maps/default/station.png");
+
+            //Game UI
+            texturesToLoad.add("textures/ui/game/player1.png");
+            texturesToLoad.add("textures/ui/game/player2.png");
+            texturesToLoad.add("textures/ui/game/player3.png");
+            texturesToLoad.add("textures/ui/game/player4.png");
+            texturesToLoad.add("textures/ui/game/player5.png");
+            texturesToLoad.add("textures/ui/game/player6.png");
+            texturesToLoad.add("textures/ui/game/player7.png");
+            texturesToLoad.add("textures/ui/game/player8.png");
+
+            //Menu UI
+            texturesToLoad.add("textures/ui/menu/background.png");
 
 //            musicToLoad.add("music/music1.wav");
 

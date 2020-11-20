@@ -16,6 +16,7 @@ public class PaddingPane extends Element implements Interactable {
     private final float paddingTop;
     private SolidColor background;
     private Color color = GlobalTheme.backgroundColor;
+    private boolean drawBackground = false;
     private Hitbox hitbox = null;
     private Rectangle hitboxesFor = null;
     private boolean insideHitbox = false;
@@ -84,9 +85,15 @@ public class PaddingPane extends Element implements Interactable {
         }
     }
 
-    public void setColor(Color color) {
+    public PaddingPane setDrawBackground(boolean drawBackground) {
+        this.drawBackground = drawBackground;
+        return this;
+    }
+
+    public PaddingPane setColor(Color color) {
         this.color = color;
         if (background != null) background.setColor(color);
+        return this;
     }
 
     @Override
@@ -99,7 +106,8 @@ public class PaddingPane extends Element implements Interactable {
                 hitboxesFor.y != y)
             hitbox = new RectangularHitbox(x + paddingLeft, y + paddingBottom, w - paddingRight - paddingLeft, h - paddingTop - paddingBottom);
 
-        background.draw(x, y, w, h);
+        if (drawBackground)
+            background.draw(x, y, w, h);
         Gdx.gl.glEnable(GL_SCISSOR_TEST);
         Gdx.gl.glScissor((int) (x + paddingLeft), (int) (y + paddingBottom), (int) (w - paddingRight - paddingLeft), (int) (h - paddingTop - paddingBottom));
         child.draw(x + paddingLeft, y + paddingBottom, w - paddingRight - paddingLeft, h - paddingTop - paddingBottom);
@@ -112,6 +120,12 @@ public class PaddingPane extends Element implements Interactable {
         background = new SolidColor();
         background.setup();
         background.setColor(color);
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        child.resize(width, height);
+        background.resize(width, height);
     }
 
     @Override

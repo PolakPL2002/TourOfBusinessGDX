@@ -82,6 +82,14 @@ public class Button extends Element implements Interactable {
         setUp = true;
     }
 
+    @Override
+    public void resize(int width, int height) {
+        if (renderer != null) renderer.dispose();
+        if (batch != null) batch.dispose();
+        batch = new SpriteBatch();
+        renderer = new ShapeRenderer();
+    }
+
     public void setFontSize(int size) {
         fontSize = size;
         if (renderer != null) {

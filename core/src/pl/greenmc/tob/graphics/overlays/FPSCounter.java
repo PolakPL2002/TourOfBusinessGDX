@@ -13,7 +13,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
 public class FPSCounter extends Overlay {
-    private final SpriteBatch batch = new SpriteBatch();
+    private SpriteBatch batch;
     private final DecimalFormat decimalFormat = new DecimalFormat("0.0", DecimalFormatSymbols.getInstance(Locale.US));
     private final FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Regular.ttf"));
     private final int numSamples;
@@ -48,6 +48,11 @@ public class FPSCounter extends Overlay {
     }
 
     @Override
+    public void setup() {
+        batch = new SpriteBatch();
+    }
+
+    @Override
     public void draw() {
         long time = System.nanoTime();
         if (samples[numSamples - 1] != -1) {
@@ -66,7 +71,15 @@ public class FPSCounter extends Overlay {
     }
 
     @Override
-    public void dispose() {
+    public void resize(int width, int height) {
+        batch.dispose();
+        batch = new SpriteBatch();
+    }
 
+    @Override
+    public void dispose() {
+        batch.dispose();
+        generator.dispose();
+        if (font != null) font.dispose();
     }
 }

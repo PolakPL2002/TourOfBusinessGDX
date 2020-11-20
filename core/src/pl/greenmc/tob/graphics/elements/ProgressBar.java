@@ -44,6 +44,15 @@ public class ProgressBar extends Element {
         setUp = true;
     }
 
+    @Override
+    public void resize(int width, int height) {
+        if (renderer != null) renderer.dispose();
+        if (batch != null) batch.dispose();
+
+        batch = new SpriteBatch();
+        renderer = new ShapeRenderer();
+    }
+
     public void setFontSize(int size) {
         parameter.size = size;
         parameter.characters = LATIN_EXTENDED;

@@ -20,7 +20,7 @@ public class LoadingScene extends Scene {
     private int connectRetriesLeft = -1;
     private TourOfBusinessGame game = null;
     private Texture logo;
-    private ProgressBar progressBar = new ProgressBar();
+    private ProgressBar progressBar;
     private FrameBuffer frameBuffer;
 
     public void setConnectRetriesLeft(int connectRetriesLeft) {
@@ -82,10 +82,21 @@ public class LoadingScene extends Scene {
         batch = new SpriteBatch();
         logo = new Texture(Gdx.files.internal("logo.png"), true);
         logo.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        progressBar = new ProgressBar();
         progressBar.setup();
         progressBar.setMax(1);
         progressBar.setFontSize((int) (Gdx.graphics.getHeight() / 72.0));
         progressBar.setTextMode(ProgressBar.TextMode.CUSTOM);
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        frameBuffer.dispose();
+        batch.dispose();
+
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+        batch = new SpriteBatch();
+        progressBar.resize(width, height);
     }
 
     @Override

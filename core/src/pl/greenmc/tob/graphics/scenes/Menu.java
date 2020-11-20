@@ -1,22 +1,25 @@
 package pl.greenmc.tob.graphics.scenes;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import org.jetbrains.annotations.NotNull;
+import pl.greenmc.tob.graphics.Background;
 import pl.greenmc.tob.graphics.Element;
-import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.Interactable;
 import pl.greenmc.tob.graphics.Scene;
+import pl.greenmc.tob.graphics.backgrounds.ImageBackground;
+import pl.greenmc.tob.graphics.backgrounds.SolidBackground;
+import pl.greenmc.tob.graphics.elements.Image;
 import pl.greenmc.tob.graphics.elements.VSplitPane;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
+import static pl.greenmc.tob.TourOfBusiness.TOB;
 
 public class Menu extends Scene implements Interactable {
-    private Color backgroundColor = GlobalTheme.backgroundColor;
+    private Background background;
     private SpriteBatch batch;
     private Element element = null;
     private FrameBuffer frameBuffer;
@@ -49,11 +52,17 @@ public class Menu extends Scene implements Interactable {
         }
     }
 
+    public void setBackground(Background background) {
+        if (this.background != null) this.background.dispose();
+        this.background = background;
+        background.setup();
+    }
+
     @Override
     public void render() {
         frameBuffer.begin();
-        Gdx.gl.glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
         Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        background.draw(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         element.draw(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         frameBuffer.end();
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -65,6 +74,8 @@ public class Menu extends Scene implements Interactable {
 
     @Override
     public void setup() {
+        background = new ImageBackground(TOB.getGame().getAssetManager().get("textures/ui/menu/background.png"), Image.Align.CROP_ASPECT).setChild(new SolidBackground());
+        background.setup();
         batch = new SpriteBatch();
         frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
         setElement(new VSplitPane());
@@ -74,6 +85,18 @@ public class Menu extends Scene implements Interactable {
         if (this.element != null) this.element.dispose();
         this.element = element;
         this.element.setup();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        batch.dispose();
+        frameBuffer.dispose();
+
+        batch = new SpriteBatch();
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+
+        if (this.element != null) element.resize(width, height);
+        background.resize(width, height);
     }
 
     @Override

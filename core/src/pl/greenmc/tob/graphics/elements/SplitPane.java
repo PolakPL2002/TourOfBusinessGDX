@@ -17,6 +17,7 @@ public abstract class SplitPane extends Element implements Interactable {
     protected final HashMap<Element, Boolean> insideHitbox = new HashMap<>();
     protected final HashMap<Element, ElementOptions> options = new HashMap<>();
     protected Color backgroundColor = GlobalTheme.backgroundColor;
+    protected boolean drawBackground = false;
     protected Rectangle hitboxesFor = null;
     protected ShapeRenderer renderer;
     protected boolean setUp = false;
@@ -80,6 +81,10 @@ public abstract class SplitPane extends Element implements Interactable {
         });
     }
 
+    public void setDrawBackground(boolean drawBackground) {
+        this.drawBackground = drawBackground;
+    }
+
     public void setBackgroundColor(Color backgroundColor) {
         this.backgroundColor = backgroundColor;
     }
@@ -95,6 +100,14 @@ public abstract class SplitPane extends Element implements Interactable {
         if (setUp) return;
         renderer = new ShapeRenderer();
         setUp = true;
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        renderer.dispose();
+
+        renderer = new ShapeRenderer();
+        children.forEach(child -> child.resize(width, height));
     }
 
     protected abstract void updateHitboxes(float x, float y, float w, float h);

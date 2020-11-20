@@ -31,6 +31,12 @@ public class SolidColor extends Element {
     }
 
     @Override
+    public void resize(int width, int height) {
+        renderer.dispose();
+        renderer = new ShapeRenderer();
+    }
+
+    @Override
     public void dispose() {
         renderer.dispose();
     }

@@ -151,6 +151,16 @@ public abstract class ScrollPane extends Element implements Interactable {
         setUp = true;
     }
 
+
+    @Override
+    public void resize(int width, int height) {
+        renderer.dispose();
+
+        renderer = new ShapeRenderer();
+        children.forEach(child -> child.resize(width, height));
+        hitboxes.clear();
+    }
+
     public abstract ScrollPane addChild(@NotNull Element element, float size);
 
     protected abstract void updateHitboxes(float x, float y, float w, float h);

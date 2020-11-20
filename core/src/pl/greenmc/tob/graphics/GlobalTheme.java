@@ -16,7 +16,7 @@ public class GlobalTheme {
     public static MaterialColor scheme = MaterialColor.BLUE;
     public static Color barBackgroundColor = scheme.color300();
     public static Color barHandleColor = scheme.color700();
-    public static Color backgroundColor = scheme.color50();
+    public static Color backgroundColor = scheme.color100();
     public static Color buttonBackgroundColor = scheme.color200();
     public static Color buttonBorderColor = scheme.color700();
     public static Color buttonClickColor = scheme.color400();
