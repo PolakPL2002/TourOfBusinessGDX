@@ -12,6 +12,7 @@ import pl.greenmc.tob.graphics.Interactable;
 import pl.greenmc.tob.graphics.Overlay;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.overlays.FPSCounter;
+import pl.greenmc.tob.graphics.overlays.NetworkActivityOverlay;
 import pl.greenmc.tob.graphics.scenes.LoadingScene;
 
 import java.util.ArrayList;
@@ -44,6 +45,7 @@ public class TourOfBusiness extends ApplicationAdapter implements InputProcessor
         TOB = this;
         changeScene(new LoadingScene());
         addOverlay(new FPSCounter(16, 60));
+        addOverlay(new NetworkActivityOverlay(1000));
         game = new TourOfBusinessGame(false);
         Gdx.input.setInputProcessor(this);
 //        File original = new File("C:\\Users\\Szymon\\IdeaProjects\\TourOfBusinessGDX\\core\\assets\\x.wav");

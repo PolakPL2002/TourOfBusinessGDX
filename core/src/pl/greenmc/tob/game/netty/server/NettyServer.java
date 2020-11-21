@@ -1,7 +1,6 @@
 package pl.greenmc.tob.game.netty.server;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
@@ -44,7 +43,7 @@ public class NettyServer {
     private final static NettyServer singleton = new NettyServer();
     private final File certChainFile = new File("certificate/cert.crt");
     private final File certKeyFile = new File("certificate/cert.key");
-    private final HashMap<String, ChannelHandlerContext> clients = new HashMap<>();
+    private final HashMap<String, ServerHandler> clients = new HashMap<>();
     private Database database;
     private int port = 2137;
     private SslContext sslCtx = null;
@@ -156,23 +155,30 @@ public class NettyServer {
      * @param ID  Client ID
      * @param ctx Client context
      */
-    public void addClient(String ID, ChannelHandlerContext ctx) {
-        if (clients.containsKey(ID)) {
-            warning("Duplicate connection for client " + ID + ". Dropping older one.");
-            final ChannelHandlerContext client = getClient(ID);
-            if (client != null) client.close();
-            removeClient(ID);
+    public void addClient(String ID, ServerHandler ctx) {
+        synchronized (clients) {
+            if (clients.containsKey(ID)) {
+                warning("Duplicate connection for client " + ID + ". Dropping older one.");
+                final ServerHandler client = getClient(ID);
+                if (client != null) {
+                    client.getCtx().close();
+                    client.setAlreadyRemoved(true);
+                    removeClient(ID);
+                }
+            }
+            clients.put(ID, ctx);
+            log("Added client " + ID + ".");
         }
-        clients.put(ID, ctx);
-        log("Added client " + ID + ".");
     }
 
     /**
      * @param ID Client ID
      */
     public void removeClient(String ID) {
-        clients.remove(ID);
-        log("Removed client " + ID + ".");
+        synchronized (clients) {
+            clients.remove(ID);
+            log("Removed client " + ID + ".");
+        }
     }
 
     /**
@@ -180,8 +186,10 @@ public class NettyServer {
      * @return Client or null if not found
      */
     @Nullable
-    public ChannelHandlerContext getClient(String ID) {
-        return clients.get(ID);
+    public ServerHandler getClient(String ID) {
+        synchronized (clients) {
+            return clients.get(ID);
+        }
     }
 
     public static NettyServer getInstance() {

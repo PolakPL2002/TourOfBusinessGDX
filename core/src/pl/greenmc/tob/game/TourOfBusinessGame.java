@@ -5,23 +5,30 @@ import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import pl.greenmc.tob.game.netty.PacketReceivedHandler;
+import pl.greenmc.tob.game.netty.*;
 import pl.greenmc.tob.game.netty.client.NettyClient;
+import pl.greenmc.tob.game.netty.packets.ConfirmationPacket;
 import pl.greenmc.tob.game.netty.packets.Packet;
+import pl.greenmc.tob.game.netty.packets.ResponsePacket;
+import pl.greenmc.tob.game.netty.packets.game.GetPlayerPacket;
+import pl.greenmc.tob.game.netty.packets.game.GetSelfPacket;
 import pl.greenmc.tob.game.netty.server.NettyServer;
+import pl.greenmc.tob.game.netty.server.ServerHandler;
 import pl.greenmc.tob.graphics.scenes.ErrorScene;
 import pl.greenmc.tob.graphics.scenes.LoadingScene;
 import pl.greenmc.tob.graphics.scenes.menus.MainMenu;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 import static pl.greenmc.tob.TourOfBusiness.TOB;
-import static pl.greenmc.tob.game.util.Logger.error;
-import static pl.greenmc.tob.game.util.Logger.log;
+import static pl.greenmc.tob.game.util.Logger.*;
 
 public class TourOfBusinessGame {
     private final AssetManager assetManager = new AssetManager();
@@ -30,6 +37,7 @@ public class TourOfBusinessGame {
     private final ArrayList<String> texturesToLoad = new ArrayList<>();
     private int connectRetriesLeft = 3;
     private LoadState loadState = LoadState.LOADING_TEXTURES;
+    private Player self = null;
 
     public TourOfBusinessGame(boolean headless) {
         if (!headless) {
@@ -98,8 +106,43 @@ public class TourOfBusinessGame {
         } else {
             NettyServer.getInstance().start(null, new PacketReceivedHandler() {
                 @Override
-                public void onPacketReceived(Packet packet, @Nullable String identity) {
+                public void onPacketReceived(Container container, Packet packet, @Nullable String identity) {
                     log("Packet received: " + packet + " from " + identity);
+                    if (packet instanceof GetSelfPacket) {
+                        try {
+                            Player player = NettyServer.getInstance().getDatabase().getPlayer(identity);
+                            final ServerHandler client = NettyServer.getInstance().getClient(identity);
+                            if (client != null)
+                                client.send(new ResponsePacket(container.messageUUID, true, true, GetSelfPacket.generateResponse(player)), null, false);
+                        } catch (SQLException e) {
+                            warning("Failed to get player data.");
+                            warning(e);
+                        } catch (ConnectionNotAliveException e) {
+                            warning("Failed to send response packet.");
+                            warning(e);
+                        }
+                    } else if (packet instanceof GetPlayerPacket) {
+                        try {
+                            Player player = NettyServer.getInstance().getDatabase().getPlayer(((GetPlayerPacket) packet).getPlayerID());
+                            final ServerHandler client = NettyServer.getInstance().getClient(identity);
+                            if (client != null)
+                                client.send(new ResponsePacket(container.messageUUID, true, true, GetPlayerPacket.generateResponse(player)), null, false);
+                        } catch (SQLException e) {
+                            warning("Failed to get player data.");
+                            warning(e);
+                        } catch (ConnectionNotAliveException e) {
+                            warning("Failed to send response packet.");
+                            warning(e);
+                        }
+                    } else
+                        try {
+                            final ServerHandler client = NettyServer.getInstance().getClient(identity);
+                            if (client != null)
+                                client.send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
+                        } catch (ConnectionNotAliveException e) {
+                            warning("Failed to send confirmation packet.");
+                            warning(e);
+                        }
                 }
             });
         }
@@ -109,6 +152,10 @@ public class TourOfBusinessGame {
         TextureLoader.TextureParameter textureParameter = new TextureLoader.TextureParameter();
         textureParameter.genMipMaps = true;
         texturesToLoad.forEach(texture -> assetManager.load(texture, Texture.class, textureParameter));
+    }
+
+    public Player getSelf() {
+        return self;
     }
 
     public int getNumTextures() {
@@ -138,6 +185,7 @@ public class TourOfBusinessGame {
             case DONE:
                 if (this.loadState != LoadState.CONNECTING) throw new RuntimeException("Invalid progression");
                 log("Loading done!");
+                updateSelf();
                 new Timer().schedule(new TimerTask() {
                     @Override
                     public void run() {
@@ -152,6 +200,35 @@ public class TourOfBusinessGame {
         return assetManager;
     }
 
+    private void updateSelf() {
+        try {
+            NettyClient.getInstance().getClientHandler().send(new GetSelfPacket(), new SentPacket.Callback() {
+                @Override
+                public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
+                    try {
+                        if (response == null) throw new InvalidPacketException();
+                        self = GetSelfPacket.parseResponse(response);
+                        if (self == null) throw new InvalidPacketException();
+                        log("Got self data: name=" + self.getName() + ", id=" + self.getID());
+                    } catch (InvalidPacketException e) {
+                        error("Failed to get self profile!");
+                        error(e);
+                    }
+                }
+
+                @Override
+                public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
+                    //TODO Handle some reasons?
+                    warning("Failed to get self profile! Trying again... (message=" + uuid + ", reason=" + reason + ")");
+                }
+            }, true);
+        } catch (ConnectionNotAliveException e) {
+            //TODO Handle?
+            error("Failed to get self profile!");
+            error(e);
+        }
+    }
+
     private void loadSounds() {
         soundsToLoad.forEach(texture -> assetManager.load(texture, Sound.class));
         musicToLoad.forEach(texture -> assetManager.load(texture, Music.class));
@@ -161,8 +238,14 @@ public class TourOfBusinessGame {
         connectRetriesLeft--;
         NettyClient.getInstance().connect(null, null, this::connectionLost, () -> setLoadState(LoadState.DONE), new PacketReceivedHandler() {
             @Override
-            public void onPacketReceived(Packet packet, @Nullable String identity) {
+            public void onPacketReceived(Container container, Packet packet, @Nullable String identity) {
                 log("Packet received: " + packet);
+                try {
+                    NettyClient.getInstance().getClientHandler().send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
+                } catch (ConnectionNotAliveException e) {
+                    warning("Failed to send confirmation packet.");
+                    warning(e);
+                }
             }
         });
     }

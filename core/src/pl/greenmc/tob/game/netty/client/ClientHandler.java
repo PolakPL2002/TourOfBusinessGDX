@@ -155,7 +155,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                     warning("Failed to send confirmation packet.");
                     warning(e);
                 }
-                if (packetReceivedHandler != null) packetReceivedHandler.onPacketReceived(packet, null);
+                if (packetReceivedHandler != null) packetReceivedHandler.onPacketReceived(container, packet, null);
             }
         } else {
             warning("[Netty] Received data that is not a container!");
@@ -267,6 +267,19 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     }
 
     /**
+     * @param uuid Packet UUID
+     * @return {@link SentPacket} or null
+     */
+    @Nullable
+    private SentPacket getPacketByUUID(UUID uuid) {
+        synchronized (sentPackets) {
+            for (SentPacket packet : sentPackets)
+                if (packet.getUUID().equals(uuid)) return packet;
+            return null;
+        }
+    }
+
+    /**
      * Sends packet to the server
      *
      * @param packet          {@link Packet} to be sent
@@ -307,15 +320,8 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
         } else throw new ConnectionNotAliveException();
     }
 
-    /**
-     * @param uuid Packet UUID
-     * @return {@link SentPacket} or null
-     */
-    private @Nullable
-    SentPacket getPacketByUUID(UUID uuid) {
-        for (SentPacket packet : sentPackets)
-            if (packet.getUUID().equals(uuid)) return packet;
-        return null;
+    public boolean isTransmitting() {
+        return sentPackets.size() > 0;
     }
 }
 

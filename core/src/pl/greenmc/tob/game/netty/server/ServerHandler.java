@@ -42,6 +42,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     private final PacketReceivedHandler packetReceivedHandler;
     private final ArrayList<SentPacket> sentPackets = new ArrayList<>();
     private final Timer timer = new Timer();
+    private boolean alreadyRemoved;
     private boolean authenticated = false;
     private boolean challengeDataSent = false;
     private ChannelHandlerContext ctx;
@@ -51,6 +52,10 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 
     public ServerHandler(@Nullable PacketReceivedHandler packetReceivedHandler) {
         this.packetReceivedHandler = packetReceivedHandler;
+    }
+
+    public ChannelHandlerContext getCtx() {
+        return ctx;
     }
 
     @Override
@@ -116,6 +121,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 
                         if (player == null) {
                             //New player
+                            log("New player is connecting. identity=" + identity);
                             try {
                                 player = NettyServer.getInstance().getDatabase().addPlayer(identity);
                             } catch (SQLException e) {
@@ -152,7 +158,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
                             if (sig.verify(authenticationPacket.getResponse())) {
                                 log("Authenticated client " + player.getName() + ".");
                                 authenticated = true;
-                                NettyServer.getInstance().addClient(identity, ctx);
+                                NettyServer.getInstance().addClient(identity, this);
                             } else {
                                 warning("Authentication for client " + player.getName() + " (unauthenticated) failed.");
                             }
@@ -178,13 +184,8 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
                         ctx.close();
                     }
                 } else {
-                    try {
-                        send(new ConfirmationPacket(container.messageUUID, false, true), null, true);
-                    } catch (ConnectionNotAliveException e) {
-                        warning("Failed to send confirmation packet.");
-                        warning(e);
-                    }
-                    if (packetReceivedHandler != null) packetReceivedHandler.onPacketReceived(packet, identity);
+                    if (packetReceivedHandler != null)
+                        packetReceivedHandler.onPacketReceived(container, packet, identity);
                 }
             }
         } else {
@@ -263,8 +264,13 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
         super.channelInactive(ctx);
         timer.cancel();
         hbTimer.cancel();
-        NettyServer.getInstance().removeClient(identity);
+        if (!alreadyRemoved)
+            NettyServer.getInstance().removeClient(identity);
         debug("Channel inactive!");
+    }
+
+    void setAlreadyRemoved(boolean alreadyRemoved) {
+        this.alreadyRemoved = alreadyRemoved;
     }
 
     /**
