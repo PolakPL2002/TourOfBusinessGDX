@@ -140,10 +140,20 @@ public class Logger {
      */
     private static void warningL(String message) {
         String x = ANSI_RESET + ANSI_YELLOW + "[WARNING][" + new Date() + "] " + message + ANSI_RESET;
-        String x2 = ANSI_RESET + ANSI_YELLOW + "[WARNING][" + new Date() + "][" + getMethodIdentifier(1) + "] " + message + ANSI_RESET;
+        String x2 = ANSI_RESET + ANSI_YELLOW + "[WARNING][" + new Date() + "][" + getMethodIdentifier(2) + "] " + message + ANSI_RESET;
         if (LOG_LEVEL < 3)
             System.out.println(x);
-        if (LOG_LEVEL_FILE < 3 && printWriter != null) printWriter.println(x2);
+        if (LOG_LEVEL_FILE < 3 && printWriter != null) {
+            printWriter.println(x2);
+            flushLog();
+        }
+    }
+
+    /**
+     * Flushes log file
+     */
+    public static void flushLog() {
+        if (printWriter != null) printWriter.flush();
     }
 
     /**
@@ -162,10 +172,13 @@ public class Logger {
      */
     private static void errorL(String message) {
         String x = ANSI_RESET + ANSI_RED + "[ERROR][" + new Date() + "] " + message + ANSI_RESET;
-        String x2 = ANSI_RESET + ANSI_RED + "[ERROR][" + new Date() + "][" + getMethodIdentifier(1) + "] " + message + ANSI_RESET;
+        String x2 = ANSI_RESET + ANSI_RED + "[ERROR][" + new Date() + "][" + getMethodIdentifier(2) + "] " + message + ANSI_RESET;
         if (LOG_LEVEL < 4)
             System.out.println(x);
-        if (LOG_LEVEL_FILE < 4 && printWriter != null) printWriter.println(x2);
+        if (LOG_LEVEL_FILE < 4 && printWriter != null) {
+            printWriter.println(x2);
+            flushLog();
+        }
     }
 
     /**
@@ -184,10 +197,13 @@ public class Logger {
      */
     private static void debugL(String message) {
         String x = ANSI_RESET + ANSI_CYAN + "[DEBUG][" + new Date() + "] " + message + ANSI_RESET;
-        String x2 = ANSI_RESET + ANSI_CYAN + "[DEBUG][" + new Date() + "][" + getMethodIdentifier(1) + "] " + message + ANSI_RESET;
+        String x2 = ANSI_RESET + ANSI_CYAN + "[DEBUG][" + new Date() + "][" + getMethodIdentifier(2) + "] " + message + ANSI_RESET;
         if (LOG_LEVEL < 1)
             System.out.println(x);
-        if (LOG_LEVEL_FILE < 1 && printWriter != null) printWriter.println(x2);
+        if (LOG_LEVEL_FILE < 1 && printWriter != null) {
+            printWriter.println(x2);
+            flushLog();
+        }
     }
 
     /**
@@ -206,10 +222,13 @@ public class Logger {
      */
     private static void logL(String message) {
         String x = ANSI_RESET + ANSI_WHITE + "[INFO][" + new Date() + "] " + message + ANSI_RESET;
-        String x2 = ANSI_RESET + ANSI_WHITE + "[INFO][" + new Date() + "][" + getMethodIdentifier(1) + "] " + message + ANSI_RESET;
+        String x2 = ANSI_RESET + ANSI_WHITE + "[INFO][" + new Date() + "][" + getMethodIdentifier(2) + "] " + message + ANSI_RESET;
         if (LOG_LEVEL < 2)
             System.out.println(x);
-        if (LOG_LEVEL_FILE < 2 && printWriter != null) printWriter.println(x2);
+        if (LOG_LEVEL_FILE < 2 && printWriter != null) {
+            printWriter.println(x2);
+            flushLog();
+        }
     }
 
     /**
@@ -255,19 +274,15 @@ public class Logger {
      */
     private static void fatalL(String message) {
         String x = ANSI_RESET + ANSI_WHITE_BACKGROUND + ANSI_RED + "[FATAL][" + new Date() + "] " + message + ANSI_RESET;
-        String x2 = ANSI_RESET + ANSI_WHITE_BACKGROUND + ANSI_RED + "[FATAL][" + new Date() + "][" + getMethodIdentifier(1) + "] " + message + ANSI_RESET;
+        String x2 = ANSI_RESET + ANSI_WHITE_BACKGROUND + ANSI_RED + "[FATAL][" + new Date() + "][" + getMethodIdentifier(2) + "] " + message + ANSI_RESET;
         if (LOG_LEVEL < 5)
             System.out.println(x);
-        if (LOG_LEVEL_FILE < 5 && printWriter != null) printWriter.println(x2);
+        if (LOG_LEVEL_FILE < 5 && printWriter != null) {
+            printWriter.println(x2);
+            flushLog();
+        }
         flushLog();
         Runtime.getRuntime().halt(2);
-    }
-
-    /**
-     * Flushes log file
-     */
-    public static void flushLog() {
-        if (printWriter != null) printWriter.flush();
     }
 
     /**
