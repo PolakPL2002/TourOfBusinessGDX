@@ -23,6 +23,7 @@ import static pl.greenmc.tob.game.util.Logger.log;
 public class TourOfBusinessGame {
     private final AssetManager assetManager = new AssetManager();
     private final ArrayList<String> musicToLoad = new ArrayList<>();
+    private final ArrayList<Player> players = new ArrayList<>();
     private final ArrayList<String> soundsToLoad = new ArrayList<>();
     private final ArrayList<String> texturesToLoad = new ArrayList<>();
     private int connectRetriesLeft = 3;
@@ -89,6 +90,15 @@ public class TourOfBusinessGame {
             //Menu UI
             texturesToLoad.add("textures/ui/menu/background.png");
 
+            players.add(new Player("Player#1", 123456789));
+            players.add(new Player("Player#2", 123456789));
+            players.add(new Player("Player#3", 123456789));
+            players.add(new Player("Player#4", 123456789));
+            players.add(new Player("Player#5", 123456789));
+            players.add(new Player("Player#6", 123456789));
+            players.add(new Player("Player#7", 123456789));
+            players.add(new Player("Player#8", 123456789));
+
 //            musicToLoad.add("music/music1.wav");
 
             loadTextures();
@@ -101,6 +111,10 @@ public class TourOfBusinessGame {
         TextureLoader.TextureParameter textureParameter = new TextureLoader.TextureParameter();
         textureParameter.genMipMaps = true;
         texturesToLoad.forEach(texture -> assetManager.load(texture, Texture.class, textureParameter));
+    }
+
+    public Player[] getPlayers() {
+        return players.toArray(new Player[0]);
     }
 
     public int getNumTextures() {

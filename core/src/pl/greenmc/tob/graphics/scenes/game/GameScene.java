@@ -14,7 +14,7 @@ public class GameScene extends Scene implements Interactable {
     private final Map map;
     //    private SpriteBatch batch;
     private Game3D game3D;
-    private GamePlayers gamePlayers;
+    private GamePlayersStats gamePlayersStats;
     private Texture texture;
 //    private HashMap<Tile, Texture> textures = new HashMap<>();
 
@@ -29,7 +29,7 @@ public class GameScene extends Scene implements Interactable {
 
     @Override
     public void onMouseMove(int x, int y) {
-        gamePlayers.onMouseMove(x, y);
+        gamePlayersStats.onMouseMove(x, y);
 //        final HashMap<Tile, Hitbox> hitboxes = game3D.getHitboxes();
 //        texture = null;
 //        for (Tile tile : hitboxes.keySet()) {
@@ -55,7 +55,7 @@ public class GameScene extends Scene implements Interactable {
         Gdx.gl.glClearColor(GlobalTheme.backgroundColor.r, GlobalTheme.backgroundColor.g, GlobalTheme.backgroundColor.b, GlobalTheme.backgroundColor.a);
         Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         game3D.render();
-        gamePlayers.render();
+        gamePlayersStats.render();
 //        if (texture != null) {
 //            batch.begin();
 //            batch.draw(texture, 0, Gdx.graphics.getHeight(), Gdx.graphics.getWidth(), -Gdx.graphics.getHeight());
@@ -67,8 +67,8 @@ public class GameScene extends Scene implements Interactable {
     public void setup() {
         game3D = new Game3D(map);
         game3D.setup();
-        gamePlayers = new GamePlayers();
-        gamePlayers.setup();
+        gamePlayersStats = new GamePlayersStats();
+        gamePlayersStats.setup();
 //        batch = new SpriteBatch();
 //        final HashMap<Tile, Hitbox> hitboxes = game3D.getHitboxes();
 //        for (Tile tile : hitboxes.keySet()) {
@@ -79,7 +79,7 @@ public class GameScene extends Scene implements Interactable {
     @Override
     public void resize(int width, int height) {
         game3D.resize(width, height);
-        gamePlayers.resize(width, height);
+        gamePlayersStats.resize(width, height);
     }
 
     /**
@@ -88,6 +88,6 @@ public class GameScene extends Scene implements Interactable {
     @Override
     public void dispose() {
         game3D.dispose();
-        gamePlayers.dispose();
+        gamePlayersStats.dispose();
     }
 }

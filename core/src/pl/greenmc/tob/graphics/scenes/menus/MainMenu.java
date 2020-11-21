@@ -2,12 +2,9 @@ package pl.greenmc.tob.graphics.scenes.menus;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import pl.greenmc.tob.game.map.SmallerMap;
-import pl.greenmc.tob.game.map.TinyMap;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.elements.*;
 import pl.greenmc.tob.graphics.scenes.Menu;
-import pl.greenmc.tob.graphics.scenes.game.GameScene;
 
 import static pl.greenmc.tob.TourOfBusiness.TOB;
 
@@ -108,11 +105,9 @@ public class MainMenu extends Menu {
 
     private void onProfile() {
         TOB.runOnGLThread(() -> TOB.changeScene(new ProfileMenu()));
-        TOB.runOnGLThread(() -> TOB.changeScene(new GameScene(new SmallerMap())));
     }
 
     private void onSettings() {
         TOB.runOnGLThread(() -> TOB.changeScene(new SettingsMenu()));
-        TOB.runOnGLThread(() -> TOB.changeScene(new GameScene(new TinyMap())));
     }
 }

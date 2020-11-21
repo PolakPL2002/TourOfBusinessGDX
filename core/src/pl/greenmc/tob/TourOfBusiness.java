@@ -166,7 +166,6 @@ public class TourOfBusiness extends ApplicationAdapter implements InputProcessor
     public boolean scrolled(float x, float y) {
         if (currentScene != null && currentScene instanceof Interactable)
             ((Interactable) currentScene).onScroll(x, y);
-        log(x + " " + y);
         return true;
     }
 }
