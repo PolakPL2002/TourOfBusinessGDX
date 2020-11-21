@@ -2,6 +2,7 @@ package pl.greenmc.tob.graphics.scenes;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import org.jetbrains.annotations.NotNull;
@@ -74,7 +75,9 @@ public class Menu extends Scene implements Interactable {
 
     @Override
     public void setup() {
-        background = new ImageBackground(TOB.getGame().getAssetManager().get("textures/ui/menu/background.png"), Image.Align.CROP_ASPECT).setChild(new SolidBackground());
+        final Texture texture = TOB.getGame().getAssetManager().get("textures/ui/menu/background.png");
+        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        background = new ImageBackground(texture, Image.Align.CROP_ASPECT).setChild(new SolidBackground());
         background.setup();
         batch = new SpriteBatch();
         frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
