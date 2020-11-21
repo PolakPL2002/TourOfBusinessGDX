@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.map.Map;
 import pl.greenmc.tob.game.map.Tile;
 import pl.greenmc.tob.graphics.Hitbox;
+import pl.greenmc.tob.graphics.MaterialColor;
 import pl.greenmc.tob.graphics.PolygonHitbox;
 import pl.greenmc.tob.graphics.Scene;
 
@@ -29,6 +30,18 @@ class Game3D extends Scene {
     private final HashMap<Tile, Hitbox> hitboxes = new HashMap<>();
     private final ArrayList<ModelInstance> instances = new ArrayList<>();
     private final Map map;
+    private final Color[] playerColors = new Color[]{
+            MaterialColor.RED.color500(),
+            MaterialColor.BLUE.color500(),
+            MaterialColor.YELLOW.color500(),
+            MaterialColor.GREEN.color500(),
+            MaterialColor.PURPLE.color500(),
+            MaterialColor.ORANGE.color500(),
+            MaterialColor.TEAL.color300(),
+            MaterialColor.PINK.color300()};
+    private final ArrayList<ModelInstance> playerInstances = new ArrayList<>();
+    private final ArrayList<Model> playerModels = new ArrayList<>();
+    private final ArrayList<HashMap<Tile, Vector3>> playerTileLocations = new ArrayList<>();
     private final ArrayList<Model> tileModels = new ArrayList<>();
     private Model boardModel;
     private OrthographicCamera cam;
@@ -53,6 +66,10 @@ class Game3D extends Scene {
         Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         modelBatch.begin(cam);
         modelBatch.render(instances, environment);
+//        for (int i = 0; i < playerInstances.size(); i++) {
+//            playerInstances.get(i).transform.set(playerTileLocations.get(i).get(map.getTiles()[5]), new Quaternion(new Vector3(0, 0, 0), 0));
+//        }
+        modelBatch.render(playerInstances, environment);
         modelBatch.end();
     }
 
@@ -120,6 +137,10 @@ class Game3D extends Scene {
         instance = new ModelInstance(boardModel);
         instances.add(instance);
 
+        for (Color ignored : playerColors) {
+            playerTileLocations.add(new HashMap<>());
+        }
+
         int numTiles = map.getTiles().length;
         float tileSizeBase = 5.2f / (numTiles / 4.0f + 3) / 2;
 
@@ -128,8 +149,7 @@ class Game3D extends Scene {
             int idInRow = i % (numTiles / 4);
             boolean bigTile = idInRow == 0;
             int row = i / (numTiles / 4);
-            Model model;
-            model = createModel(modelBuilder, 2 * tileSizeBase - 0.0025f, 0.015f, (bigTile ? 2 * tileSizeBase : tileSizeBase) - 0.0025f,
+            Model model = createModel(modelBuilder, 2 * tileSizeBase - 0.0025f, 0.015f, (bigTile ? 2 * tileSizeBase : tileSizeBase) - 0.0025f,
                     new Material(ColorAttribute.createDiffuse(Color.GRAY)),
                     new Material(ColorAttribute.createDiffuse(Color.GRAY)),
                     new Material(TextureAttribute.createDiffuse(tile.getTexture())),
@@ -143,7 +163,35 @@ class Game3D extends Scene {
             instances.add(instance);
             tileModels.add(model);
             i++;
+            for (int j = 0; j < playerTileLocations.size(); j++) {
+                final float x = (j % 4 - 2) * (tileSizeBase / 2) + tileSizeBase / 4;
+                final float z = (float) ((Math.floor(j / 4.0f) - 1) * (tileSizeBase / 2) - (tileSizeBase / 4));
+                final float y = (tileSizeBase / 8) + 0.015f;
+                if (row % 2 == 1 && !bigTile)
+                    playerTileLocations.get(j).put(tile, getTileLocation(numTiles, tileSizeBase, idInRow, false, row).add(x, y, -z));
+                else
+                    playerTileLocations.get(j).put(tile, getTileLocation(numTiles, tileSizeBase, idInRow, bigTile, row).add(z, y, x));
+            }
         }
+//        int j = 0;
+        for (Color color : playerColors) {
+            Model model = createModel(modelBuilder, tileSizeBase / 4 - 0.005f, tileSizeBase / 8, tileSizeBase / 4 - 0.005f,
+                    new Material(ColorAttribute.createDiffuse(color)),
+                    new Material(ColorAttribute.createDiffuse(color)),
+                    new Material(ColorAttribute.createDiffuse(color)),
+                    new Material(ColorAttribute.createDiffuse(color)),
+                    new Material(ColorAttribute.createDiffuse(color)),
+                    new Material(ColorAttribute.createDiffuse(color)));
+//            for (Tile tile : map.getTiles()) {
+//                final ModelInstance e = new ModelInstance(model);
+//                e.transform.set(playerTileLocations.get(j).get(tile), new Quaternion(new Vector3(0, 0, 0), 0));
+//                playerInstances.add(e);
+//            }
+//            j++;
+            playerInstances.add(new ModelInstance(model));
+            playerModels.add(model);
+        }
+
     }
 
     @NotNull
