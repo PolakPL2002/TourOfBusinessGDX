@@ -8,7 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
 import org.jetbrains.annotations.NotNull;
-import pl.greenmc.tob.game.Player;
+import pl.greenmc.tob.game.InGamePlayer;
 import pl.greenmc.tob.graphics.Interactable;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.elements.Image;
@@ -38,23 +38,23 @@ class GamePlayersStats extends Scene implements Interactable {
     @Override
     public void render() {
         batch.begin();
-        Player[] players = TOB.getGame().getPlayers();
+        InGamePlayer[] players = new InGamePlayer[0]; //TODO
         for (int i = 0; i < Math.min(players.length, PLAYER_SLOTS); i++) {
             drawStats(positions[i], players[i], images[i], i % 4 == 1 || i % 4 == 2, i == timerOnPlayer);
         }
         batch.end();
     }
 
-    private void drawStats(@NotNull Rectangle pos, @NotNull Player player, @NotNull Image image, boolean alignRight, boolean drawTimer) {
+    private void drawStats(@NotNull Rectangle pos, @NotNull InGamePlayer player, @NotNull Image image, boolean alignRight, boolean drawTimer) {
         image.draw(pos.x, pos.y, pos.width, pos.height);
         if (alignRight) {
             layout.setText(fontNames, player.getName());
             fontNames.draw(batch, player.getName(), pos.x + pos.width - pos.height / 3 / 5 - layout.width, pos.y + pos.height - pos.height / 3 / 4);
-            layout.setText(fontMoney, player.getMoney() + "$");
-            fontMoney.draw(batch, player.getMoney() + "$", pos.x + pos.width - pos.height / 3 / 5 - layout.width, pos.y + pos.height - 2 * pos.height / 3 / 4 - pos.height / 7);
+            layout.setText(fontMoney, player.getBalance() + "$");
+            fontMoney.draw(batch, player.getBalance() + "$", pos.x + pos.width - pos.height / 3 / 5 - layout.width, pos.y + pos.height - 2 * pos.height / 3 / 4 - pos.height / 7);
         } else {
             fontNames.draw(batch, player.getName(), pos.x + pos.height / 3 / 5, pos.y + pos.height - pos.height / 3 / 4);
-            fontMoney.draw(batch, player.getMoney() + "$", pos.x + pos.height / 3 / 5, pos.y + pos.height - 2 * pos.height / 3 / 4 - pos.height / 7);
+            fontMoney.draw(batch, player.getBalance() + "$", pos.x + pos.height / 3 / 5, pos.y + pos.height - 2 * pos.height / 3 / 4 - pos.height / 7);
         }
         if (drawTimer) {
             progressBar.draw(pos.x + pos.width * 0.1f, pos.y + pos.height * 0.45f, pos.width * 0.8f, pos.height * 0.1f);

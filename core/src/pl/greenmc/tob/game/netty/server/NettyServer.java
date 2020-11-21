@@ -21,6 +21,8 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.jetbrains.annotations.Nullable;
+import pl.greenmc.tob.game.netty.PacketReceivedHandler;
+import pl.greenmc.tob.game.server.Database;
 
 import javax.net.ssl.SSLException;
 import java.io.File;
@@ -40,14 +42,27 @@ import static pl.greenmc.tob.game.util.Logger.*;
  */
 public class NettyServer {
     private final static NettyServer singleton = new NettyServer();
-    private final int PORT = 2137;
     private final File certChainFile = new File("certificate/cert.crt");
     private final File certKeyFile = new File("certificate/cert.key");
     private final HashMap<String, ChannelHandlerContext> clients = new HashMap<>();
+    private Database database;
+    private int port = 2137;
     private SslContext sslCtx = null;
 
     private NettyServer() {
 
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public Database getDatabase() {
+        return database;
     }
 
     /**
@@ -55,7 +70,8 @@ public class NettyServer {
      *
      * @param onInterrupted Called when server is interrupted
      */
-    public void start(Runnable onInterrupted) {
+    public void start(@Nullable Runnable onInterrupted, @Nullable final PacketReceivedHandler packetReceivedHandler) {
+        if (database == null) database = new Database();
         if (sslCtx == null) loadCertificate();
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -71,13 +87,13 @@ public class NettyServer {
                                     sslCtx.newHandler(ch.alloc()),
                                     new ObjectEncoder(),
                                     new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
-                                    new ServerHandler());
+                                    new ServerHandler(packetReceivedHandler));
                         }
                     });
             // Bind and start to accept incoming connections.
             try {
                 log("Starting server...");
-                b.bind(PORT).sync().channel().closeFuture().sync();
+                b.bind(port).sync().channel().closeFuture().sync();
             } catch (InterruptedException e) {
                 if (onInterrupted != null) onInterrupted.run();
             }

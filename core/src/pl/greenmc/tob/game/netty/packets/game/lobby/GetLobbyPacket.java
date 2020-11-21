@@ -1,26 +1,22 @@
-package pl.greenmc.tob.game.netty.packets;
+package pl.greenmc.tob.game.netty.packets.game.lobby;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import pl.greenmc.tob.game.Lobby;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
+import pl.greenmc.tob.game.netty.packets.Packet;
 
-import java.util.Base64;
-
-/**
- * Packet used to identify server
- */
-public class HelloPacket extends Packet {
+public class GetLobbyPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "HELLO";
-    private final String clientID;
+    public static String TYPE = "GAME_LOBBY_GET_LOBBY";
+    private final int lobbyID;
 
-    /**
-     * @param clientID Client ID
-     */
-    public HelloPacket(String clientID) {
-        this.clientID = clientID;
+    public GetLobbyPacket(int lobbyID) {
+        this.lobbyID = lobbyID;
     }
 
     /**
@@ -29,7 +25,7 @@ public class HelloPacket extends Packet {
      * @param objectToDecode Object representing packet to be decoded
      * @throws InvalidPacketException Thrown on decoding error
      */
-    public HelloPacket(JsonObject objectToDecode) throws InvalidPacketException {
+    public GetLobbyPacket(JsonObject objectToDecode) throws InvalidPacketException {
         super(objectToDecode);
         if (objectToDecode.has("type")) {
             //Check type
@@ -37,8 +33,8 @@ public class HelloPacket extends Packet {
                 JsonElement type = objectToDecode.get("type");
                 if (type != null && type.isJsonPrimitive() && type.getAsString().equalsIgnoreCase(TYPE)) {
                     //Decode values
-                    JsonElement clientID = objectToDecode.get("clientID");
-                    if (clientID != null && clientID.isJsonPrimitive()) this.clientID = clientID.getAsString();
+                    JsonElement lobbyID = objectToDecode.get("lobbyID");
+                    if (lobbyID != null && lobbyID.isJsonPrimitive()) this.lobbyID = lobbyID.getAsInt();
                     else throw new InvalidPacketException();
 
                 } else throw new InvalidPacketException();
@@ -46,13 +42,6 @@ public class HelloPacket extends Packet {
                 throw new InvalidPacketException();
             }
         } else throw new InvalidPacketException();
-    }
-
-    /**
-     * @return Client ID
-     */
-    public String getClientID() {
-        return clientID;
     }
 
     /**
@@ -64,17 +53,14 @@ public class HelloPacket extends Packet {
     public JsonObject encode() {
         JsonObject out = new JsonObject();
         out.addProperty("type", TYPE);
-        out.addProperty("clientID", clientID);
+        out.addProperty("lobbyID", lobbyID);
         return out;
     }
 
-    /**
-     * @param challengeData Challenge data
-     * @return Response
-     */
-    public static JsonObject generateResponse(byte[] challengeData) {
+    @NotNull
+    public static JsonObject generateResponse(@NotNull Lobby lobby) {
         JsonObject response = new JsonObject();
-        response.addProperty("challenge", Base64.getEncoder().encodeToString(challengeData));
+        response.add("lobby", lobby.toJsonObject());
         return response;
     }
 
@@ -83,14 +69,13 @@ public class HelloPacket extends Packet {
      * @return Response data
      * @throws InvalidPacketException On invalid data provided
      */
-    public static HelloResponse parseResponse(JsonObject response) throws InvalidPacketException {
+    @Nullable
+    public static Lobby parseResponse(@NotNull JsonObject response) throws InvalidPacketException {
         //Decode values
-        JsonElement challenge = response.get("challenge");
-        byte[] challengeData;
-        if (challenge != null && challenge.isJsonPrimitive())
-            challengeData = Base64.getDecoder().decode(challenge.getAsString());
-        else throw new InvalidPacketException();
-
-        return new HelloResponse(challengeData);
+        JsonElement lobby = response.get("lobby");
+        if (lobby == null) return null;
+        if (!lobby.isJsonObject())
+            throw new InvalidPacketException();
+        return new Lobby(lobby.getAsJsonObject());
     }
 }

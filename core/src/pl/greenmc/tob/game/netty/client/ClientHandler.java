@@ -6,10 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
-import pl.greenmc.tob.game.netty.Container;
-import pl.greenmc.tob.game.netty.InvalidPacketException;
-import pl.greenmc.tob.game.netty.SentPacket;
+import pl.greenmc.tob.game.netty.*;
 import pl.greenmc.tob.game.netty.packets.*;
 
 import java.io.*;
@@ -31,15 +28,17 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
      */
     public final int TIMEOUT = 2500;
     private final Timer hbTimer = new Timer();
+    private final Runnable onAuthenticated;
+    private final PacketReceivedHandler packetReceivedHandler;
     private final ArrayList<SentPacket> sentPackets = new ArrayList<>();
     private final Timer timer = new Timer();
     private boolean authenticated = false;
     private ChannelHandlerContext ctx;
     private KeyPair keyPair = null;
-    private final Runnable onAuthenticated;
 
-    public ClientHandler(Runnable onAuthenticated) {
+    public ClientHandler(@Nullable Runnable onAuthenticated, @Nullable PacketReceivedHandler packetReceivedHandler) {
         this.onAuthenticated = onAuthenticated;
+        this.packetReceivedHandler = packetReceivedHandler;
     }
 
     @Override
@@ -61,8 +60,8 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                         return;
                     }
                     try {
-                        final HelloPacketResponse helloPacketResponse = HelloPacket.parseResponse(response);
-                        final byte[] challengeData = helloPacketResponse.getChallengeData();
+                        final HelloResponse helloResponse = HelloPacket.parseResponse(response);
+                        final byte[] challengeData = helloResponse.getChallengeData();
                         Signature sig = Signature.getInstance("SHA512withRSA");
                         sig.initSign(getPrivateKey());
                         sig.update(challengeData);
@@ -72,7 +71,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                             public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
                                 log("[Netty] Authenticated!");
                                 authenticated = true;
-                                onAuthenticated.run();
+                                if (onAuthenticated != null) onAuthenticated.run();
                             }
 
                             @Override
@@ -123,8 +122,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
             //Parse class
             Object o;
             try {
-                final JsonObject jsonObject = JsonParser.parseString(container.packetData)
-                        .getAsJsonObject();
+                final JsonObject jsonObject = JsonParser.parseString(container.packetData).getAsJsonObject();
                 final Class<?> loadClass = Packet.class.getClassLoader().loadClass(container.packetClass);
                 final Constructor<?> constructor = loadClass.getConstructor(JsonObject.class);
                 o = constructor.newInstance(jsonObject);
@@ -134,27 +132,12 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
             }
             if (!(o instanceof Packet)) return;
             Packet packet = (Packet) o;
-            if (packet instanceof ResponsePacket) {
-                final ResponsePacket responsePacket = (ResponsePacket) packet;
-                SentPacket sentPacket = getPacketByUUID(responsePacket.getUUID());
-                if (sentPacket != null) {
-                    if (responsePacket.isSuccess())
-                        sentPacket.success(responsePacket.getResponse());
-                    else if (!responsePacket.isAuthenticated())
-                        sentPacket.failure(SentPacket.FailureReason.NOT_AUTHENTICATED);
-                    else if (sentPacket.isResendOnFailure()) {
-                        try {
-                            send(sentPacket.getPacket(), sentPacket.getCallback(), sentPacket.isResendOnFailure(), sentPacket.getUUID());
-                        } catch (ConnectionNotAliveException e) {
-                            e.printStackTrace();
-                        }
-                    } else sentPacket.failure(SentPacket.FailureReason.CORRUPTED_RESPONSE);
-                }
-            } else if (packet instanceof ConfirmationPacket) {
+            if (packet instanceof ConfirmationPacket) {
                 final ConfirmationPacket confirmationPacket = (ConfirmationPacket) packet;
                 SentPacket sentPacket = getPacketByUUID(confirmationPacket.getUUID());
                 if (sentPacket != null) {
-                    if (confirmationPacket.isSuccess()) sentPacket.success(null);
+                    if (confirmationPacket.isSuccess())
+                        sentPacket.success(confirmationPacket instanceof ResponsePacket ? ((ResponsePacket) confirmationPacket).getResponse() : null);
                     else if (!confirmationPacket.isAuthenticated())
                         sentPacket.failure(SentPacket.FailureReason.NOT_AUTHENTICATED);
                     else if (sentPacket.isResendOnFailure()) {
@@ -166,7 +149,13 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                     } else sentPacket.failure(SentPacket.FailureReason.CORRUPTED_RESPONSE);
                 }
             } else {
-                //TODO Raise event
+                try {
+                    send(new ConfirmationPacket(container.messageUUID, false, true), null, true);
+                } catch (ConnectionNotAliveException e) {
+                    warning("Failed to send confirmation packet.");
+                    warning(e);
+                }
+                if (packetReceivedHandler != null) packetReceivedHandler.onPacketReceived(packet, null);
             }
         } else {
             warning("[Netty] Received data that is not a container!");

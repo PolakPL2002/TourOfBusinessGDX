@@ -3,13 +3,13 @@ package pl.greenmc.tob.game.netty.packets;
 /**
  * Response for {@link HelloPacket}
  */
-public class HelloPacketResponse {
+public class HelloResponse {
     private final byte[] challengeData;
 
     /**
      * @param challengeData Challenge data
      */
-    public HelloPacketResponse(byte[] challengeData) {
+    public HelloResponse(byte[] challengeData) {
         this.challengeData = challengeData;
     }
 

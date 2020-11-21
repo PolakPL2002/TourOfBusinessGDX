@@ -6,7 +6,10 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import pl.greenmc.tob.game.netty.PacketReceivedHandler;
 import pl.greenmc.tob.game.netty.client.NettyClient;
+import pl.greenmc.tob.game.netty.packets.Packet;
 import pl.greenmc.tob.game.netty.server.NettyServer;
 import pl.greenmc.tob.graphics.scenes.ErrorScene;
 import pl.greenmc.tob.graphics.scenes.LoadingScene;
@@ -23,7 +26,6 @@ import static pl.greenmc.tob.game.util.Logger.log;
 public class TourOfBusinessGame {
     private final AssetManager assetManager = new AssetManager();
     private final ArrayList<String> musicToLoad = new ArrayList<>();
-    private final ArrayList<Player> players = new ArrayList<>();
     private final ArrayList<String> soundsToLoad = new ArrayList<>();
     private final ArrayList<String> texturesToLoad = new ArrayList<>();
     private int connectRetriesLeft = 3;
@@ -36,7 +38,7 @@ public class TourOfBusinessGame {
 
             //Logo
             texturesToLoad.add("test.png");
-            texturesToLoad.add("logo.png");
+//            texturesToLoad.add("logo.png");
 
             //Default map
             texturesToLoad.add("textures/maps/default/board.png");
@@ -90,20 +92,16 @@ public class TourOfBusinessGame {
             //Menu UI
             texturesToLoad.add("textures/ui/menu/background.png");
 
-            players.add(new Player("Player#1", 123456789));
-            players.add(new Player("Player#2", 123456789));
-            players.add(new Player("Player#3", 123456789));
-            players.add(new Player("Player#4", 123456789));
-            players.add(new Player("Player#5", 123456789));
-            players.add(new Player("Player#6", 123456789));
-            players.add(new Player("Player#7", 123456789));
-            players.add(new Player("Player#8", 123456789));
-
 //            musicToLoad.add("music/music1.wav");
 
             loadTextures();
         } else {
-            NettyServer.getInstance().start(null);
+            NettyServer.getInstance().start(null, new PacketReceivedHandler() {
+                @Override
+                public void onPacketReceived(Packet packet, @Nullable String identity) {
+                    log("Packet received: " + packet + " from " + identity);
+                }
+            });
         }
     }
 
@@ -111,10 +109,6 @@ public class TourOfBusinessGame {
         TextureLoader.TextureParameter textureParameter = new TextureLoader.TextureParameter();
         textureParameter.genMipMaps = true;
         texturesToLoad.forEach(texture -> assetManager.load(texture, Texture.class, textureParameter));
-    }
-
-    public Player[] getPlayers() {
-        return players.toArray(new Player[0]);
     }
 
     public int getNumTextures() {
@@ -165,7 +159,12 @@ public class TourOfBusinessGame {
 
     private void connect() {
         connectRetriesLeft--;
-        NettyClient.getInstance().connect(null, null, this::connectionLost, () -> setLoadState(LoadState.DONE));
+        NettyClient.getInstance().connect(null, null, this::connectionLost, () -> setLoadState(LoadState.DONE), new PacketReceivedHandler() {
+            @Override
+            public void onPacketReceived(Packet packet, @Nullable String identity) {
+                log("Packet received: " + packet);
+            }
+        });
     }
 
     private void connectionLost() {

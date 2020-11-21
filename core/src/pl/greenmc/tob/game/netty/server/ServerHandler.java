@@ -5,8 +5,10 @@ import com.google.gson.JsonParser;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.jetbrains.annotations.Nullable;
+import pl.greenmc.tob.game.Player;
 import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
 import pl.greenmc.tob.game.netty.Container;
+import pl.greenmc.tob.game.netty.PacketReceivedHandler;
 import pl.greenmc.tob.game.netty.SentPacket;
 import pl.greenmc.tob.game.netty.packets.*;
 
@@ -15,6 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.sql.SQLException;
 import java.util.*;
 
 import static pl.greenmc.tob.game.util.Logger.*;
@@ -36,13 +39,19 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
      */
     public final int TIMEOUT = 2500;
     private final byte[] challengeData = new byte[CHALLENGE_LENGTH];
+    private final PacketReceivedHandler packetReceivedHandler;
     private final ArrayList<SentPacket> sentPackets = new ArrayList<>();
     private final Timer timer = new Timer();
     private boolean authenticated = false;
     private boolean challengeDataSent = false;
     private ChannelHandlerContext ctx;
     private Timer hbTimer = new Timer();
-    private String identity = "";
+    private String identity;
+    private Player player;
+
+    public ServerHandler(@Nullable PacketReceivedHandler packetReceivedHandler) {
+        this.packetReceivedHandler = packetReceivedHandler;
+    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
@@ -71,30 +80,18 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
             }
             if (!(o instanceof Packet)) return;
             Packet packet = (Packet) o;
-            if (packet instanceof ResponsePacket) {
-                final ResponsePacket responsePacket = (ResponsePacket) packet;
-                SentPacket sentPacket = getPacketByUUID(responsePacket.getUUID());
-                if (sentPacket != null) {
-                    if (responsePacket.isSuccess())
-                        sentPacket.success(responsePacket.getResponse());
-                    else if (sentPacket.isResendOnFailure()) {
-                        try {
-                            send(sentPacket.getPacket(), sentPacket.getCallback(), sentPacket.isResendOnFailure(), sentPacket.getUUID());
-                        } catch (ConnectionNotAliveException e) {
-                            e.printStackTrace();
-                        }
-                    } else sentPacket.failure(SentPacket.FailureReason.CORRUPTED_RESPONSE);
-                }
-            } else if (packet instanceof ConfirmationPacket) {
+            if (packet instanceof ConfirmationPacket) {
                 final ConfirmationPacket confirmationPacket = (ConfirmationPacket) packet;
                 SentPacket sentPacket = getPacketByUUID(confirmationPacket.getUUID());
                 if (sentPacket != null) {
-                    if (confirmationPacket.isSuccess()) sentPacket.success(null);
+                    if (confirmationPacket.isSuccess())
+                        sentPacket.success(confirmationPacket instanceof ResponsePacket ? ((ResponsePacket) confirmationPacket).getResponse() : null);
                     else if (sentPacket.isResendOnFailure()) {
                         try {
                             send(sentPacket.getPacket(), sentPacket.getCallback(), sentPacket.isResendOnFailure(), sentPacket.getUUID());
                         } catch (ConnectionNotAliveException e) {
-                            e.printStackTrace();
+                            warning("Failed to resend packet.");
+                            warning(e);
                         }
                     } else sentPacket.failure(SentPacket.FailureReason.CORRUPTED_RESPONSE);
                 }
@@ -107,17 +104,37 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
                         //Send challenge to the client
                         challengeDataSent = true;
                         HelloPacket helloPacket = (HelloPacket) packet;
-                        //TODO Load client details from database
                         identity = helloPacket.getClientID();
-                        log("Authentication of " + identity + " started.");
+
+                        try {
+                            player = NettyServer.getInstance().getDatabase().getPlayer(identity);
+                        } catch (SQLException e) {
+                            error("An error occurred while reading client data from database!");
+                            error(e);
+                            return;
+                        }
+
+                        if (player == null) {
+                            //New player
+                            try {
+                                player = NettyServer.getInstance().getDatabase().addPlayer(identity);
+                            } catch (SQLException e) {
+                                error("An error occurred while adding client data to database!");
+                                error(e);
+                                return;
+                            }
+                        }
+
+                        log("Authentication of " + player.getName() + " (unauthenticated) started.");
                         new SecureRandom().nextBytes(challengeData);
                         try {
                             send(new ResponsePacket(container.messageUUID, true, authenticated, HelloPacket.generateResponse(challengeData)), null, true);
                         } catch (ConnectionNotAliveException e) {
-                            e.printStackTrace();
+                            warning("Failed to send confirmation packet.");
+                            warning(e);
                             return;
                         }
-                        log("Challenge data sent to " + identity + ".");
+                        log("Challenge data sent to " + player.getName() + " (unauthenticated).");
                     } else if (challengeDataSent && packet instanceof AuthenticationPacket) {
                         AuthenticationPacket authenticationPacket = (AuthenticationPacket) packet;
                         if (!Arrays.equals(challengeData, authenticationPacket.getChallenge())) {
@@ -133,16 +150,17 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
                             sig.initVerify(publicKey);
                             sig.update(challengeData);
                             if (sig.verify(authenticationPacket.getResponse())) {
-                                log("Authenticated client " + identity + ".");
+                                log("Authenticated client " + player.getName() + ".");
                                 authenticated = true;
                                 NettyServer.getInstance().addClient(identity, ctx);
                             } else {
-                                warning("Authentication for client " + identity + " failed.");
+                                warning("Authentication for client " + player.getName() + " (unauthenticated) failed.");
                             }
                             try {
                                 send(new ConfirmationPacket(container.messageUUID, authenticated, authenticated), null, true);
                             } catch (ConnectionNotAliveException e) {
-                                e.printStackTrace();
+                                warning("Failed to send confirmation packet.");
+                                warning(e);
                             }
                             if (!authenticated) ctx.close();
                         } catch (SignatureException | NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException e) {
@@ -150,23 +168,29 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
                             ctx.close();
                         }
                     } else {
-                        warning("Received non-authentication packet before authentication! (" + packet.getClass().getCanonicalName() + ")");
+                        warning("Received non-authentication packet before authentication from client " + player.getName() + " (unauthenticated)! (" + packet.getClass().getCanonicalName() + ")");
                         try {
                             send(new ConfirmationPacket(container.messageUUID, false, authenticated), null, true);
                         } catch (ConnectionNotAliveException e) {
-                            e.printStackTrace();
+                            warning("Failed to send confirmation packet.");
+                            warning(e);
                         }
                         ctx.close();
                     }
                 } else {
-                    //TODO Raise event
+                    try {
+                        send(new ConfirmationPacket(container.messageUUID, false, true), null, true);
+                    } catch (ConnectionNotAliveException e) {
+                        warning("Failed to send confirmation packet.");
+                        warning(e);
+                    }
+                    if (packetReceivedHandler != null) packetReceivedHandler.onPacketReceived(packet, identity);
                 }
             }
         } else {
             warning("[Netty] Received data that is not a container!");
         }
     }
-
 
     /**
      * Sends packet to the client
@@ -212,7 +236,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
      */
     private void heartbeatTimeout() {
         //TODO Raise some event
-        warning("Client " + identity + " timed out!");
+        warning("Client " + player.getName() + (authenticated ? "" : " (unauthenticated)") + " timed out!");
         ctx.close();
     }
 
@@ -285,7 +309,6 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
             throw new ConnectionNotAliveException();
         }
     }
-
 
     /**
      * @param uuid Packet UUID

@@ -14,6 +14,7 @@ import io.netty.handler.codec.serialization.ObjectEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.FingerprintTrustManagerFactory;
+import pl.greenmc.tob.game.netty.PacketReceivedHandler;
 
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLException;
@@ -28,15 +29,30 @@ import static pl.greenmc.tob.game.util.Logger.warning;
  */
 public class NettyClient {
     private final static NettyClient singleton = new NettyClient();
-    private final String HOST = "127.0.0.1";
-    private final int PORT = 2137;
     private final String[] acceptedCertificates = new String[]{};
     private ClientHandler clientHandler;
     private boolean connected = false;
-    //    private final Timer reconnectTimer = new Timer();
+    private String host = "127.0.0.1";
+    private int port = 2137;
     private boolean sslError = false;
 
     private NettyClient() {
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 
     /**
@@ -72,7 +88,7 @@ public class NettyClient {
      *
      * @param onSSLError Runnable run on SSL error
      */
-    public void connect(@Nullable final Runnable onSSLError, @Nullable final Runnable onConnect, @Nullable final Runnable onDisconnect, @Nullable final Runnable onAuthenticated) {
+    public void connect(@Nullable final Runnable onSSLError, @Nullable final Runnable onConnect, @Nullable final Runnable onDisconnect, @Nullable final Runnable onAuthenticated, @Nullable final PacketReceivedHandler packetReceivedHandler) {
         // Start the connection attempt.
         new Thread(() -> {
             EventLoopGroup group = new NioEventLoopGroup();
@@ -110,10 +126,10 @@ public class NettyClient {
                             @Override
                             public void initChannel(SocketChannel ch) {
                                 ChannelPipeline p = ch.pipeline();
-                                clientHandler = new ClientHandler(onAuthenticated);
+                                clientHandler = new ClientHandler(onAuthenticated, packetReceivedHandler);
                                 p.addLast();
                                 p.addLast(
-                                        sslCtx.newHandler(ch.alloc(), HOST, PORT),
+                                        sslCtx.newHandler(ch.alloc(), host, port),
                                         new ObjectEncoder(),
                                         new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
                                         clientHandler);
@@ -121,7 +137,7 @@ public class NettyClient {
                         });
                 log("[Netty] Connecting...");
                 try {
-                    ChannelFuture sync = b.connect(HOST, PORT).sync();
+                    ChannelFuture sync = b.connect(host, port).sync();
                     log("[Netty] Connected!");
                     connected = true;
                     if (onConnect != null) onConnect.run();
@@ -134,12 +150,6 @@ public class NettyClient {
                 group.shutdownGracefully();
                 warning("[Netty] Client disconnected!");
                 if (onDisconnect != null) onDisconnect.run();
-//                reconnectTimer.schedule(new TimerTask() {
-//                    @Override
-//                    public void run() {
-//                        connect(null);
-//                    }
-//                }, 3000);
             }
         }).start();
         log("[Netty] Client started!");
