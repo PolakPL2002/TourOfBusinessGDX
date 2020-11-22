@@ -50,6 +50,10 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     private String identity;
     private Player player;
 
+    public Player getPlayer() {
+        return player;
+    }
+
     public ServerHandler(@Nullable PacketReceivedHandler packetReceivedHandler) {
         this.packetReceivedHandler = packetReceivedHandler;
     }

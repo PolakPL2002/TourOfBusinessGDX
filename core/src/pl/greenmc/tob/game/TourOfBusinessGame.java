@@ -12,16 +12,11 @@ import pl.greenmc.tob.game.netty.*;
 import pl.greenmc.tob.game.netty.client.NettyClient;
 import pl.greenmc.tob.game.netty.packets.ConfirmationPacket;
 import pl.greenmc.tob.game.netty.packets.Packet;
-import pl.greenmc.tob.game.netty.packets.ResponsePacket;
-import pl.greenmc.tob.game.netty.packets.game.GetPlayerPacket;
 import pl.greenmc.tob.game.netty.packets.game.GetSelfPacket;
-import pl.greenmc.tob.game.netty.server.NettyServer;
-import pl.greenmc.tob.game.netty.server.ServerHandler;
 import pl.greenmc.tob.graphics.scenes.ErrorScene;
 import pl.greenmc.tob.graphics.scenes.LoadingScene;
 import pl.greenmc.tob.graphics.scenes.menus.MainMenu;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -35,6 +30,7 @@ public class TourOfBusinessGame {
     private final ArrayList<String> musicToLoad = new ArrayList<>();
     private final ArrayList<String> soundsToLoad = new ArrayList<>();
     private final ArrayList<String> texturesToLoad = new ArrayList<>();
+    private TourOfBusinessServer tourOfBusinessServer = null;
     private int connectRetriesLeft = 3;
     private LoadState loadState = LoadState.LOADING_TEXTURES;
     private Player self = null;
@@ -104,48 +100,12 @@ public class TourOfBusinessGame {
 
             loadTextures();
         } else {
-            NettyServer.getInstance().start(null, new PacketReceivedHandler() {
-                @Override
-                public void onPacketReceived(Container container, Packet packet, @Nullable String identity) {
-                    log("Packet received: " + packet + " from " + identity);
-                    if (packet instanceof GetSelfPacket) {
-                        try {
-                            Player player = NettyServer.getInstance().getDatabase().getPlayer(identity);
-                            final ServerHandler client = NettyServer.getInstance().getClient(identity);
-                            if (client != null)
-                                client.send(new ResponsePacket(container.messageUUID, true, true, GetSelfPacket.generateResponse(player)), null, false);
-                        } catch (SQLException e) {
-                            warning("Failed to get player data.");
-                            warning(e);
-                        } catch (ConnectionNotAliveException e) {
-                            warning("Failed to send response packet.");
-                            warning(e);
-                        }
-                    } else if (packet instanceof GetPlayerPacket) {
-                        try {
-                            Player player = NettyServer.getInstance().getDatabase().getPlayer(((GetPlayerPacket) packet).getPlayerID());
-                            final ServerHandler client = NettyServer.getInstance().getClient(identity);
-                            if (client != null)
-                                client.send(new ResponsePacket(container.messageUUID, true, true, GetPlayerPacket.generateResponse(player)), null, false);
-                        } catch (SQLException e) {
-                            warning("Failed to get player data.");
-                            warning(e);
-                        } catch (ConnectionNotAliveException e) {
-                            warning("Failed to send response packet.");
-                            warning(e);
-                        }
-                    } else
-                        try {
-                            final ServerHandler client = NettyServer.getInstance().getClient(identity);
-                            if (client != null)
-                                client.send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
-                        } catch (ConnectionNotAliveException e) {
-                            warning("Failed to send confirmation packet.");
-                            warning(e);
-                        }
-                }
-            });
+            tourOfBusinessServer = new TourOfBusinessServer();
         }
+    }
+
+    public TourOfBusinessServer getServer() {
+        return tourOfBusinessServer;
     }
 
     private void loadTextures() {

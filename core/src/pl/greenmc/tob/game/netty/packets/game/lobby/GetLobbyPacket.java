@@ -44,6 +44,10 @@ public class GetLobbyPacket extends Packet {
         } else throw new InvalidPacketException();
     }
 
+    public int getLobbyID() {
+        return lobbyID;
+    }
+
     /**
      * Encodes packet for network transmission
      *
@@ -58,9 +62,12 @@ public class GetLobbyPacket extends Packet {
     }
 
     @NotNull
-    public static JsonObject generateResponse(@NotNull Lobby lobby) {
+    public static JsonObject generateResponse(@Nullable Lobby lobby) {
         JsonObject response = new JsonObject();
-        response.add("lobby", lobby.toJsonObject());
+        if (lobby == null)
+            response.add("lobby", null);
+        else
+            response.add("lobby", lobby.toJsonObject());
         return response;
     }
 

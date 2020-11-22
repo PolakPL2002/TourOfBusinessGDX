@@ -13,6 +13,10 @@ public class JoinLobbyPacket extends Packet {
     public static String TYPE = "GAME_LOBBY_JOIN_LOBBY";
     private final int lobbyID;
 
+    public int getLobbyID() {
+        return lobbyID;
+    }
+
     public JoinLobbyPacket(int lobbyID) {
         this.lobbyID = lobbyID;
     }
