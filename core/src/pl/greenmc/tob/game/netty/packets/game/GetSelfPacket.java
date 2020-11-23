@@ -67,8 +67,10 @@ public class GetSelfPacket extends Packet {
     public static Player parseResponse(@NotNull JsonObject response) throws InvalidPacketException {
         //Decode values
         JsonElement player = response.get("player");
-        if (player == null) return null;
-        if (!player.isJsonObject())
+        if (player == null)
+            throw new InvalidPacketException();
+        else if (player.isJsonNull()) return null;
+        else if (!player.isJsonObject())
             throw new InvalidPacketException();
         return new Player(player.getAsJsonObject());
     }

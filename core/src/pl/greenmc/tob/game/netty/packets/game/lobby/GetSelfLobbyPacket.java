@@ -2,9 +2,6 @@ package pl.greenmc.tob.game.netty.packets.game.lobby;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import pl.greenmc.tob.game.Lobby;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.packets.Packet;
 
@@ -49,30 +46,5 @@ public class GetSelfLobbyPacket extends Packet {
         JsonObject out = new JsonObject();
         out.addProperty("type", TYPE);
         return out;
-    }
-
-    @NotNull
-    public static JsonObject generateResponse(@Nullable Lobby lobby) {
-        JsonObject response = new JsonObject();
-        if (lobby == null)
-            response.add("lobby", null);
-        else
-            response.add("lobby", lobby.toJsonObject());
-        return response;
-    }
-
-    /**
-     * @param response Response to be parsed
-     * @return Response data
-     * @throws InvalidPacketException On invalid data provided
-     */
-    @Nullable
-    public static Lobby parseResponse(@NotNull JsonObject response) throws InvalidPacketException {
-        //Decode values
-        JsonElement lobby = response.get("lobby");
-        if (lobby == null) return null;
-        if (!lobby.isJsonObject())
-            throw new InvalidPacketException();
-        return new Lobby(lobby.getAsJsonObject());
     }
 }

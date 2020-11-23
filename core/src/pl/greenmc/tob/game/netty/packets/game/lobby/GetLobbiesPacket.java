@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.Lobby;
+import pl.greenmc.tob.game.Player;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.packets.Packet;
 
@@ -53,13 +54,18 @@ public class GetLobbiesPacket extends Packet {
     }
 
     @NotNull
-    public static JsonObject generateResponse(@NotNull Lobby[] lobbies) {
+    public static JsonObject generateResponse(@NotNull Lobby[] lobbies, @NotNull Player[] players) {
         JsonObject response = new JsonObject();
         JsonArray array = new JsonArray();
         for (Lobby lobby : lobbies) {
             array.add(lobby.toJsonObject());
         }
         response.add("lobbies", array);
+        array = new JsonArray();
+        for (Player player : players) {
+            array.add(player.toJsonObject());
+        }
+        response.add("players", array);
         return response;
     }
 
@@ -75,7 +81,7 @@ public class GetLobbiesPacket extends Packet {
         JsonElement lobbies = response.get("lobbies");
         if (lobbies == null || !lobbies.isJsonArray())
             throw new InvalidPacketException();
-        final JsonArray jsonArray = lobbies.getAsJsonArray();
+        JsonArray jsonArray = lobbies.getAsJsonArray();
         Lobby[] out = new Lobby[jsonArray.size()];
         for (int i = 0; i < out.length; i++) {
             final JsonElement jsonElement = jsonArray.get(i);
@@ -84,6 +90,18 @@ public class GetLobbiesPacket extends Packet {
             out[i] = new Lobby(jsonElement.getAsJsonObject());
         }
 
-        return new GetLobbiesResponse(out);
+        JsonElement players = response.get("players");
+        if (players == null || !players.isJsonArray())
+            throw new InvalidPacketException();
+        jsonArray = players.getAsJsonArray();
+        Player[] outPlayers = new Player[jsonArray.size()];
+        for (int i = 0; i < out.length; i++) {
+            final JsonElement jsonElement = jsonArray.get(i);
+            if (jsonElement == null || !jsonElement.isJsonObject())
+                throw new InvalidPacketException();
+            outPlayers[i] = new Player(jsonElement.getAsJsonObject());
+        }
+
+        return new GetLobbiesResponse(out, outPlayers);
     }
 }

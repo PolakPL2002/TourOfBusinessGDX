@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.map.Map;
 import pl.greenmc.tob.game.map.Tile;
 import pl.greenmc.tob.graphics.Hitbox;
-import pl.greenmc.tob.graphics.MaterialColor;
 import pl.greenmc.tob.graphics.PolygonHitbox;
 import pl.greenmc.tob.graphics.Scene;
 
@@ -25,20 +24,12 @@ import java.util.HashMap;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
+import static pl.greenmc.tob.graphics.GlobalTheme.playerColors;
 
 class Game3D extends Scene {
     private final HashMap<Tile, Hitbox> hitboxes = new HashMap<>();
     private final ArrayList<ModelInstance> instances = new ArrayList<>();
     private final Map map;
-    private final Color[] playerColors = new Color[]{
-            MaterialColor.RED.color500(),
-            MaterialColor.BLUE.color500(),
-            MaterialColor.YELLOW.color500(),
-            MaterialColor.GREEN.color500(),
-            MaterialColor.PURPLE.color500(),
-            MaterialColor.ORANGE.color500(),
-            MaterialColor.TEAL.color300(),
-            MaterialColor.PINK.color300()};
     private final ArrayList<ModelInstance> playerInstances = new ArrayList<>();
     private final ArrayList<Model> playerModels = new ArrayList<>();
     private final ArrayList<HashMap<Tile, Vector3>> playerTileLocations = new ArrayList<>();
@@ -95,8 +86,6 @@ class Game3D extends Scene {
             int idInRow = i % (numTiles / 4);
             boolean bigTile = idInRow == 0;
             int row = i / (numTiles / 4);
-
-            float offset = tileSizeBase * numTiles / 4 - idInRow * tileSizeBase * 2;
 
             final Vector3 tileLocation = getTileLocation(numTiles, tileSizeBase, idInRow, bigTile, row);
             final Vector3 c1;
@@ -272,5 +261,6 @@ class Game3D extends Scene {
         modelBatch.dispose();
         boardModel.dispose();
         tileModels.forEach(Model::dispose);
+        playerModels.forEach(Model::dispose);
     }
 }

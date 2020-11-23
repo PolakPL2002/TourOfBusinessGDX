@@ -4,26 +4,35 @@ package pl.greenmc.tob.graphics;
 import com.badlogic.gdx.graphics.Color;
 
 public class GlobalTheme {
-    public static Color buttonNoBackgroundColor = MaterialColor.RED.color200();
-    public static Color buttonNoBorderColor = MaterialColor.RED.color700();
-    public static Color buttonNoClickColor = MaterialColor.RED.color400();
-    public static Color buttonNoHoverColor = MaterialColor.RED.color300();
-    public static Color buttonYesBackgroundColor = MaterialColor.GREEN.color200();
-    public static Color buttonYesBorderColor = MaterialColor.GREEN.color700();
-    public static Color buttonYesClickColor = MaterialColor.GREEN.color400();
-    public static Color buttonYesHoverColor = MaterialColor.GREEN.color300();
-    public static Color errorBackgroundColor = MaterialColor.RED.color200();
-    public static MaterialColor scheme = MaterialColor.BLUE;
-    public static Color barBackgroundColor = scheme.color300();
-    public static Color barHandleColor = scheme.color700();
-    public static Color backgroundColor = scheme.color100();
-    public static Color buttonBackgroundColor = scheme.color200();
-    public static Color buttonBorderColor = scheme.color700();
-    public static Color buttonClickColor = scheme.color400();
-    public static Color buttonHoverColor = scheme.color300();
-    public static Color menuBackgroundColor = scheme.color50();
-    public static Color progressBarBackgroundColor = scheme.color100();
-    public static Color progressBarBorderColor = scheme.color700();
-    public static Color progressBarColor = scheme.color500();
-    public static Color textColor = Color.BLACK;
+    public static final Color buttonNoBackgroundColor = MaterialColor.RED.color200();
+    public static final Color buttonNoBorderColor = MaterialColor.RED.color700();
+    public static final Color buttonNoClickColor = MaterialColor.RED.color400();
+    public static final Color buttonNoHoverColor = MaterialColor.RED.color300();
+    public static final Color buttonYesBackgroundColor = MaterialColor.GREEN.color200();
+    public static final Color buttonYesBorderColor = MaterialColor.GREEN.color700();
+    public static final Color buttonYesClickColor = MaterialColor.GREEN.color400();
+    public static final Color buttonYesHoverColor = MaterialColor.GREEN.color300();
+    public static final Color errorBackgroundColor = MaterialColor.RED.color200();
+    public static final Color[] playerColors = new Color[]{
+            MaterialColor.RED.color500(),
+            MaterialColor.BLUE.color500(),
+            MaterialColor.YELLOW.color500(),
+            MaterialColor.GREEN.color500(),
+            MaterialColor.PURPLE.color500(),
+            MaterialColor.ORANGE.color500(),
+            MaterialColor.TEAL.color300(),
+            MaterialColor.PINK.color300()};
+    public static final MaterialColor scheme = MaterialColor.BLUE;
+    public static final Color barBackgroundColor = scheme.color300();
+    public static final Color barHandleColor = scheme.color700();
+    public static final Color backgroundColor = scheme.color100();
+    public static final Color buttonBackgroundColor = scheme.color200();
+    public static final Color buttonBorderColor = scheme.color700();
+    public static final Color buttonClickColor = scheme.color400();
+    public static final Color buttonHoverColor = scheme.color300();
+    public static final Color menuBackgroundColor = scheme.color50();
+    public static final Color progressBarBackgroundColor = scheme.color100();
+    public static final Color progressBarBorderColor = scheme.color700();
+    public static final Color progressBarColor = scheme.color500();
+    public static final Color textColor = Color.BLACK;
 }

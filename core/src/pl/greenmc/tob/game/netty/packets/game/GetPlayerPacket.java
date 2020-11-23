@@ -8,7 +8,6 @@ import pl.greenmc.tob.game.Player;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.packets.Packet;
 
-//TODO
 public class GetPlayerPacket extends Packet {
     /**
      * Packet data type identifier
@@ -78,8 +77,10 @@ public class GetPlayerPacket extends Packet {
     public static Player parseResponse(@NotNull JsonObject response) throws InvalidPacketException {
         //Decode values
         JsonElement player = response.get("player");
-        if (player == null) return null;
-        if (!player.isJsonObject())
+        if (player == null)
+            throw new InvalidPacketException();
+        else if (player.isJsonNull()) return null;
+        else if (!player.isJsonObject())
             throw new InvalidPacketException();
         return new Player(player.getAsJsonObject());
     }

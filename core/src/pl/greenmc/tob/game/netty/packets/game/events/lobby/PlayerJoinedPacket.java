@@ -16,6 +16,10 @@ public class PlayerJoinedPacket extends Packet {
         this.playerID = playerID;
     }
 
+    public int getPlayerID() {
+        return playerID;
+    }
+
     /**
      * Decodes packet after network transmission
      *

@@ -50,6 +50,10 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     private String identity;
     private Player player;
 
+    public String getIdentity() {
+        return identity;
+    }
+
     public Player getPlayer() {
         return player;
     }

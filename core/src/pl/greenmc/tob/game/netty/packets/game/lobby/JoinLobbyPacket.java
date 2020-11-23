@@ -74,7 +74,7 @@ public class JoinLobbyPacket extends Packet {
     public static boolean parseResponse(@NotNull JsonObject response) throws InvalidPacketException {
         //Decode values
         JsonElement success = response.get("success");
-        if (success == null || !success.isJsonObject())
+        if (success == null || !success.isJsonPrimitive())
             throw new InvalidPacketException();
         return success.getAsBoolean();
     }

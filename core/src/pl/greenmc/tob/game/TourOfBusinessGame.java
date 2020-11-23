@@ -13,8 +13,15 @@ import pl.greenmc.tob.game.netty.client.NettyClient;
 import pl.greenmc.tob.game.netty.packets.ConfirmationPacket;
 import pl.greenmc.tob.game.netty.packets.Packet;
 import pl.greenmc.tob.game.netty.packets.game.GetSelfPacket;
+import pl.greenmc.tob.game.netty.packets.game.events.lobby.LobbyCreatedPacket;
+import pl.greenmc.tob.game.netty.packets.game.events.lobby.LobbyRemovedPacket;
+import pl.greenmc.tob.game.netty.packets.game.events.lobby.PlayerJoinedPacket;
+import pl.greenmc.tob.game.netty.packets.game.events.lobby.PlayerLeftPacket;
+import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.scenes.ErrorScene;
 import pl.greenmc.tob.graphics.scenes.LoadingScene;
+import pl.greenmc.tob.graphics.scenes.menus.JoinGameMenu;
+import pl.greenmc.tob.graphics.scenes.menus.LobbyMenu;
 import pl.greenmc.tob.graphics.scenes.menus.MainMenu;
 
 import java.util.ArrayList;
@@ -30,10 +37,10 @@ public class TourOfBusinessGame {
     private final ArrayList<String> musicToLoad = new ArrayList<>();
     private final ArrayList<String> soundsToLoad = new ArrayList<>();
     private final ArrayList<String> texturesToLoad = new ArrayList<>();
-    private TourOfBusinessServer tourOfBusinessServer = null;
     private int connectRetriesLeft = 3;
     private LoadState loadState = LoadState.LOADING_TEXTURES;
     private Player self = null;
+    private TourOfBusinessServer tourOfBusinessServer = null;
 
     public TourOfBusinessGame(boolean headless) {
         if (!headless) {
@@ -104,14 +111,14 @@ public class TourOfBusinessGame {
         }
     }
 
-    public TourOfBusinessServer getServer() {
-        return tourOfBusinessServer;
-    }
-
     private void loadTextures() {
         TextureLoader.TextureParameter textureParameter = new TextureLoader.TextureParameter();
         textureParameter.genMipMaps = true;
         texturesToLoad.forEach(texture -> assetManager.load(texture, Texture.class, textureParameter));
+    }
+
+    public TourOfBusinessServer getServer() {
+        return tourOfBusinessServer;
     }
 
     public Player getSelf() {
@@ -200,6 +207,29 @@ public class TourOfBusinessGame {
             @Override
             public void onPacketReceived(Container container, Packet packet, @Nullable String identity) {
                 log("Packet received: " + packet);
+                Scene scene = TOB.getScene();
+                if (packet instanceof LobbyCreatedPacket) {
+                    if (scene instanceof JoinGameMenu) {
+                        //Refresh list
+                        ((JoinGameMenu) scene).onLobbyCreated(((LobbyCreatedPacket) packet).getLobbyID());
+                    }
+                } else if (packet instanceof LobbyRemovedPacket) {
+                    if (scene instanceof JoinGameMenu) {
+                        //Refresh list
+                        ((JoinGameMenu) scene).onLobbyRemoved(((LobbyRemovedPacket) packet).getLobbyID());
+                    } else if (scene instanceof LobbyMenu) {
+                        ((LobbyMenu) scene).onLobbyRemoved(((LobbyRemovedPacket) packet).getLobbyID());
+                    }
+                } else if (packet instanceof PlayerJoinedPacket) {
+                    if (scene instanceof LobbyMenu) {
+                        ((LobbyMenu) scene).onPlayerJoined(((PlayerJoinedPacket) packet).getPlayerID());
+                    }
+                } else if (packet instanceof PlayerLeftPacket) {
+                    if (scene instanceof LobbyMenu) {
+                        ((LobbyMenu) scene).onPlayerLeft(((PlayerLeftPacket) packet).getPlayerID());
+                    }
+                }
+                //There are no packets that require data response from client
                 try {
                     NettyClient.getInstance().getClientHandler().send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
                 } catch (ConnectionNotAliveException e) {

@@ -41,6 +41,10 @@ public class LobbyCreatedPacket extends Packet {
         } else throw new InvalidPacketException();
     }
 
+    public int getLobbyID() {
+        return lobbyID;
+    }
+
     /**
      * Encodes packet for network transmission
      *

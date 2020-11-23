@@ -1,5 +1,6 @@
 package pl.greenmc.tob.game;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
@@ -20,6 +21,8 @@ import pl.greenmc.tob.game.netty.server.ServerHandler;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 
 import static pl.greenmc.tob.game.util.Logger.log;
 import static pl.greenmc.tob.game.util.Logger.warning;
@@ -62,26 +65,36 @@ public class TourOfBusinessServer {
                 } else if (packet instanceof GetLobbiesPacket) {
                     try {
                         final ServerHandler client = NettyServer.getInstance().getClient(identity);
-                        if (client != null)
-                            client.send(new ResponsePacket(container.messageUUID, true, true, GetLobbiesPacket.generateResponse(lobbies.toArray(new Lobby[0]))), null, false);
+                        if (client != null) {
+                            Lobby[] lobbies = TourOfBusinessServer.this.lobbies.toArray(new Lobby[0]);
+                            client.send(new ResponsePacket(container.messageUUID, true, true, GetLobbiesPacket.generateResponse(lobbies, getLobbiesPlayers(lobbies))), null, false);
+                        }
                     } catch (ConnectionNotAliveException e) {
                         warning("Failed to send response packet.");
+                        warning(e);
+                    } catch (SQLException e) {
+                        warning("Failed to get player data.");
                         warning(e);
                     }
                 } else if (packet instanceof GetLobbyPacket) {
                     try {
                         final ServerHandler client = NettyServer.getInstance().getClient(identity);
-                        if (client != null)
-                            client.send(new ResponsePacket(container.messageUUID, true, true, GetLobbyPacket.generateResponse(getLobbyByID(((GetLobbyPacket) packet).getLobbyID()))), null, false);
+                        if (client != null) {
+                            Lobby lobby = getLobbyByID(((GetLobbyPacket) packet).getLobbyID());
+                            client.send(new ResponsePacket(container.messageUUID, true, true, GetLobbyPacket.generateResponse(lobby, getLobbyPlayers(lobby))), null, false);
+                        }
                     } catch (ConnectionNotAliveException e) {
                         warning("Failed to send response packet.");
+                        warning(e);
+                    } catch (SQLException e) {
+                        warning("Failed to get player data.");
                         warning(e);
                     }
                 } else if (packet instanceof CreateLobbyPacket) {
                     try {
                         final ServerHandler client = NettyServer.getInstance().getClient(identity);
                         if (client != null) {
-                            Player player = getPlayerFromHandler(identity, client);
+                            Player player = getPlayerFromHandler(client);
                             if (player == null) return;
                             Lobby lobby = getLobbyByOwner(player.getID());
                             boolean success = true;
@@ -104,7 +117,7 @@ public class TourOfBusinessServer {
                     try {
                         final ServerHandler client = NettyServer.getInstance().getClient(identity);
                         if (client != null) {
-                            Player player = getPlayerFromHandler(identity, client);
+                            Player player = getPlayerFromHandler(client);
                             if (player == null) return;
                             Lobby lobby = getLobbyByID(((JoinLobbyPacket) packet).getLobbyID());
                             boolean success = true;
@@ -147,7 +160,7 @@ public class TourOfBusinessServer {
                     try {
                         final ServerHandler client = NettyServer.getInstance().getClient(identity);
                         if (client != null) {
-                            Player player = getPlayerFromHandler(identity, client);
+                            Player player = getPlayerFromHandler(client);
                             if (player == null) return;
                             Lobby lobby = getLobbyByPlayer(player.getID());
                             boolean success = true;
@@ -178,11 +191,11 @@ public class TourOfBusinessServer {
                     try {
                         final ServerHandler client = NettyServer.getInstance().getClient(identity);
                         if (client != null) {
-                            Player player = getPlayerFromHandler(identity, client);
+                            Player player = getPlayerFromHandler(client);
                             if (player == null) return;
                             Lobby lobby = getLobbyByPlayer(player.getID());
 
-                            client.send(new ResponsePacket(container.messageUUID, true, true, GetSelfLobbyPacket.generateResponse(lobby)), null, false);
+                            client.send(new ResponsePacket(container.messageUUID, true, true, GetLobbyPacket.generateResponse(lobby, getLobbyPlayers(lobby))), null, false);
                         }
                     } catch (ConnectionNotAliveException e) {
                         warning("Failed to send response packet.");
@@ -202,6 +215,47 @@ public class TourOfBusinessServer {
                     }
             }
         });
+    }
+
+    @NotNull
+    private Player[] getLobbiesPlayers(@NotNull Lobby[] lobbies) throws SQLException {
+        HashSet<Player> out = new HashSet<>();
+        for (Lobby lobby : lobbies) {
+            Player[] newPlayers = getLobbyPlayers(lobby);
+            out.addAll(Arrays.asList(newPlayers));
+
+            Player owner = NettyServer.getInstance().getDatabase().getPlayer(lobby.getOwner());
+            out.add(owner);
+        }
+        return out.toArray(new Player[0]);
+    }
+
+    @Nullable
+    @Contract("null -> null; !null -> new")
+    private Player[] getLobbyPlayers(@Nullable Lobby lobby) throws SQLException {
+        if (lobby == null) return null;
+        Integer[] lobbyPlayers = lobby.getPlayers();
+        Player[] players = new Player[lobbyPlayers.length + 1];
+        int i = 0;
+        for (int player : lobbyPlayers) {
+            Player playerByID = NettyServer.getInstance().getDatabase().getPlayer(player);
+            if (playerByID == null) {
+                lobby.removePlayer(player);
+                //Event not raised because player is unknown
+                warning("Removed unknown player#" + player + " from lobby#" + lobby.getID());
+                return getLobbyPlayers(lobby);
+            }
+            players[i] = playerByID;
+            i++;
+        }
+        Player playerByID = NettyServer.getInstance().getDatabase().getPlayer(lobby.getOwner());
+        if (playerByID == null) {
+            removeLobby(lobby);
+            warning("Removed lobby#" + lobby.getID() + ". Owner unknown.");
+            return null;
+        }
+        players[i] = playerByID;
+        return players;
     }
 
     private void onPlayerJoinedLobby(@NotNull Lobby lobby, @NotNull Player player) {
@@ -241,12 +295,12 @@ public class TourOfBusinessServer {
     }
 
     @Nullable
-    private Player getPlayerFromHandler(@Nullable String identity, @NotNull ServerHandler client) throws SQLException {
+    private Player getPlayerFromHandler(@NotNull ServerHandler client) throws SQLException {
         Player player = client.getPlayer();
         if (player == null)
-            player = NettyServer.getInstance().getDatabase().getPlayer(identity);
+            player = NettyServer.getInstance().getDatabase().getPlayer(client.getIdentity());
         if (player == null) {
-            warning("Can't find player for identity=" + identity);
+            warning("Can't find player for identity=" + client.getIdentity());
             client.getCtx().close();
             return null;
         }

@@ -1,13 +1,56 @@
 package pl.greenmc.tob.graphics.scenes.menus;
 
 import com.badlogic.gdx.graphics.Color;
-import pl.greenmc.tob.graphics.GlobalTheme;
+import com.google.gson.JsonObject;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import pl.greenmc.tob.game.Lobby;
+import pl.greenmc.tob.game.Player;
+import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
+import pl.greenmc.tob.game.netty.InvalidPacketException;
+import pl.greenmc.tob.game.netty.SentPacket;
+import pl.greenmc.tob.game.netty.client.NettyClient;
+import pl.greenmc.tob.game.netty.packets.game.lobby.GetLobbiesPacket;
+import pl.greenmc.tob.game.netty.packets.game.lobby.GetLobbiesResponse;
 import pl.greenmc.tob.graphics.elements.*;
 import pl.greenmc.tob.graphics.scenes.Menu;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
 import static pl.greenmc.tob.TourOfBusiness.TOB;
+import static pl.greenmc.tob.game.util.Logger.*;
 
 public class JoinGameMenu extends Menu {
+
+    private final Object reloadLock = new Object();
+    private VScrollPane element;
+    private Lobby[] lobbies = new Lobby[0];
+    private PaddingPane pane;
+    private Player[] players = new Player[0];
+    private boolean reloadInProgress = false;
+    private boolean reloadScheduled = false;
+
+    public void onLobbyCreated(int lobbyID) {
+        synchronized (reloadLock) {
+            if (!reloadInProgress)
+                reloadLobbies();
+            else
+                reloadScheduled = true;
+        }
+    }
+
+    public void onLobbyRemoved(int lobbyID) {
+        synchronized (reloadLock) {
+            if (!reloadInProgress)
+                reloadLobbies();
+            else
+                reloadScheduled = true;
+        }
+    }
+
     @Override
     public void setup() {
         super.setup();
@@ -16,24 +59,16 @@ public class JoinGameMenu extends Menu {
 
         button1.setClickCallback(this::onBack);
 
-        VScrollPane element = new VScrollPane();
-        element.addChild(new Button("Pokój 5"), 120)
-                .addChild(new Button("Pokój 4"), 120)
-                .addChild(new Button("Pokój 3"), 120)
-                .addChild(new Button("Pokój 2"), 120)
-                .addChild(new Button("Pokój 1"), 120);
+        Label label = new Label("Ładowanie...\nProszę czekać", 30, false);
+        label.setBackgroundColor(new Color(1, 1, 1, 0.75f));
+        pane = new PaddingPane(label, 0);
+        reloadLobbies();
 
         HSplitPane menu = new HSplitPane()
                 .addChild(
                         button1,
                         new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED)
-                ).addChild(element, new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE));
-        menu.setBackgroundColor(new Color(0, 0, 0, 0));
-        PaddingPane menuPadding = new PaddingPane(
-                menu,
-                10
-        );
-        menuPadding.setColor(GlobalTheme.menuBackgroundColor);
+                ).addChild(pane, new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE));
         setElement(
                 new VSplitPane()
                         .addChild(
@@ -47,10 +82,7 @@ public class JoinGameMenu extends Menu {
                                                 new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                                         )
                                         .addChild(
-                                                new PaddingPane(
-                                                        menuPadding,
-                                                        3
-                                                ),
+                                                menu,
                                                 new HSplitPane.ElementOptions(8, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                                         )
                                         .addChild(
@@ -64,6 +96,92 @@ public class JoinGameMenu extends Menu {
                                 new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
                         )
         );
+    }
+
+    private void reloadLobbies() {
+        synchronized (reloadLock) {
+            reloadInProgress = true;
+        }
+        try {
+            NettyClient.getInstance().getClientHandler().send(new GetLobbiesPacket(), new SentPacket.Callback() {
+                @Override
+                public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
+                    try {
+                        if (response == null) throw new InvalidPacketException();
+                        GetLobbiesResponse getLobbiesResponse = GetLobbiesPacket.parseResponse(response);
+                        synchronized (reloadLock) {
+                            lobbies = getLobbiesResponse.getLobbies();
+                            players = getLobbiesResponse.getPlayers();
+                            log("Got " + lobbies.length + " lobbies and " + players.length + " players from server.");
+                        }
+                        TOB.runOnGLThread(() -> {
+                            if (element == null) {
+                                element = new VScrollPane();
+                                pane.setChild(element);
+                            }
+                            element.clearChildren();
+                            synchronized (reloadLock) {
+                                List<Lobby> lobbies = Arrays.asList(JoinGameMenu.this.lobbies);
+                                Collections.reverse(lobbies);
+                                for (Lobby lobby : lobbies) {
+                                    Player owner = getPlayerByID(lobby.getOwner());
+                                    String name;
+                                    if (owner != null)
+                                        name = owner.getName() + "'s lobby";
+                                    else name = "Lobby of unknown player";
+                                    Button button = new Button(name);
+                                    button.setClickCallback(() -> joinLobby(lobby));
+                                    JoinGameMenu.this.element.addChild(button, 120);
+                                }
+                            }
+                        });
+                        reloadFinished();
+                    } catch (InvalidPacketException e) {
+                        error(e);
+                        TOB.runOnGLThread(() -> TOB.changeScene(new MainMenu("Failed to get lobbies!\n" + e.getMessage())));
+                        reloadFinished();
+                    }
+                }
+
+                @Override
+                public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
+                    warning("Failed to get lobbies!");
+                    TOB.runOnGLThread(() -> TOB.changeScene(new MainMenu("Failed to get lobbies!\n" + reason.name())));
+                    reloadFinished();
+                }
+            }, false);
+        } catch (ConnectionNotAliveException e) {
+            error("Failed to get lobbies!");
+            error(e);
+            TOB.runOnGLThread(() -> TOB.changeScene(new MainMenu("Failed to get lobbies!\n" + e.getMessage())));
+            reloadFinished();
+        }
+    }
+
+    private void reloadFinished() {
+        boolean doReload = false;
+        synchronized (reloadLock) {
+            reloadInProgress = false;
+            if (reloadScheduled) {
+                doReload = true;
+                reloadScheduled = false;
+            }
+        }
+        if (doReload) reloadLobbies();
+    }
+
+    private void joinLobby(Lobby lobby) {
+        TOB.runOnGLThread(() -> TOB.changeScene(new LobbyMenu(lobby.getID())));
+    }
+
+    @Nullable
+    private Player getPlayerByID(int playerID) {
+        synchronized (reloadLock) {
+            for (Player player : players)
+                if (player.getID() == playerID)
+                    return player;
+            return null;
+        }
     }
 
     private void onBack() {

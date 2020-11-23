@@ -41,6 +41,10 @@ public class PlayerLeftPacket extends Packet {
         } else throw new InvalidPacketException();
     }
 
+    public int getPlayerID() {
+        return playerID;
+    }
+
     /**
      * Encodes packet for network transmission
      *

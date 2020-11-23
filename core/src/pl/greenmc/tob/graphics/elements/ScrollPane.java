@@ -3,6 +3,7 @@ package pl.greenmc.tob.graphics.elements;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Disposable;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.graphics.Element;
 import pl.greenmc.tob.graphics.GlobalTheme;
@@ -162,6 +163,12 @@ public abstract class ScrollPane extends Element implements Interactable {
     }
 
     public abstract ScrollPane addChild(@NotNull Element element, float size);
+
+    public void clearChildren() {
+        children.forEach(Disposable::dispose);
+        children.clear();
+        hitboxes.clear();
+    }
 
     protected abstract void updateHitboxes(float x, float y, float w, float h);
 }

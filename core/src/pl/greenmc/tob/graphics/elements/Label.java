@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.utils.Align;
 import pl.greenmc.tob.graphics.Element;
 import pl.greenmc.tob.graphics.GlobalTheme;
 
@@ -131,11 +132,9 @@ public class Label extends Element {
 
         batch.begin();
         font.setColor(textColor);
-        layout.setText(font, text);
+        layout.setText(font, text, textColor, (float) (w * 0.8), Align.center, true);
 
-        final float fontX = x + (w - layout.width) / 2;
-        final float fontY = y + (h + layout.height) / 2;
-        font.draw(batch, layout, fontX, fontY);
+        font.draw(batch, layout, x + (float) (w * 0.1), y + (h + layout.height) / 2);
         batch.end();
     }
 
