@@ -14,7 +14,7 @@ import static pl.greenmc.tob.game.util.Logger.warning;
 
 public class DesktopLauncher {
     public static void main(String[] arg) {
-        boolean server = false, nextIP = false, nextPort = false;
+        boolean server = false, nextIP = false, nextPort = false, windowed = false;
         String IP = null, port = null;
         for (String s : arg) {
             if (nextIP) {
@@ -28,6 +28,8 @@ public class DesktopLauncher {
             }
             if (s.equalsIgnoreCase("--server")) {
                 server = true;
+            } else if (s.equalsIgnoreCase("--windowed")) {
+                windowed = true;
             } else if (s.equalsIgnoreCase("--ip")) {
                 nextIP = true;
             } else if (s.equalsIgnoreCase("--port")) {
@@ -54,11 +56,16 @@ public class DesktopLauncher {
             new TourOfBusinessGame(true);
         } else {
             LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-            config.fullscreen = true;
-            Dimension dimension = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-            config.height = dimension.height;
-            config.width = dimension.width;
-            log("Setting resolution to " + dimension.width + "x" + dimension.height);
+            if (!windowed) {
+                config.fullscreen = true;
+                Dimension dimension = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+                config.height = dimension.height;
+                config.width = dimension.width;
+                log("Setting resolution to " + dimension.width + "x" + dimension.height);
+            } else {
+                config.height = 720;
+                config.width = 1280;
+            }
             config.pauseWhenMinimized = false;
             config.samples = 16;
             new LwjglApplication(new TourOfBusiness(), config);
