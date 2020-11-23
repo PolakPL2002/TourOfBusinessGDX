@@ -33,6 +33,15 @@ public class JoinGameMenu extends Menu {
     private boolean reloadInProgress = false;
     private boolean reloadScheduled = false;
 
+    public void onGameStarted(int lobbyID) {
+        synchronized (reloadLock) {
+            if (!reloadInProgress)
+                reloadLobbies();
+            else
+                reloadScheduled = true;
+        }
+    }
+
     public void onLobbyCreated(int lobbyID) {
         synchronized (reloadLock) {
             if (!reloadInProgress)

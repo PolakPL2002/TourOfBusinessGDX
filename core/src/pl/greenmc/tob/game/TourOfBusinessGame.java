@@ -13,10 +13,7 @@ import pl.greenmc.tob.game.netty.client.NettyClient;
 import pl.greenmc.tob.game.netty.packets.ConfirmationPacket;
 import pl.greenmc.tob.game.netty.packets.Packet;
 import pl.greenmc.tob.game.netty.packets.game.GetSelfPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.lobby.LobbyCreatedPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.lobby.LobbyRemovedPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.lobby.PlayerJoinedPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.lobby.PlayerLeftPacket;
+import pl.greenmc.tob.game.netty.packets.game.events.lobby.*;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.scenes.ErrorScene;
 import pl.greenmc.tob.graphics.scenes.LoadingScene;
@@ -220,6 +217,13 @@ public class TourOfBusinessGame {
                     } else if (scene instanceof LobbyMenu) {
                         ((LobbyMenu) scene).onLobbyRemoved(((LobbyRemovedPacket) packet).getLobbyID());
                     }
+                } else if (packet instanceof GameStartedPacket) {
+                    if (scene instanceof JoinGameMenu) {
+                        //Refresh list
+                        ((JoinGameMenu) scene).onGameStarted(((GameStartedPacket) packet).getLobbyID());
+                    } else if (scene instanceof LobbyMenu) {
+                        ((LobbyMenu) scene).onGameStarted(((GameStartedPacket) packet).getLobbyID());
+                    }
                 } else if (packet instanceof PlayerJoinedPacket) {
                     if (scene instanceof LobbyMenu) {
                         ((LobbyMenu) scene).onPlayerJoined(((PlayerJoinedPacket) packet).getPlayerID());
@@ -227,6 +231,11 @@ public class TourOfBusinessGame {
                 } else if (packet instanceof PlayerLeftPacket) {
                     if (scene instanceof LobbyMenu) {
                         ((LobbyMenu) scene).onPlayerLeft(((PlayerLeftPacket) packet).getPlayerID());
+                    }
+                } else if (packet instanceof PlayerReadyStateChanged) {
+                    if (scene instanceof LobbyMenu) {
+                        PlayerReadyStateChanged playerReadyStateChanged = (PlayerReadyStateChanged) packet;
+                        ((LobbyMenu) scene).onPlayerReadyStateChanged(playerReadyStateChanged.getPlayerID(), playerReadyStateChanged.isReady());
                     }
                 }
                 //There are no packets that require data response from client

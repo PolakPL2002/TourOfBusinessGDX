@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.greenmc.tob.game.Lobby;
 import pl.greenmc.tob.game.Player;
+import pl.greenmc.tob.game.map.DefaultMap;
 import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.SentPacket;
@@ -14,6 +15,7 @@ import pl.greenmc.tob.game.netty.packets.game.lobby.*;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.elements.*;
 import pl.greenmc.tob.graphics.scenes.Menu;
+import pl.greenmc.tob.graphics.scenes.game.GameScene;
 
 import java.util.UUID;
 
@@ -42,6 +44,13 @@ public class LobbyMenu extends Menu {
         this.create = false;
     }
 
+    public void onGameStarted(int lobbyID) {
+        if (lobby != null && lobbyID == lobby.getID()) {
+            //TODO Allow for map selection
+            TOB.runOnGLThread(() -> TOB.changeScene(new GameScene(new DefaultMap())));
+        }
+    }
+
     public void onLobbyRemoved(int lobbyID) {
         if (lobby != null && lobbyID == lobby.getID()) {
             removed = true;
@@ -60,6 +69,16 @@ public class LobbyMenu extends Menu {
     }
 
     public void onPlayerLeft(int playerID) {
+        synchronized (reloadLock) {
+            if (!reloadInProgress)
+                getLobbyDetails();
+            else
+                reloadScheduled = true;
+        }
+        //TODO Some notification
+    }
+
+    public void onPlayerReadyStateChanged(int playerID, boolean ready) {
         synchronized (reloadLock) {
             if (!reloadInProgress)
                 getLobbyDetails();
@@ -180,7 +199,7 @@ public class LobbyMenu extends Menu {
                         lobby = getLobbyResponse.getLobby();
                         players = getLobbyResponse.getPlayers();
                         if (lobby != null) {
-                            log("Successfully joined lobby! id=" + lobby.getID());
+                            log("Successfully downloaded lobby data! id=" + lobby.getID());
                             updateView();
                         } else if (!removed) {
                             log("Not in lobby!");
@@ -229,8 +248,82 @@ public class LobbyMenu extends Menu {
                 container.setChild(label);
             } else {
                 Button backButton = new Button("Opuść");
-                Button readyButton = new Button("Gotowy");
+                boolean selfReady = lobby.isPlayerReady(TOB.getGame().getSelf().getID());
+                Button readyButton;
+                if (lobby.getOwner() != TOB.getGame().getSelf().getID()) {
+                    readyButton = new Button(selfReady ? "Niegotowy" : "Gotowy");
 
+                    readyButton.setBackgroundColor(selfReady ? GlobalTheme.buttonNoBackgroundColor : GlobalTheme.buttonYesBackgroundColor);
+                    readyButton.setClickColor(selfReady ? GlobalTheme.buttonNoClickColor : GlobalTheme.buttonYesClickColor);
+                    readyButton.setHoverColor(selfReady ? GlobalTheme.buttonNoHoverColor : GlobalTheme.buttonYesHoverColor);
+                    readyButton.setBorderColor(selfReady ? GlobalTheme.buttonNoBorderColor : GlobalTheme.buttonYesBorderColor);
+
+                    readyButton.setClickCallback(() -> {
+                        synchronized (reloadLock) {
+                            if (!reloadInProgress) {
+                                reloadInProgress = true;
+                                try {
+                                    NettyClient.getInstance().getClientHandler().send(new SetSelfReadyPacket(!selfReady), new SentPacket.Callback() {
+                                        @Override
+                                        public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
+                                            getLobbyDetails();
+                                        }
+
+                                        @Override
+                                        public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
+                                            warning("Failed to set ready state!");
+                                            reloadFinished();
+                                        }
+                                    }, false);
+                                } catch (ConnectionNotAliveException e) {
+                                    warning("Failed to set ready state!");
+                                    warning(e);
+                                    reloadFinished();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    readyButton = new Button("Rozpocznij");
+
+                    boolean allReady = true;
+                    for (int player : lobby.getPlayers()) {
+                        if (!lobby.isPlayerReady(player)) {
+                            allReady = false;
+                            break;
+                        }
+                    }
+
+                    readyButton.setBackgroundColor(allReady ? GlobalTheme.buttonYesBackgroundColor : GlobalTheme.buttonNoBackgroundColor);
+                    readyButton.setClickColor(allReady ? GlobalTheme.buttonYesClickColor : GlobalTheme.buttonNoClickColor);
+                    readyButton.setHoverColor(allReady ? GlobalTheme.buttonYesHoverColor : GlobalTheme.buttonNoHoverColor);
+                    readyButton.setBorderColor(allReady ? GlobalTheme.buttonYesBorderColor : GlobalTheme.buttonNoBorderColor);
+                    readyButton.setClickCallback(() -> {
+                        synchronized (reloadLock) {
+                            if (!reloadInProgress) {
+                                reloadInProgress = true;
+                                try {
+                                    NettyClient.getInstance().getClientHandler().send(new StartGamePacket(), new SentPacket.Callback() {
+                                        @Override
+                                        public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
+                                            log("Successfully requested game start.");
+                                        }
+
+                                        @Override
+                                        public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
+                                            warning("Failed to set ready state!");
+                                            reloadFinished();
+                                        }
+                                    }, false);
+                                } catch (ConnectionNotAliveException e) {
+                                    warning("Failed to set ready state!");
+                                    warning(e);
+                                    reloadFinished();
+                                }
+                            }
+                        }
+                    });
+                }
                 backButton.setFontSize(20);
                 readyButton.setFontSize(20);
 
@@ -242,6 +335,7 @@ public class LobbyMenu extends Menu {
                         e.printStackTrace();
                     }
                 });
+
 
                 if (lobby.getOwner() == TOB.getGame().getSelf().getID()) {
                     backButton.setBackgroundColor(GlobalTheme.buttonNoBackgroundColor);
@@ -260,17 +354,20 @@ public class LobbyMenu extends Menu {
 
                 Player player;
                 player = getPlayerByID(lobby.getOwner());
+                String name;
                 if (player != null)
-                    players[0].setText(player.getName());
+                    name = player.getName();
                 else
-                    players[0].setText("<Unknown player>");
+                    name = "<Unknown player>";
+                players[0].setText(name + "\nWłaściciel");
                 int i = 1;
                 for (int playerID : lobby.getPlayers()) {
                     player = getPlayerByID(playerID);
                     if (player != null)
-                        players[i].setText(player.getName());
+                        name = player.getName();
                     else
-                        players[i].setText("<Unknown player>");
+                        name = "<Unknown player>";
+                    players[i].setText(name + "\n" + (lobby.isPlayerReady(playerID) ? "Gotowy" : "Niegotowy"));
                     i++;
                 }
 

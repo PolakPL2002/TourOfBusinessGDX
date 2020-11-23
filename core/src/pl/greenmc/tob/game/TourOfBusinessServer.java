@@ -11,10 +11,7 @@ import pl.greenmc.tob.game.netty.packets.Packet;
 import pl.greenmc.tob.game.netty.packets.ResponsePacket;
 import pl.greenmc.tob.game.netty.packets.game.GetPlayerPacket;
 import pl.greenmc.tob.game.netty.packets.game.GetSelfPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.lobby.LobbyCreatedPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.lobby.LobbyRemovedPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.lobby.PlayerJoinedPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.lobby.PlayerLeftPacket;
+import pl.greenmc.tob.game.netty.packets.game.events.lobby.*;
 import pl.greenmc.tob.game.netty.packets.game.lobby.*;
 import pl.greenmc.tob.game.netty.server.NettyServer;
 import pl.greenmc.tob.game.netty.server.ServerHandler;
@@ -204,6 +201,46 @@ public class TourOfBusinessServer {
                         warning("Failed to get player from database.");
                         warning(e);
                     }
+                } else if (packet instanceof SetSelfReadyPacket) {
+                    try {
+                        final ServerHandler client = NettyServer.getInstance().getClient(identity);
+                        if (client != null) {
+                            Player player = getPlayerFromHandler(client);
+                            if (player == null) return;
+                            Lobby lobby = getLobbyByPlayer(player.getID());
+                            if (lobby != null) {
+                                lobby.setPlayerReady(player.getID(), ((SetSelfReadyPacket) packet).isReady());
+                                onPlayerReadyStateChanged(lobby, player);
+                            }
+                            client.send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
+                        }
+                    } catch (ConnectionNotAliveException e) {
+                        warning("Failed to send response packet.");
+                        warning(e);
+                    } catch (SQLException e) {
+                        warning("Failed to get player from database.");
+                        warning(e);
+                    }
+                } else if (packet instanceof StartGamePacket) {
+                    try {
+                        final ServerHandler client = NettyServer.getInstance().getClient(identity);
+                        if (client != null) {
+                            Player player = getPlayerFromHandler(client);
+                            if (player == null) return;
+                            Lobby lobby = getLobbyByOwner(player.getID());
+                            if (lobby != null) {
+                                lobby.setLobbyState(Lobby.LobbyState.IN_GAME);
+                                onGameStarted(lobby);
+                            }
+                            client.send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
+                        }
+                    } catch (ConnectionNotAliveException e) {
+                        warning("Failed to send response packet.");
+                        warning(e);
+                    } catch (SQLException e) {
+                        warning("Failed to get player from database.");
+                        warning(e);
+                    }
                 } else
                     try {
                         final ServerHandler client = NettyServer.getInstance().getClient(identity);
@@ -215,6 +252,17 @@ public class TourOfBusinessServer {
                     }
             }
         });
+    }
+
+    private void onGameStarted(Lobby lobby) {
+        for (ServerHandler client : NettyServer.getInstance().getClients()) {
+            try {
+                client.send(new GameStartedPacket(lobby.getID()), null, false);
+            } catch (ConnectionNotAliveException e) {
+                warning("Failed to send event packet.");
+                warning(e);
+            }
+        }
     }
 
     @NotNull
@@ -265,6 +313,15 @@ public class TourOfBusinessServer {
             }
         }
         sendPacketToPlayerByID(new PlayerJoinedPacket(player.getID()), lobby.getOwner());
+    }
+
+    private void onPlayerReadyStateChanged(@NotNull Lobby lobby, @NotNull Player player) {
+        for (int p : lobby.getPlayers()) {
+            if (p != player.getID()) {
+                sendPacketToPlayerByID(new PlayerReadyStateChanged(player.getID(), lobby.isPlayerReady(player.getID())), p);
+            }
+        }
+        sendPacketToPlayerByID(new PlayerReadyStateChanged(player.getID(), lobby.isPlayerReady(player.getID())), lobby.getOwner());
     }
 
     private void onPlayerLeftLobby(@NotNull Lobby lobby, @NotNull Player player) {

@@ -7,12 +7,14 @@ import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Lobby {
     public static String TYPE = "LOBBY";
     private final int ID;
     private final int owner;
     private final ArrayList<Integer> players = new ArrayList<>();
+    private final HashMap<Integer, Boolean> playersReady = new HashMap<>();
     private LobbyState lobbyState = LobbyState.CONFIGURING;
 
     public Lobby(int ID, int owner) {
@@ -43,9 +45,18 @@ public class Lobby {
                     JsonElement players = jsonObject.get("players");
                     if (players != null && players.isJsonArray())
                         for (JsonElement player : players.getAsJsonArray())
-                            if (player != null && player.isJsonPrimitive())
-                                this.players.add(player.getAsInt());
-                            else throw new InvalidPacketException();
+                            if (player != null && player.isJsonObject()) {
+                                JsonObject p = player.getAsJsonObject();
+
+                                JsonElement id = p.get("id");
+                                if (id != null && id.isJsonPrimitive()) this.players.add(id.getAsInt());
+                                else throw new InvalidPacketException();
+
+                                JsonElement ready = p.get("ready");
+                                if (ready != null && ready.isJsonPrimitive())
+                                    playersReady.put(id.getAsInt(), ready.getAsBoolean());
+                                else throw new InvalidPacketException();
+                            } else throw new InvalidPacketException();
                     else throw new InvalidPacketException();
                 } else throw new InvalidPacketException();
             } catch (ClassCastException ignored) {
@@ -66,14 +77,25 @@ public class Lobby {
         return players.toArray(new Integer[0]);
     }
 
-    public Lobby addPlayer(int playerID) {
+    public void addPlayer(int playerID) {
         if (!players.contains(playerID)) players.add(playerID);
-        return this;
+        playersReady.put(playerID, false);
     }
 
-    public Lobby removePlayer(@NotNull Integer playerID) {
-        players.remove(playerID);
-        return this;
+    public boolean isPlayerReady(int playerID) {
+        return playersReady.getOrDefault(playerID, false);
+    }
+
+    public void removePlayer(@NotNull Integer playerID) {
+        if (players.contains(playerID)) {
+            players.remove(playerID);
+            playersReady.remove(playerID);
+        }
+    }
+
+    public void setPlayerReady(int playerID, boolean isReady) {
+        if (playersReady.containsKey(playerID))
+            playersReady.put(playerID, isReady);
     }
 
     public LobbyState getLobbyState() {
@@ -91,7 +113,12 @@ public class Lobby {
         out.addProperty("owner", owner);
         out.addProperty("lobbyState", lobbyState.name());
         JsonArray players = new JsonArray();
-        for (int player : this.players) players.add(player);
+        for (int player : this.players) {
+            JsonObject p = new JsonObject();
+            p.addProperty("id", player);
+            p.addProperty("ready", playersReady.getOrDefault(player, false));
+            players.add(p);
+        }
         out.add("players", players);
         return out;
     }
