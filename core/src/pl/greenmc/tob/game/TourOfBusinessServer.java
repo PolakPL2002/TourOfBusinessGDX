@@ -228,7 +228,10 @@ public class TourOfBusinessServer {
                             Player player = getPlayerFromHandler(client);
                             if (player == null) return;
                             Lobby lobby = getLobbyByOwner(player.getID());
-                            if (lobby != null) {
+                            if (lobby != null &&
+                                    lobby.getLobbyState() == Lobby.LobbyState.CONFIGURING &&
+                                    lobby.allReady() &&
+                                    lobby.getPlayers().length > 0) {
                                 lobby.setLobbyState(Lobby.LobbyState.IN_GAME);
                                 onGameStarted(lobby);
                             }

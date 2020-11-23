@@ -294,35 +294,39 @@ public class LobbyMenu extends Menu {
                         }
                     }
 
+                    if (lobby.getPlayers().length == 0)
+                        allReady = false;
+
                     readyButton.setBackgroundColor(allReady ? GlobalTheme.buttonYesBackgroundColor : GlobalTheme.buttonNoBackgroundColor);
                     readyButton.setClickColor(allReady ? GlobalTheme.buttonYesClickColor : GlobalTheme.buttonNoClickColor);
                     readyButton.setHoverColor(allReady ? GlobalTheme.buttonYesHoverColor : GlobalTheme.buttonNoHoverColor);
                     readyButton.setBorderColor(allReady ? GlobalTheme.buttonYesBorderColor : GlobalTheme.buttonNoBorderColor);
-                    readyButton.setClickCallback(() -> {
-                        synchronized (reloadLock) {
-                            if (!reloadInProgress) {
-                                reloadInProgress = true;
-                                try {
-                                    NettyClient.getInstance().getClientHandler().send(new StartGamePacket(), new SentPacket.Callback() {
-                                        @Override
-                                        public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
-                                            log("Successfully requested game start.");
-                                        }
+                    if (allReady)
+                        readyButton.setClickCallback(() -> {
+                            synchronized (reloadLock) {
+                                if (!reloadInProgress) {
+                                    reloadInProgress = true;
+                                    try {
+                                        NettyClient.getInstance().getClientHandler().send(new StartGamePacket(), new SentPacket.Callback() {
+                                            @Override
+                                            public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
+                                                log("Successfully requested game start.");
+                                            }
 
-                                        @Override
-                                        public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
-                                            warning("Failed to set ready state!");
-                                            reloadFinished();
-                                        }
-                                    }, false);
-                                } catch (ConnectionNotAliveException e) {
-                                    warning("Failed to set ready state!");
-                                    warning(e);
-                                    reloadFinished();
+                                            @Override
+                                            public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
+                                                warning("Failed to set ready state!");
+                                                reloadFinished();
+                                            }
+                                        }, false);
+                                    } catch (ConnectionNotAliveException e) {
+                                        warning("Failed to set ready state!");
+                                        warning(e);
+                                        reloadFinished();
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
                 }
                 backButton.setFontSize(20);
                 readyButton.setFontSize(20);

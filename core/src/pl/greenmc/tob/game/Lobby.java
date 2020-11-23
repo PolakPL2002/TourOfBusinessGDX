@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
+import pl.greenmc.tob.game.map.DefaultMap;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ public class Lobby {
     private final int owner;
     private final ArrayList<Integer> players = new ArrayList<>();
     private final HashMap<Integer, Boolean> playersReady = new HashMap<>();
+    private GameState gameState = null;
     private LobbyState lobbyState = LobbyState.CONFIGURING;
 
     public Lobby(int ID, int owner) {
@@ -65,16 +67,20 @@ public class Lobby {
         } else throw new InvalidPacketException();
     }
 
+    public GameState getGameState() {
+        return gameState;
+    }
+
+    public void setGameState(GameState gameState) {
+        this.gameState = gameState;
+    }
+
     public int getID() {
         return ID;
     }
 
     public int getOwner() {
         return owner;
-    }
-
-    public Integer[] getPlayers() {
-        return players.toArray(new Integer[0]);
     }
 
     public void addPlayer(int playerID) {
@@ -104,6 +110,16 @@ public class Lobby {
 
     public void setLobbyState(LobbyState lobbyState) {
         this.lobbyState = lobbyState;
+        if (lobbyState == LobbyState.IN_GAME) {
+            int[] players = new int[this.players.size() + 1];
+            players[0] = owner;
+            System.arraycopy(getPlayers(), 0, players, 1, players.length - 1);
+            gameState = new GameState(players, new DefaultMap()); //TODO Allow for other maps
+        }
+    }
+
+    public Integer[] getPlayers() {
+        return players.toArray(new Integer[0]);
     }
 
     public JsonObject toJsonObject() {
@@ -121,6 +137,13 @@ public class Lobby {
         }
         out.add("players", players);
         return out;
+    }
+
+    public boolean allReady() {
+        for (int player : players)
+            if (!playersReady.getOrDefault(player, false))
+                return false;
+        return true;
     }
 
     public enum LobbyState {
