@@ -7,14 +7,14 @@ import java.util.HashMap;
 
 public class GameState {
     private final Map map;
-    private final int[] playersIDs;
+    private final Integer[] playersIDs;
     private final int startingPlayerNum;
     private State state = State.AWAITING_ROLL;
     private HashMap<Integer, Integer> tileLevels = new HashMap<>(); //tileNum, tileLevel
     private HashMap<Integer, Integer> tileOwners = new HashMap<>(); //tileNum, playerNum
     private int turnOf;
 
-    public GameState(@NotNull int[] playersIDs, @NotNull Map map) {
+    public GameState(@NotNull Integer[] playersIDs, @NotNull Map map) {
         this.playersIDs = playersIDs;
         startingPlayerNum = (int) Math.floor(Math.random() * playersIDs.length);
         turnOf = startingPlayerNum;

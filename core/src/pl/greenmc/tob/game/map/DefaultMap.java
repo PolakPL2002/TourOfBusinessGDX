@@ -3,6 +3,11 @@ package pl.greenmc.tob.game.map;
 import static pl.greenmc.tob.TourOfBusiness.TOB;
 
 public class DefaultMap extends Map {
+    //fixme In server mode: java.lang.NullPointerException
+    //	at pl.greenmc.tob.game.map.DefaultMap.<init>(DefaultMap.java:7)
+    //	at pl.greenmc.tob.game.Lobby.setLobbyState(Lobby.java:117)
+    //	at pl.greenmc.tob.game.TourOfBusinessServer$1.onPacketReceived(TourOfBusinessServer.java:235)
+    //	at pl.greenmc.tob.game.netty.server.ServerHandler.channelRead(ServerHandler.java:196)
     public DefaultMap() {
         super(TOB.getGame().getAssetManager().get("textures/maps/default/board.png"));
 

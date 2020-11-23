@@ -111,7 +111,7 @@ public class Lobby {
     public void setLobbyState(LobbyState lobbyState) {
         this.lobbyState = lobbyState;
         if (lobbyState == LobbyState.IN_GAME) {
-            int[] players = new int[this.players.size() + 1];
+            Integer[] players = new Integer[this.players.size() + 1];
             players[0] = owner;
             System.arraycopy(getPlayers(), 0, players, 1, players.length - 1);
             gameState = new GameState(players, new DefaultMap()); //TODO Allow for other maps
