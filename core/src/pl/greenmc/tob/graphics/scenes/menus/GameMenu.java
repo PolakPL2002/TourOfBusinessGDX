@@ -1,23 +1,11 @@
 package pl.greenmc.tob.graphics.scenes.menus;
 
 import com.badlogic.gdx.graphics.Color;
-import com.google.gson.JsonObject;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
-import pl.greenmc.tob.game.netty.InvalidPacketException;
-import pl.greenmc.tob.game.netty.SentPacket;
-import pl.greenmc.tob.game.netty.client.NettyClient;
-import pl.greenmc.tob.game.netty.packets.game.lobby.CreateLobbyPacket;
-import pl.greenmc.tob.game.netty.packets.game.lobby.CreateLobbyResponse;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.elements.*;
 import pl.greenmc.tob.graphics.scenes.Menu;
 
-import java.util.UUID;
-
 import static pl.greenmc.tob.TourOfBusiness.TOB;
-import static pl.greenmc.tob.game.util.Logger.*;
 
 public class GameMenu extends Menu {
     @Override
@@ -98,32 +86,7 @@ public class GameMenu extends Menu {
     }
 
     private void onNew() {
-        try {
-            NettyClient.getInstance().getClientHandler().send(new CreateLobbyPacket(), new SentPacket.Callback() {
-                @Override
-                public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
-                    try {
-                        if (response == null) throw new InvalidPacketException();
-                        final CreateLobbyResponse createLobbyResponse = CreateLobbyPacket.parseResponse(response);
-                        if (createLobbyResponse.isSuccess())
-                            log("Successfully created lobby! id=" + createLobbyResponse.getLobbyID());
-                        else
-                            log("Failed to create lobby!");
-                    } catch (InvalidPacketException e) {
-                        error(e);
-                    }
-                }
-
-                @Override
-                public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
-                    warning("Failed to create lobby!");
-                }
-            }, false);
-        } catch (ConnectionNotAliveException e) {
-            error("Failed to create lobby");
-            error(e);
-        }
-//        TOB.runOnGLThread(() -> TOB.changeScene(new GameScene(new DefaultMap())));
+        TOB.runOnGLThread(() -> TOB.changeScene(new LobbyMenu()));
     }
 
     private void onJoin() {

@@ -21,6 +21,7 @@ public class Database {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+        //TODO Setup database
     }
 
     public void disconnect() {

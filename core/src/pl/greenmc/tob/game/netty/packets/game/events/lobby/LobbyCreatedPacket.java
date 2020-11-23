@@ -1,19 +1,19 @@
-package pl.greenmc.tob.game.netty.packets.game.lobby;
+package pl.greenmc.tob.game.netty.packets.game.events.lobby;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.packets.Packet;
 
-public class LobbyPlayerJoinedPacket extends Packet {
+public class LobbyCreatedPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_LOBBY_PLAYER_JOINED";
-    private final int playerID;
+    public static String TYPE = "GAME_EVENTS_LOBBY_CREATED";
+    private final int lobbyID;
 
-    public LobbyPlayerJoinedPacket(int playerID) {
-        this.playerID = playerID;
+    public LobbyCreatedPacket(int lobbyID) {
+        this.lobbyID = lobbyID;
     }
 
     /**
@@ -22,7 +22,7 @@ public class LobbyPlayerJoinedPacket extends Packet {
      * @param objectToDecode Object representing packet to be decoded
      * @throws InvalidPacketException Thrown on decoding error
      */
-    public LobbyPlayerJoinedPacket(JsonObject objectToDecode) throws InvalidPacketException {
+    public LobbyCreatedPacket(JsonObject objectToDecode) throws InvalidPacketException {
         super(objectToDecode);
         if (objectToDecode.has("type")) {
             //Check type
@@ -30,8 +30,8 @@ public class LobbyPlayerJoinedPacket extends Packet {
                 JsonElement type = objectToDecode.get("type");
                 if (type != null && type.isJsonPrimitive() && type.getAsString().equalsIgnoreCase(TYPE)) {
                     //Decode values
-                    JsonElement playerID = objectToDecode.get("playerID");
-                    if (playerID != null && playerID.isJsonPrimitive()) this.playerID = playerID.getAsInt();
+                    JsonElement lobbyID = objectToDecode.get("lobbyID");
+                    if (lobbyID != null && lobbyID.isJsonPrimitive()) this.lobbyID = lobbyID.getAsInt();
                     else throw new InvalidPacketException();
 
                 } else throw new InvalidPacketException();
@@ -50,7 +50,7 @@ public class LobbyPlayerJoinedPacket extends Packet {
     public JsonObject encode() {
         JsonObject out = new JsonObject();
         out.addProperty("type", TYPE);
-        out.addProperty("playerID", playerID);
+        out.addProperty("lobbyID", lobbyID);
         return out;
     }
 }

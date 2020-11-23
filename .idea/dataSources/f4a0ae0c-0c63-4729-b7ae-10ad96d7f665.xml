@@ -2,7 +2,7 @@
 <dataSource name="database.db">
   <database-model serializer="dbm" dbms="SQLITE" family-id="SQLITE" format-version="4.19">
     <root id="1">
-      <ServerVersion>3.31.1</ServerVersion>
+      <ServerVersion>3.25.1</ServerVersion>
     </root>
     <schema id="2" parent="1" name="main">
       <Current>1</Current>

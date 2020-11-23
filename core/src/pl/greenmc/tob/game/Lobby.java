@@ -8,7 +8,6 @@ import pl.greenmc.tob.game.netty.InvalidPacketException;
 
 import java.util.ArrayList;
 
-//TODO Owner, players, state, gamestate
 public class Lobby {
     public static String TYPE = "LOBBY";
     private final int ID;

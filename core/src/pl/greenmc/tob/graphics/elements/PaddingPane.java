@@ -9,7 +9,14 @@ import pl.greenmc.tob.graphics.*;
 import static com.badlogic.gdx.graphics.GL20.GL_SCISSOR_TEST;
 
 public class PaddingPane extends Element implements Interactable {
-    private final Element child;
+    private Element child;
+
+    public void setChild(@NotNull Element child) {
+        this.child.dispose();
+        this.child = child;
+        child.setup();
+    }
+
     private final float paddingBottom;
     private final float paddingLeft;
     private final float paddingRight;

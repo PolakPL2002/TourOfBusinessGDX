@@ -52,6 +52,10 @@ public class NettyServer {
 
     }
 
+    public ServerHandler[] getClients() {
+        return clients.values().toArray(new ServerHandler[0]);
+    }
+
     public int getPort() {
         return port;
     }

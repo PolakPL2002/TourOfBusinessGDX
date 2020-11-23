@@ -1,20 +1,20 @@
-package pl.greenmc.tob.game.netty.packets.game;
+package pl.greenmc.tob.game.netty.packets.game.lobby;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import pl.greenmc.tob.game.Player;
+import pl.greenmc.tob.game.Lobby;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.packets.Packet;
 
-public class GetSelfPacket extends Packet {
+public class GetSelfLobbyPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_GET_SELF";
+    public static String TYPE = "GAME_LOBBY_GET_SELF_LOBBY";
 
-    public GetSelfPacket() {
+    public GetSelfLobbyPacket() {
 
     }
 
@@ -24,7 +24,7 @@ public class GetSelfPacket extends Packet {
      * @param objectToDecode Object representing packet to be decoded
      * @throws InvalidPacketException Thrown on decoding error
      */
-    public GetSelfPacket(JsonObject objectToDecode) throws InvalidPacketException {
+    public GetSelfLobbyPacket(JsonObject objectToDecode) throws InvalidPacketException {
         super(objectToDecode);
         if (objectToDecode.has("type")) {
             //Check type
@@ -52,9 +52,12 @@ public class GetSelfPacket extends Packet {
     }
 
     @NotNull
-    public static JsonObject generateResponse(@NotNull Player player) {
+    public static JsonObject generateResponse(@Nullable Lobby lobby) {
         JsonObject response = new JsonObject();
-        response.add("player", player.toJsonObject());
+        if (lobby == null)
+            response.add("lobby", null);
+        else
+            response.add("lobby", lobby.toJsonObject());
         return response;
     }
 
@@ -64,12 +67,12 @@ public class GetSelfPacket extends Packet {
      * @throws InvalidPacketException On invalid data provided
      */
     @Nullable
-    public static Player parseResponse(@NotNull JsonObject response) throws InvalidPacketException {
+    public static Lobby parseResponse(@NotNull JsonObject response) throws InvalidPacketException {
         //Decode values
-        JsonElement player = response.get("player");
-        if (player == null) return null;
-        if (!player.isJsonObject())
+        JsonElement lobby = response.get("lobby");
+        if (lobby == null) return null;
+        if (!lobby.isJsonObject())
             throw new InvalidPacketException();
-        return new Player(player.getAsJsonObject());
+        return new Lobby(lobby.getAsJsonObject());
     }
 }

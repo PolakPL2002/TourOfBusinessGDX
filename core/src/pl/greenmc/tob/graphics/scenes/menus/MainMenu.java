@@ -2,6 +2,7 @@ package pl.greenmc.tob.graphics.scenes.menus;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.elements.*;
 import pl.greenmc.tob.graphics.scenes.Menu;
@@ -10,6 +11,16 @@ import static pl.greenmc.tob.TourOfBusiness.TOB;
 
 
 public class MainMenu extends Menu {
+    private final String error;
+
+    public MainMenu() {
+        error = "";
+    }
+
+    public MainMenu(@NotNull String error) {
+        this.error = error;
+    }
+
     @Override
     public void setup() {
         super.setup();
@@ -67,6 +78,9 @@ public class MainMenu extends Menu {
                 10
         );
         menuPadding.setColor(GlobalTheme.menuBackgroundColor);
+        Label errorLabel = new Label(error, 18, false);
+        if (error.length() > 0)
+            errorLabel.setBackgroundColor(new Color(1, 1, 1, 0.75f));
         setElement(
                 new VSplitPane()
                         .addChild(
@@ -87,7 +101,15 @@ public class MainMenu extends Menu {
                                                 new HSplitPane.ElementOptions(300, HSplitPane.ElementOptions.HeightMode.FIXED)
                                         )
                                         .addChild(
-                                                new TransparentColor(),
+                                                new HSplitPane()
+                                                        .addChild(
+                                                                errorLabel,
+                                                                new HSplitPane.ElementOptions(2, HSplitPane.ElementOptions.HeightMode.VARIABLE)
+                                                        )
+                                                        .addChild(
+                                                                new TransparentColor(),
+                                                                new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
+                                                        ),
                                                 new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                                         ),
                                 new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
