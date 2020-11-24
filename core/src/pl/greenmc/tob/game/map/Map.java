@@ -2,12 +2,14 @@ package pl.greenmc.tob.game.map;
 
 import com.badlogic.gdx.graphics.Texture;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static pl.greenmc.tob.TourOfBusiness.TOB;
+
 public class Map {
-    @NotNull
     private final Texture texture;
     private final ArrayList<Tile> tiles = new ArrayList<>();
 
@@ -16,12 +18,13 @@ public class Map {
         setTiles(tiles);
     }
 
-    Map(@NotNull Texture texture) {
+    Map(@Nullable Texture texture) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
     }
 
-    @NotNull
+    @Nullable
     public Texture getTexture() {
         return texture;
     }
@@ -93,5 +96,14 @@ public class Map {
             }
         }
         if (numStart != 1) throw new RuntimeException("There is invalid number of START.");
+    }
+
+    @Nullable
+    protected static Texture loadTexture(String s) {
+        if (TOB == null) {
+            //Server mode
+            return null;
+        }
+        return TOB.getGame().getAssetManager().get(s);
     }
 }

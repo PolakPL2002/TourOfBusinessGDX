@@ -2,6 +2,7 @@ package pl.greenmc.tob.game.map;
 
 import com.badlogic.gdx.graphics.Texture;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 
@@ -10,98 +11,111 @@ public class Tile {
     private final Texture texture;
     private final TileType type;
 
-    public Tile(@NotNull Texture texture, @NotNull StartTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull StartTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.START;
     }
 
-    public Tile(@NotNull Texture texture, @NotNull StationTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull StationTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.STATION;
         data.tileGroup.addTile(this);
     }
 
-    public Tile(@NotNull Texture texture, @NotNull CityTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull CityTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.CITY;
         data.tileGroup.addTile(this);
     }
 
-    public Tile(@NotNull Texture texture, @NotNull UtilityTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull UtilityTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.UTILITY;
         data.tileGroup.addTile(this);
     }
 
-    public Tile(@NotNull Texture texture, @NotNull ChanceTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull ChanceTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.CHANCE;
     }
 
-    public Tile(@NotNull Texture texture, @NotNull CommunityChestTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull CommunityChestTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.COMMUNITY_CHEST;
     }
 
-    public Tile(@NotNull Texture texture, @NotNull PlaceholderTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull PlaceholderTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.PLACEHOLDER;
     }
 
-    public Tile(@NotNull Texture texture, @NotNull JailTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull JailTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.JAIL;
         data.tileGroup.addTile(this);
     }
 
-    public Tile(@NotNull Texture texture, @NotNull GoToJailTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull GoToJailTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.GO_TO_JAIL;
         data.tileGroup.addTile(this);
     }
 
-    public Tile(@NotNull Texture texture, @NotNull ChampionshipsTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull ChampionshipsTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.CHAMPIONSHIPS;
     }
 
-    public Tile(@NotNull Texture texture, @NotNull TravelTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull TravelTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.TRAVEL;
     }
 
-    public Tile(@NotNull Texture texture, @NotNull IncomeTaxTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull IncomeTaxTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.INCOME_TAX;
     }
 
-    public Tile(@NotNull Texture texture, @NotNull LuxuryTaxTileData data) {
+    public Tile(@Nullable Texture texture, @NotNull LuxuryTaxTileData data) {
         this.texture = texture;
-        texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+        if (texture != null)
+            texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
         this.data = data;
         type = TileType.LUXURY_TAX;
     }
@@ -110,6 +124,7 @@ public class Tile {
         return data;
     }
 
+    @Nullable
     public Texture getTexture() {
         return texture;
     }

@@ -116,7 +116,12 @@ public class TourOfBusinessServer {
                         if (client != null) {
                             Player player = getPlayerFromHandler(client);
                             if (player == null) return;
-                            Lobby lobby = getLobbyByID(((JoinLobbyPacket) packet).getLobbyID());
+                            Lobby lobby = getLobbyByPlayer(player.getID());
+                            if (lobby != null) {
+                                lobby.removePlayer(player.getID());
+                                onPlayerLeftLobby(lobby, player);
+                            }
+                            lobby = getLobbyByID(((JoinLobbyPacket) packet).getLobbyID());
                             boolean success = true;
                             if (lobby == null)
                                 success = false;
