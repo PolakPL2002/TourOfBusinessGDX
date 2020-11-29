@@ -10,8 +10,10 @@ public class GameState {
     private static final int DICE_MIN = 1;
     private static final int NUM_DICES = 2;
     private final Map map;
+    private final boolean[] playerInJail;
+    private final int[] playerPositions; //Player positions on board (playerNum, boardID)
     private final Integer[] playersIDs;
-    private final int[] rolledNumbers = new int[NUM_DICES];
+    private final int[] rolledNumbers = new int[NUM_DICES]; //Last rolled numbers
     private final int startingPlayerNum;
     private JailDecision jailDecision = null;
     private boolean playerRolled = false;
@@ -24,6 +26,8 @@ public class GameState {
 
     public GameState(@NotNull Integer[] playersIDs, @NotNull Map map) {
         this.playersIDs = playersIDs;
+        this.playerPositions = new int[playersIDs.length];
+        this.playerInJail = new boolean[playersIDs.length];
         startingPlayerNum = (int) Math.floor(Math.random() * playersIDs.length);
         turnOf = startingPlayerNum;
         this.map = map;
@@ -72,10 +76,37 @@ public class GameState {
                 }
                 break;
             case PLAYER_MOVING:
-                //TODO Wait for animation to end
-                //TODO Update player's position
+                //TODO Check if player is in jail
+                if (playerRolled) {
+                    int num = 0;
+                    for (int i = 0; i < NUM_DICES; i++) num += rolledNumbers[i];
+                    movePlayer(turnOf, num);
+                    playerRolled = false;
+                }
+                if (checkTimeout(1000)) {
+                    //Animation finished
+                    int num = 0;
+                    for (int i = 0; i < NUM_DICES; i++) num += rolledNumbers[i];
+                    for (int i = 0; i < num; i++)
+                        processTilePass(turnOf, boundInt(playerPositions[turnOf] - num + i, map.getTiles().length));
+                    processTileEntry(turnOf, boundInt(playerPositions[turnOf], map.getTiles().length));
+                }
                 break;
         }
+    }
+
+    private int boundInt(int x, int y) {
+        int i = x % y;
+        if (i < 0) i += y;
+        return i;
+    }
+
+    private void processTileEntry(int player, int tile) {
+
+    }
+
+    private void processTilePass(int player, int tile) {
+
     }
 
     private void changeState(State newState) {
@@ -99,6 +130,11 @@ public class GameState {
             }
             playerRolled = true;
         }
+    }
+
+    private void movePlayer(int player, int numTiles) {
+        playerPositions[player] = playerPositions[player] + numTiles;
+        //TODO Raise event
     }
 
     private void startRound() {
