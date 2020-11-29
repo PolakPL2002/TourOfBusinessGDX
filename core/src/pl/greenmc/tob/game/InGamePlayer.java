@@ -1,5 +1,9 @@
 package pl.greenmc.tob.game;
 
+import org.jetbrains.annotations.ApiStatus;
+
+@Deprecated
+@ApiStatus.ScheduledForRemoval
 public class InGamePlayer extends Player {
     private final int balance;
 

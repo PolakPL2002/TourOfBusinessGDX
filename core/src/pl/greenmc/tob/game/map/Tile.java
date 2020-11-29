@@ -149,7 +149,7 @@ public class Tile {
         LUXURY_TAX
     }
 
-    static class ChampionshipsTileData extends TileData {
+    public static class ChampionshipsTileData extends TileData {
         private final int cost;
 
         public ChampionshipsTileData(int cost) {
@@ -161,12 +161,12 @@ public class Tile {
         }
     }
 
-    static class ChanceTileData extends TileData {
+    public static class ChanceTileData extends TileData {
         public ChanceTileData() {
         }
     }
 
-    static class CityTileData extends TileData {
+    public static class CityTileData extends TileData {
         private final int improvementCost;
         private final String name;
         private final ArrayList<Integer> rents = new ArrayList<>();
@@ -212,12 +212,12 @@ public class Tile {
         }
     }
 
-    static class CommunityChestTileData extends TileData {
+    public static class CommunityChestTileData extends TileData {
         public CommunityChestTileData() {
         }
     }
 
-    static class GoToJailTileData extends TileData {
+    public static class GoToJailTileData extends TileData {
         private final TileGroup tileGroup;
 
         public GoToJailTileData(@NotNull TileGroup tileGroup) {
@@ -229,7 +229,7 @@ public class Tile {
         }
     }
 
-    static class IncomeTaxTileData extends TileData {
+    public static class IncomeTaxTileData extends TileData {
         private final int cost;
 
         public IncomeTaxTileData(int cost) {
@@ -241,7 +241,7 @@ public class Tile {
         }
     }
 
-    static class JailTileData extends TileData {
+    public static class JailTileData extends TileData {
         private final int bailMoney;
         private final int maxRounds;
         private final TileGroup tileGroup;
@@ -265,7 +265,7 @@ public class Tile {
         }
     }
 
-    static class LuxuryTaxTileData extends TileData {
+    public static class LuxuryTaxTileData extends TileData {
         private final int cost;
 
         public LuxuryTaxTileData(int cost) {
@@ -277,7 +277,7 @@ public class Tile {
         }
     }
 
-    static class PlaceholderTileData extends TileData {
+    public static class PlaceholderTileData extends TileData {
         private final int charge;
 
         public PlaceholderTileData(int charge) {
@@ -289,7 +289,7 @@ public class Tile {
         }
     }
 
-    static class StartTileData extends TileData {
+    public static class StartTileData extends TileData {
         private final int startMoney;
 
         public StartTileData(int startMoney) {
@@ -301,7 +301,7 @@ public class Tile {
         }
     }
 
-    static class StationTileData extends TileData {
+    public static class StationTileData extends TileData {
         private final String name;
         private final ArrayList<Integer> rents = new ArrayList<>();
         private final TileGroup tileGroup;
@@ -345,7 +345,7 @@ public class Tile {
     private static abstract class TileData {
     }
 
-    static class TileGroup {
+    public static class TileGroup {
         private final ArrayList<Tile> tiles = new ArrayList<>();
 
         public void addTile(@NotNull Tile tile) {
@@ -357,7 +357,7 @@ public class Tile {
         }
     }
 
-    static class TravelTileData extends TileData {
+    public static class TravelTileData extends TileData {
         private final int cost;
 
         public TravelTileData(int cost) {
@@ -369,7 +369,7 @@ public class Tile {
         }
     }
 
-    static class UtilityTileData extends TileData {
+    public static class UtilityTileData extends TileData {
         private final ArrayList<Integer> multipliers = new ArrayList<>();
         private final String name;
         private final TileGroup tileGroup;
