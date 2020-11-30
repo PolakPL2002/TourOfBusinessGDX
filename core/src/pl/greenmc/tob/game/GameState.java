@@ -5,46 +5,63 @@ import org.jetbrains.annotations.Nullable;
 import pl.greenmc.tob.game.map.Map;
 import pl.greenmc.tob.game.map.Tile;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static pl.greenmc.tob.game.util.Logger.warning;
 import static pl.greenmc.tob.game.util.Utilities.boundInt;
 
 public class GameState {
     private static final int DICE_MAX = 6;
     private static final int DICE_MIN = 1;
     private static final int NUM_DICES = 2;
+    private static final long STARTING_BALANCE = 2000000L;
+    private static final float START_STAND_MULTIPLIER = 2.0f;
+    private final boolean ALLOW_ACTIONS_WHILE_IN_JAIL = false;
+    private final float TIMEOUT_MULTIPLIER = 1.0f;
+    private final ArrayList<AfterSellAction> afterSellActions = new ArrayList<>();
     private final Map map;
+    private final long[] playerBalances; //Player balance
     private final boolean[] playerInJail;
     private final int[] playerInJailTurns;
-    private final int[] playerPositions; //Player positions on board (playerNum, boardID)
+    private final int[] playerPositions; //Player positions on board
     private final Integer[] playersIDs;
+    private final ArrayList<Integer> propertiesToSell = new ArrayList<>();
     private final int[] rolledNumbers = new int[NUM_DICES]; //Last rolled numbers
     private final int startingPlayerNum;
+    private final int[] tileLevels;
+    private final Integer[] tileOwners;
+    private BuyDecision buyDecision = null;
     private JailDecision jailDecision = null;
+    private int loopNumber = 0;
     private boolean playerRolled = false;
+    private int sellAmount = 0;
     private State state = State.AWAITING_ROLL;
-    private HashMap<Integer, Integer> tileLevels = new HashMap<>(); //tileNum, tileLevel
-    private HashMap<Integer, Integer> tileOwners = new HashMap<>(); //tileNum, playerNum
-    private float timeoutMultiplier = 1.0f; //TODO Add this as config entry
+    private Integer tileToBuy = null;
     private long timeoutStart = 0;
     private Timer timer;
     private int turnOf;
 
     public GameState(@NotNull Integer[] playersIDs, @NotNull Map map) {
         this.playersIDs = playersIDs;
+        this.playerBalances = new long[playersIDs.length];
+        for (int i = 0; i < playersIDs.length; i++)
+            this.playerBalances[i] = STARTING_BALANCE;
         this.playerPositions = new int[playersIDs.length];
         this.playerInJailTurns = new int[playersIDs.length];
         this.playerInJail = new boolean[playersIDs.length];
-        startingPlayerNum = (int) Math.floor(Math.random() * playersIDs.length);
-        turnOf = startingPlayerNum;
+        this.tileOwners = new Integer[map.getTiles().length];
+        this.tileLevels = new int[map.getTiles().length];
+        this.startingPlayerNum = (int) Math.floor(Math.random() * playersIDs.length);
+        this.turnOf = startingPlayerNum;
         this.map = map;
         for (int i = 0; i < map.getTiles().length; i++) {
-            tileOwners.put(i, null);
+            tileOwners[i] = null;
         }
         for (int i = 0; i < map.getTiles().length; i++) {
-            tileLevels.put(i, 0);
+            tileLevels[i] = 0;
         }
     }
 
@@ -64,6 +81,10 @@ public class GameState {
         timer = null;
     }
 
+    public int getStartingPlayerNum() {
+        return startingPlayerNum;
+    }
+
     private void gameTick() {
         switch (state) {
             case AWAITING_JAIL:
@@ -75,13 +96,11 @@ public class GameState {
                     setPlayerInJail(turnOf, false);
                     changeState(State.AWAITING_ROLL);
                     return;
-                }
-                if (jailDecision != null) {
+                } else if (jailDecision != null) {
                     switch (jailDecision) {
                         case ROLL:
                             break;
                         case PAY:
-                            //TODO Check if player has enough money and update jailed flag
                             if (takePlayerMoney(turnOf, getJailBail(getPlayerPosition(turnOf)))) {
                                 //Player had enough money
                                 setPlayerInJail(turnOf, false);
@@ -96,7 +115,7 @@ public class GameState {
                     }
                     changeState(State.AWAITING_ROLL);
                     return;
-                } else if (checkTimeout(state.getTimeout(timeoutMultiplier))) {
+                } else if (checkTimeout(state.getTimeout(TIMEOUT_MULTIPLIER))) {
                     //Default to roll
                     setJailDecision(JailDecision.ROLL);
                     return;
@@ -106,7 +125,7 @@ public class GameState {
                 if (playerRolled) {
                     changeState(State.PLAYER_MOVING);
                     return;
-                } else if (checkTimeout(state.getTimeout(timeoutMultiplier))) {
+                } else if (checkTimeout(state.getTimeout(TIMEOUT_MULTIPLIER))) {
                     roll();
                     return;
                 }
@@ -119,7 +138,10 @@ public class GameState {
                     if (isPlayerInJail(turnOf) && !draw) {
                         //Player stays in jail
                         //TODO Send some event?
-                        //TODO Add config entry to allow round end screen in jail
+                        if (ALLOW_ACTIONS_WHILE_IN_JAIL)
+                            endTurn();
+                        else
+                            changeState(State.END_ROUND);
                     } else {
                         int num = 0;
                         for (int i = 0; i < NUM_DICES; i++) num += rolledNumbers[i];
@@ -137,18 +159,149 @@ public class GameState {
                 }
                 break;
             case AWAITING_BUY:
-                //TODO
+                if (tileToBuy == null)
+                    changeState(State.END_ROUND);
+                else if (buyDecision != null) {
+                    switch (buyDecision) {
+                        case BUY:
+                            if (isTileBuyable(tileToBuy) &&
+                                    takePlayerMoney(turnOf, getPropertyPrice(tileToBuy))) {
+                                setTileOwner(tileToBuy, turnOf);
+                                //TODO Raise event
+                            } else
+                                setBuyDecision(BuyDecision.DONT_BUY);
+                            break;
+                        case DONT_BUY:
+                            //TODO Start auction if config allows
+                            break;
+                    }
+                } else if (checkTimeout(state.getTimeout(TIMEOUT_MULTIPLIER))) {
+                    //Default to not buy
+                    setBuyDecision(BuyDecision.DONT_BUY);
+                    return;
+                }
                 break;
             case SELL:
-                //TODO
+                if (propertiesToSell.size() > 0) {
+                    int totalValue = 0;
+                    for (Integer tile : propertiesToSell) {
+                        if (tile != null && getTileOwner(tile) == turnOf)
+                            totalValue += getPropertyValue(tile);
+                        else {
+                            //Invalid data
+                            autoSell(turnOf);
+                            return;
+                        }
+                    }
+                    if (totalValue < sellAmount) {
+                        autoSell(turnOf);
+                    } else {
+                        for (Integer tile : propertiesToSell) {
+                            setTileOwner(tile, null);
+                            givePlayerMoney(turnOf, getPropertyValue(tile));
+                        }
+                        for (AfterSellAction action : afterSellActions) {
+                            if (action.getTo() == null) {
+                                if (!takePlayerMoney(turnOf, action.getAmount()))
+                                    warning("Unable to collect " + action.getAmount());
+                            } else {
+                                if (!playerPayPlayer(turnOf, action.getTo(), action.getAmount()))
+                                    warning("Unable to collect " + action.getAmount());
+                            }
+                        }
+                        changeState(State.END_ROUND);
+                    }
+                } else if (checkTimeout(state.getTimeout(TIMEOUT_MULTIPLIER))) {
+                    autoSell(turnOf);
+                }
                 break;
             case AUCTION:
                 //TODO
                 break;
             case END_ROUND:
                 //TODO
+                //TODO Check for extra moves (cards, doubles etc.)
                 break;
         }
+    }
+
+    private int getTileOwner(int tile) {
+        return tileOwners[tile % map.getTiles().length];
+    }
+
+    private void autoSell(int player) {
+        //TODO Implement auto sell
+        //ex. Sort player's properties by value asc
+        //Select until sellAmount is reached
+        //Unselect from beginning while (sellAmount > totalValue)
+    }
+
+    private int getPropertyValue(int tile) {
+        int value = 0;
+        if (isTileBuyable(tile)) {
+            Tile tile1 = map.getTiles()[tile % map.getTiles().length];
+            switch (tile1.getType()) {
+                case UTILITY:
+                case STATION:
+                    value = getPropertyPrice(tile);
+                    break;
+                case CITY:
+                    Tile.CityTileData data = (Tile.CityTileData) tile1.getData();
+                    value = data.getValue() + data.getImprovementCost() * getTileLevel(tile);
+                    break;
+            }
+        }
+        return value;
+    }
+
+    private int getTileLevel(int tile) {
+        return tileLevels[tile % map.getTiles().length];
+    }
+
+    private void setTileOwner(int tile, Integer owner) {
+        tileOwners[tile % map.getTiles().length] = owner;
+        //TODO Raise event
+    }
+
+    private int getPropertyPrice(int tile) {
+        int price = 0;
+        if (isTileBuyable(tile)) {
+            Tile tile1 = map.getTiles()[tile % map.getTiles().length];
+            switch (tile1.getType()) {
+                case UTILITY:
+                    price = ((Tile.UtilityTileData) tile1.getData()).getValue();
+                    break;
+                case STATION:
+                    price = ((Tile.StationTileData) tile1.getData()).getValue();
+                    break;
+                case CITY:
+                    price = ((Tile.CityTileData) tile1.getData()).getValue();
+                    break;
+            }
+        }
+        return price;
+    }
+
+    private boolean isTileBuyable(int tile) {
+        switch (map.getTiles()[tile % map.getTiles().length].getType()) {
+            case CITY:
+            case STATION:
+            case UTILITY:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void setBuyDecision(BuyDecision decision) {
+        buyDecision = decision;
+    }
+
+    private void endTurn() {
+        turnOf = (turnOf + 1) % playersIDs.length;
+        if (turnOf == startingPlayerNum) loopNumber++;
+        resetVariables();
+        changeState(State.AWAITING_JAIL);
     }
 
     private int getJailMaxTurns(int tile) {
@@ -198,13 +351,34 @@ public class GameState {
         jailDecision = decision;
     }
 
+    private void resetVariables() {
+        jailDecision = null;
+        buyDecision = null;
+        playerRolled = false;
+        tileToBuy = null;
+        sellAmount = 0;
+        afterSellActions.clear();
+        propertiesToSell.clear();
+    }
+
+    private void processTilePass(int player, int tile) {
+        Tile tile1 = getTile(tile);
+        if (tile1 != null) {
+            //noinspection SwitchStatementWithTooFewBranches
+            switch (tile1.getType()) {
+                case START:
+                    givePlayerMoney(player, ((Tile.StartTileData) tile1.getData()).getStartMoney());
+                    break;
+            }
+        }
+    }
+
     private void processTileEntry(int player, int tile) {
         Tile tile1 = getTile(tile);
         if (tile1 != null) {
             switch (tile1.getType()) {
                 case START:
-                    //TODO Add config entry for start stand multiplier
-                    givePlayerMoney(player, ((Tile.StartTileData) tile1.getData()).getStartMoney());
+                    givePlayerMoney(player, (int) (((Tile.StartTileData) tile1.getData()).getStartMoney() * START_STAND_MULTIPLIER));
                     break;
                 case CITY:
                     //TODO
@@ -225,7 +399,21 @@ public class GameState {
                     //TODO
                     break;
                 case GO_TO_JAIL:
-                    //TODO
+                    Tile.GoToJailTileData data = (Tile.GoToJailTileData) tile1.getData();
+                    Tile[] tiles = data.getTileGroup().getTiles();
+                    int jailNum = -1;
+                    for (int i = 0; i < tiles.length; i++) {
+                        if (tiles[i].getType() == Tile.TileType.JAIL) {
+                            jailNum = i;
+                            break;
+                        }
+                    }
+                    if (jailNum == -1) {
+                        warning("No jail found for GO_TO_JAIL tile!");
+                        break;
+                    }
+                    setPlayerInJail(player, true);
+                    movePlayer(player, jailNum);
                     break;
                 case INCOME_TAX:
                     //TODO
@@ -244,22 +432,6 @@ public class GameState {
                     break;
             }
         }
-    }
-
-    private void processTilePass(int player, int tile) {
-        Tile tile1 = getTile(tile);
-        if (tile1 != null) {
-            //noinspection SwitchStatementWithTooFewBranches
-            switch (tile1.getType()) {
-                case START:
-                    givePlayerMoney(player, ((Tile.StartTileData) tile1.getData()).getStartMoney());
-                    break;
-            }
-        }
-    }
-
-    private void givePlayerMoney(int player, int amount) {
-        //TODO Implement financial system
     }
 
     private void changeState(State newState) {
@@ -298,30 +470,42 @@ public class GameState {
         return playerInJail[player];
     }
 
-    private boolean takePlayerMoney(int player, int amount) {
-        //TODO Implement financial system
-        //Return false if player does not have enough money
-        return false;
+    private void givePlayerMoney(int player, int amount) {
+        playerBalances[player] += amount;
+        //TODO Raise event
     }
 
-    public int getStartingPlayerNum() {
-        return startingPlayerNum;
+    private boolean takePlayerMoney(int player, int amount) {
+        if (playerBalances[player] < amount)
+            return false;
+        playerBalances[player] -= amount;
+        //TODO Raise event
+        return true;
     }
 
     private boolean playerPayPlayer(int from, int to, int amount) {
-        //TODO Implement financial system
-        //Return false if player does not have enough money
-        return false;
+        if (playerBalances[from] < amount)
+            return false;
+        playerBalances[from] -= amount;
+        playerBalances[to] += amount;
+        //TODO Raise event
+        return true;
     }
 
-    private int getPlayerBalance(int player) {
-        //TODO Implement financial system
-        return 0;
+    private void initiateSell(int amount, AfterSellAction[] actions) {
+        sellAmount = amount;
+        afterSellActions.clear();
+        Collections.addAll(afterSellActions, actions);
+        changeState(State.SELL);
     }
 
-    private void startRound() {
-        jailDecision = null;
-        playerRolled = false;
+    private long getPlayerBalance(int player) {
+        return playerBalances[player];
+    }
+
+    enum BuyDecision {
+        BUY,
+        DONT_BUY
     }
 
     enum JailDecision {
@@ -358,10 +542,10 @@ public class GameState {
         AWAITING_JAIL(15000),
         AWAITING_ROLL(15000),
         PLAYER_MOVING,
-        AWAITING_BUY,
-        AUCTION,
-        SELL,
-        END_ROUND;
+        AWAITING_BUY(15000),
+        AUCTION(60000), //TODO Set auction time with parameter
+        SELL(45000),
+        END_ROUND(15000); //TODO Reset on action
 
         private final int timeout;
 
@@ -379,6 +563,24 @@ public class GameState {
 
         public int getTimeout(float multiplier) {
             return (int) (timeout * multiplier);
+        }
+    }
+
+    private class AfterSellAction {
+        private final int amount;
+        private final Integer to;
+
+        public AfterSellAction(Integer to, int amount) {
+            this.to = to;
+            this.amount = amount;
+        }
+
+        public Integer getTo() {
+            return to;
+        }
+
+        public int getAmount() {
+            return amount;
         }
     }
 }

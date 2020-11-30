@@ -115,6 +115,7 @@ public class Lobby {
             players[0] = owner;
             System.arraycopy(getPlayers(), 0, players, 1, players.length - 1);
             gameState = new GameState(players, new DefaultMap()); //TODO Allow for other maps
+            gameState.startTicking();
         }
     }
 
