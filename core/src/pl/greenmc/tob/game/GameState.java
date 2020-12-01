@@ -1,23 +1,23 @@
 package pl.greenmc.tob.game;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.greenmc.tob.game.map.Map;
 import pl.greenmc.tob.game.map.Tile;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import static pl.greenmc.tob.game.util.Logger.warning;
 import static pl.greenmc.tob.game.util.Utilities.boundInt;
 
 public class GameState {
+    private static final boolean AUCTIONS_ENABLED = true;
     private static final int DICE_MAX = 6;
     private static final int DICE_MIN = 1;
     private static final int NUM_DICES = 2;
     private static final long STARTING_BALANCE = 2000000L;
+    private static final boolean START_AUCTION_ON_DONT_BUY = true;
     private static final float START_STAND_MULTIPLIER = 2.0f;
     private final boolean ALLOW_ACTIONS_WHILE_IN_JAIL = false;
     private final float TIMEOUT_MULTIPLIER = 1.0f;
@@ -149,7 +149,7 @@ public class GameState {
                         playerRolled = false;
                     }
                 }
-                if (checkTimeout(1000)) {
+                if (checkTimeout(state.getTimeout())) {
                     //Animation finished
                     int num = 0;
                     for (int i = 0; i < NUM_DICES; i++) num += rolledNumbers[i];
@@ -167,12 +167,12 @@ public class GameState {
                             if (isTileBuyable(tileToBuy) &&
                                     takePlayerMoney(turnOf, getPropertyPrice(tileToBuy))) {
                                 setTileOwner(tileToBuy, turnOf);
-                                //TODO Raise event
                             } else
                                 setBuyDecision(BuyDecision.DONT_BUY);
                             break;
                         case DONT_BUY:
-                            //TODO Start auction if config allows
+                            if (AUCTIONS_ENABLED && START_AUCTION_ON_DONT_BUY)
+                                startAuction(tileToBuy);
                             break;
                     }
                 } else if (checkTimeout(state.getTimeout(TIMEOUT_MULTIPLIER))) {
@@ -189,12 +189,16 @@ public class GameState {
                             totalValue += getPropertyValue(tile);
                         else {
                             //Invalid data
-                            autoSell(turnOf);
+                            if (!autoSell(turnOf, getPlayerBalance(turnOf) + sellAmount)) {
+                                //TODO Bankruptcy
+                            }
                             return;
                         }
                     }
                     if (totalValue < sellAmount) {
-                        autoSell(turnOf);
+                        if (!autoSell(turnOf, getPlayerBalance(turnOf) + sellAmount)) {
+                            //TODO Bankruptcy
+                        }
                     } else {
                         for (Integer tile : propertiesToSell) {
                             setTileOwner(tile, null);
@@ -212,7 +216,9 @@ public class GameState {
                         changeState(State.END_ROUND);
                     }
                 } else if (checkTimeout(state.getTimeout(TIMEOUT_MULTIPLIER))) {
-                    autoSell(turnOf);
+                    if (!autoSell(turnOf, getPlayerBalance(turnOf) + sellAmount)) {
+                        //TODO Bankruptcy
+                    }
                 }
                 break;
             case AUCTION:
@@ -225,72 +231,56 @@ public class GameState {
         }
     }
 
-    private int getTileOwner(int tile) {
-        return tileOwners[tile % map.getTiles().length];
+    private void startAuction(int tileToBuy) {
+        //TODO
     }
 
-    private void autoSell(int player) {
+    /**
+     * @param player     Player number
+     * @param totalValue Total amount that player should have after autoSell
+     */
+    private boolean autoSell(int player, long totalValue) {
         //TODO Implement auto sell
         //ex. Sort player's properties by value asc
         //Select until sellAmount is reached
         //Unselect from beginning while (sellAmount > totalValue)
-    }
+        if (getPlayerValue(player) < totalValue) return false;
+        propertiesToSell.clear();
+        final int[] playerProperties = getPlayerProperties(player);
 
-    private int getPropertyValue(int tile) {
-        int value = 0;
-        if (isTileBuyable(tile)) {
-            Tile tile1 = map.getTiles()[tile % map.getTiles().length];
-            switch (tile1.getType()) {
-                case UTILITY:
-                case STATION:
-                    value = getPropertyPrice(tile);
-                    break;
-                case CITY:
-                    Tile.CityTileData data = (Tile.CityTileData) tile1.getData();
-                    value = data.getValue() + data.getImprovementCost() * getTileLevel(tile);
-                    break;
-            }
+        HashMap<Integer, Long> propertyValues = new HashMap<>();
+        for (int property : playerProperties)
+            propertyValues.put(property, getPropertyValue(property));
+
+        final Integer[] sorted = ArrayUtils.toObject(playerProperties);
+        Arrays.sort(sorted, Comparator.comparing(propertyValues::get));
+        System.arraycopy(ArrayUtils.toPrimitive(sorted), 0, playerProperties, 0, sorted.length);
+
+        ArrayList<Integer> propertiesToSell = new ArrayList<>();
+        long value = getPlayerBalance(player);
+        for (int playerProperty : playerProperties) {
+            if (value >= totalValue) break;
+            value += getPropertyValue(playerProperty);
+            propertiesToSell.add(playerProperty);
         }
-        return value;
-    }
 
-    private int getTileLevel(int tile) {
-        return tileLevels[tile % map.getTiles().length];
+        value = getPlayerBalance(player);
+
+        for (int i = propertiesToSell.size() - 1; i >= 0; i--) {
+            if (value >= totalValue) break;
+            value += getPropertyValue(propertiesToSell.get(i));
+            this.propertiesToSell.add(propertiesToSell.get(i));
+        }
+        return true;
     }
 
     private void setTileOwner(int tile, Integer owner) {
         tileOwners[tile % map.getTiles().length] = owner;
+        if (owner == null) {
+            //TODO Remove all upgrades from tile
+            //TODO In all tiles in group for upgrades mode remove upgrades from all tiles
+        }
         //TODO Raise event
-    }
-
-    private int getPropertyPrice(int tile) {
-        int price = 0;
-        if (isTileBuyable(tile)) {
-            Tile tile1 = map.getTiles()[tile % map.getTiles().length];
-            switch (tile1.getType()) {
-                case UTILITY:
-                    price = ((Tile.UtilityTileData) tile1.getData()).getValue();
-                    break;
-                case STATION:
-                    price = ((Tile.StationTileData) tile1.getData()).getValue();
-                    break;
-                case CITY:
-                    price = ((Tile.CityTileData) tile1.getData()).getValue();
-                    break;
-            }
-        }
-        return price;
-    }
-
-    private boolean isTileBuyable(int tile) {
-        switch (map.getTiles()[tile % map.getTiles().length].getType()) {
-            case CITY:
-            case STATION:
-            case UTILITY:
-                return true;
-            default:
-                return false;
-        }
     }
 
     private void setBuyDecision(BuyDecision decision) {
@@ -302,6 +292,16 @@ public class GameState {
         if (turnOf == startingPlayerNum) loopNumber++;
         resetVariables();
         changeState(State.AWAITING_JAIL);
+    }
+
+    private void resetVariables() {
+        jailDecision = null;
+        buyDecision = null;
+        playerRolled = false;
+        tileToBuy = null;
+        sellAmount = 0;
+        afterSellActions.clear();
+        propertiesToSell.clear();
     }
 
     private int getJailMaxTurns(int tile) {
@@ -351,16 +351,6 @@ public class GameState {
         jailDecision = decision;
     }
 
-    private void resetVariables() {
-        jailDecision = null;
-        buyDecision = null;
-        playerRolled = false;
-        tileToBuy = null;
-        sellAmount = 0;
-        afterSellActions.clear();
-        propertiesToSell.clear();
-    }
-
     private void processTilePass(int player, int tile) {
         Tile tile1 = getTile(tile);
         if (tile1 != null) {
@@ -371,6 +361,11 @@ public class GameState {
                     break;
             }
         }
+    }
+
+    private void givePlayerMoney(int player, long amount) {
+        playerBalances[player] += amount;
+        //TODO Raise event
     }
 
     private void processTileEntry(int player, int tile) {
@@ -434,16 +429,6 @@ public class GameState {
         }
     }
 
-    private void changeState(State newState) {
-        //TODO Add some checks
-        resetTimeout();
-        state = newState;
-    }
-
-    private void resetTimeout() {
-        timeoutStart = System.nanoTime();
-    }
-
     /**
      * @param timeout Timeout in ms
      * @return Whether timeout is triggered
@@ -470,12 +455,7 @@ public class GameState {
         return playerInJail[player];
     }
 
-    private void givePlayerMoney(int player, int amount) {
-        playerBalances[player] += amount;
-        //TODO Raise event
-    }
-
-    private boolean takePlayerMoney(int player, int amount) {
+    private boolean takePlayerMoney(int player, long amount) {
         if (playerBalances[player] < amount)
             return false;
         playerBalances[player] -= amount;
@@ -483,7 +463,7 @@ public class GameState {
         return true;
     }
 
-    private boolean playerPayPlayer(int from, int to, int amount) {
+    private boolean playerPayPlayer(int from, int to, long amount) {
         if (playerBalances[from] < amount)
             return false;
         playerBalances[from] -= amount;
@@ -496,11 +476,101 @@ public class GameState {
         sellAmount = amount;
         afterSellActions.clear();
         Collections.addAll(afterSellActions, actions);
+        if (getPlayerValue(turnOf) - getPlayerBalance(turnOf) < amount) {
+            //TODO Bankruptcy
+        }
         changeState(State.SELL);
+    }
+
+    private long getPlayerValue(int player) {
+        long total = getPlayerBalance(player);
+        final int[] playerProperties = getPlayerProperties(player);
+        for (int property : playerProperties) {
+            total += getPropertyValue(property);
+        }
+        return total;
+    }
+
+    private long getPropertyValue(int tile) {
+        //TODO Consider price modifier
+        long value = 0;
+        if (isTileBuyable(tile)) {
+            Tile tile1 = map.getTiles()[tile % map.getTiles().length];
+            switch (tile1.getType()) {
+                case UTILITY:
+                case STATION:
+                    value = getPropertyPrice(tile);
+                    break;
+                case CITY:
+                    Tile.CityTileData data = (Tile.CityTileData) tile1.getData();
+                    value = data.getValue() + data.getImprovementCost() * getTileLevel(tile);
+                    break;
+            }
+        }
+        return value;
+    }
+
+    private int getTileLevel(int tile) {
+        return tileLevels[tile % map.getTiles().length];
+    }
+
+    private int getPropertyPrice(int tile) {
+        int price = 0;
+        if (isTileBuyable(tile)) {
+            Tile tile1 = map.getTiles()[tile % map.getTiles().length];
+            switch (tile1.getType()) {
+                case UTILITY:
+                    price = ((Tile.UtilityTileData) tile1.getData()).getValue();
+                    break;
+                case STATION:
+                    price = ((Tile.StationTileData) tile1.getData()).getValue();
+                    break;
+                case CITY:
+                    price = ((Tile.CityTileData) tile1.getData()).getValue();
+                    break;
+            }
+        }
+        return price;
+    }
+
+    private boolean isTileBuyable(int tile) {
+        switch (map.getTiles()[tile % map.getTiles().length].getType()) {
+            case CITY:
+            case STATION:
+            case UTILITY:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    @NotNull
+    private int[] getPlayerProperties(int player) {
+        ArrayList<Integer> out = new ArrayList<>();
+        for (int i = 0; i < map.getTiles().length; i++)
+            if (getTileOwner(i) == player) out.add(i);
+        int[] realOut = new int[out.size()];
+        for (int i = 0; i < out.size(); i++)
+            realOut[i] = out.get(i);
+        return realOut;
+    }
+
+    private int getTileOwner(int tile) {
+        return tileOwners[tile % map.getTiles().length];
     }
 
     private long getPlayerBalance(int player) {
         return playerBalances[player];
+    }
+
+    private void changeState(State newState) {
+        //TODO Add some checks
+        resetTimeout();
+        state = newState;
+    }
+
+    private void resetTimeout() {
+        timeoutStart = System.nanoTime();
     }
 
     enum BuyDecision {
@@ -541,7 +611,7 @@ public class GameState {
     enum State {
         AWAITING_JAIL(15000),
         AWAITING_ROLL(15000),
-        PLAYER_MOVING,
+        PLAYER_MOVING(1000),
         AWAITING_BUY(15000),
         AUCTION(60000), //TODO Set auction time with parameter
         SELL(45000),
@@ -549,6 +619,7 @@ public class GameState {
 
         private final int timeout;
 
+        @SuppressWarnings("unused")
         State() {
             this(0);
         }
@@ -566,7 +637,7 @@ public class GameState {
         }
     }
 
-    private class AfterSellAction {
+    private static class AfterSellAction {
         private final int amount;
         private final Integer to;
 

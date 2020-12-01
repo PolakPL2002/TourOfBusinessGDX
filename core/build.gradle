@@ -10,6 +10,8 @@ dependencies {
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.67'
     // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.32.3.2'
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
 }
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
