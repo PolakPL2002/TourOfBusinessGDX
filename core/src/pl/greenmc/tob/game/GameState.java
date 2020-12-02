@@ -93,6 +93,7 @@ public class GameState {
     private void gameTick() {
         switch (state) {
             case AWAITING_JAIL:
+                playerInJailTurns[turnOf]++;
                 if (!isPlayerInJail(turnOf)) {
                     //Player is not in jail
                     changeState(State.AWAITING_ROLL);
@@ -148,6 +149,7 @@ public class GameState {
                         else
                             changeState(State.END_ROUND);
                     } else {
+                        setPlayerInJail(turnOf, false);
                         int num = 0;
                         for (int i = 0; i < NUM_DICES; i++) num += rolledNumbers[i];
                         movePlayer(turnOf, num);
@@ -376,6 +378,7 @@ public class GameState {
     }
 
     private void setPlayerInJail(int player, boolean inJail) {
+        log("setPlayerInJail: " + player + ", " + inJail);
         if (inJail && !isPlayerInJail(player)) {
             playerInJail[player] = true;
             playerInJailTurns[player] = 0;
@@ -486,7 +489,11 @@ public class GameState {
                         break;
                     }
                     setPlayerInJail(player, true);
-                    movePlayer(player, jailNum);
+                    final int tileNumber = getTileNumber(tiles[jailNum]);
+                    if (tileNumber > -1)
+                        movePlayerToTile(player, tileNumber);
+                    else
+                        warning("Jail tile number not found.");
                     changeState(State.END_ROUND);
                     break;
                 case INCOME_TAX:
@@ -527,6 +534,22 @@ public class GameState {
                     break;
             }
         }
+    }
+
+    private void movePlayerToTile(int player, int tileNumber) {
+        playerPositions[player] = tileNumber;
+        log("Moved player " + player + " to tile " + getPlayerPosition(player));
+        //TODO Raise event
+    }
+
+    private int getTileNumber(Tile tile) {
+        int i = 0;
+        for (Tile t : map.getTiles()) {
+            if (t == tile)
+                return i;
+            i++;
+        }
+        return -1;
     }
 
     private long getPropertyRent(int tile) {
