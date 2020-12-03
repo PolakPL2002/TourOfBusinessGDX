@@ -36,7 +36,7 @@ public class Lobby {
                     else throw new InvalidPacketException();
 
                     JsonElement owner = jsonObject.get("owner");
-                    if (owner != null && owner.isJsonPrimitive()) this.owner = ID.getAsInt();
+                    if (owner != null && owner.isJsonPrimitive()) this.owner = owner.getAsInt();
                     else throw new InvalidPacketException();
 
                     JsonElement lobbyState = jsonObject.get("lobbyState");
@@ -123,6 +123,7 @@ public class Lobby {
         return players.toArray(new Integer[0]);
     }
 
+    @NotNull
     public JsonObject toJsonObject() {
         JsonObject out = new JsonObject();
         out.addProperty("type", TYPE);

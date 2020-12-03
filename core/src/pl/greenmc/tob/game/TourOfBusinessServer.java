@@ -27,6 +27,25 @@ import static pl.greenmc.tob.game.util.Logger.warning;
 public class TourOfBusinessServer {
     private final int LOBBY_MAX_PLAYERS = 7;
     private final ArrayList<Lobby> lobbies = new ArrayList<>();
+    private static TourOfBusinessServer instance;
+
+    public void sendPacketToPlayerByID(@NotNull Packet packet, int playerID) {
+        try {
+            Player player1 = NettyServer.getInstance().getDatabase().getPlayer(playerID);
+            if (player1 != null) {
+                ServerHandler client = NettyServer.getInstance().getClient(player1.getIdentity());
+                if (client != null) {
+                    client.send(packet, null, false);
+                }
+            }
+        } catch (ConnectionNotAliveException e) {
+            warning("Failed to send event packet.");
+            warning(e);
+        } catch (SQLException e) {
+            warning("Failed to get player from database.");
+            warning(e);
+        }
+    }
 
     public TourOfBusinessServer() {
         NettyServer.getInstance().start(null, new PacketReceivedHandler() {
@@ -341,22 +360,8 @@ public class TourOfBusinessServer {
         sendPacketToPlayerByID(new PlayerLeftPacket(player.getID()), lobby.getOwner());
     }
 
-    private void sendPacketToPlayerByID(@NotNull Packet packet, int playerID) {
-        try {
-            Player player1 = NettyServer.getInstance().getDatabase().getPlayer(playerID);
-            if (player1 != null) {
-                ServerHandler client = NettyServer.getInstance().getClient(player1.getIdentity());
-                if (client != null) {
-                    client.send(packet, null, false);
-                }
-            }
-        } catch (ConnectionNotAliveException e) {
-            warning("Failed to send event packet.");
-            warning(e);
-        } catch (SQLException e) {
-            warning("Failed to get player from database.");
-            warning(e);
-        }
+    public static TourOfBusinessServer getServer() {
+        return instance;
     }
 
     @Nullable
