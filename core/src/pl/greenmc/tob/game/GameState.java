@@ -7,7 +7,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import pl.greenmc.tob.game.map.DefaultMap;
 import pl.greenmc.tob.game.map.Map;
 import pl.greenmc.tob.game.map.Tile;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
@@ -17,11 +16,11 @@ import pl.greenmc.tob.game.netty.packets.game.events.PlayerMovedPacket;
 import pl.greenmc.tob.game.netty.packets.game.events.PlayerStateChangedPacket;
 import pl.greenmc.tob.game.netty.packets.game.events.TileModifiedPacket;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static pl.greenmc.tob.game.TourOfBusinessServer.getServer;
-import static pl.greenmc.tob.game.util.Logger.log;
-import static pl.greenmc.tob.game.util.Logger.warning;
+import static pl.greenmc.tob.game.util.Logger.*;
 import static pl.greenmc.tob.game.util.Utilities.boundInt;
 
 public class GameState {
@@ -88,12 +87,22 @@ public class GameState {
                 JsonElement type = jsonObject.get("type");
                 if (type != null && type.isJsonPrimitive() && type.getAsString().equalsIgnoreCase(TYPE)) {
                     //Decode values
-                    String mapID; //TODO Get map from ID
+                    String mapID;
                     JsonElement map = jsonObject.get("map");
                     if (map != null && map.isJsonPrimitive()) mapID = map.getAsString();
                     else throw new InvalidPacketException();
 
-                    this.map = new DefaultMap();
+                    Object o;
+                    try {
+                        o = Map.class.getClassLoader().loadClass(mapID).getConstructor().newInstance();
+                    } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                        error("Failed to load class!");
+                        error(e);
+                        throw new InvalidPacketException();
+                    }
+                    if (!(o instanceof Map)) throw new InvalidPacketException();
+
+                    this.map = (Map) o;
 
                     JsonElement startingPlayerNum = jsonObject.get("startingPlayerNum");
                     if (startingPlayerNum != null && startingPlayerNum.isJsonPrimitive())
