@@ -24,8 +24,7 @@ import static pl.greenmc.tob.game.util.Logger.*;
 import static pl.greenmc.tob.game.util.Utilities.boundInt;
 
 public class GameState {
-    public static final String TYPE = "GAME_STATE";
-    private static final boolean AUCTIONS_ENABLED = true;
+    private static final boolean AUCTIONS_ENABLED = false;
     private static final int DICE_MAX = 6;
     private static final int DICE_MIN = 1;
     private static final int NUM_DICES = 2;
@@ -36,32 +35,32 @@ public class GameState {
     private final boolean ALLOW_ACTIONS_WHILE_IN_JAIL = false;
     private final float TIMEOUT_MULTIPLIER = 0.1f;
     private final ArrayList<AfterSellAction> afterSellActions = new ArrayList<>();
-    private final Map map; //JSON
-    private final long[] playerBalances; //Player balance //JSON
-    private final boolean[] playerBankrupt; //JSON
-    private final Integer[] playerIDs; //JSON
-    private final boolean[] playerInJail; //JSON
-    private final int[] playerInJailTurns; //JSON
-    private final int[] playerPositions; //Player positions on board //JSON
+    private final Map map;
+    private final long[] playerBalances; //Player balance 
+    private final boolean[] playerBankrupt;
+    private final int[] playerIDs;
+    private final boolean[] playerInJail;
+    private final int[] playerInJailTurns;
+    private final int[] playerPositions; //Player positions on board 
     private final ArrayList<Integer> propertiesToSell = new ArrayList<>();
     private final int[] rolledNumbers = new int[NUM_DICES]; //Last rolled numbers
-    private final int startingPlayerNum; //JSON
-    private final int[] tileLevels; //JSON
-    private final Integer[] tileOwners; //JSON
+    private final int startingPlayerNum;
+    private final int[] tileLevels;
+    private final Integer[] tileOwners;
     private BuyDecision buyDecision = null;
     private int drawsInRow = 0;
     private JailDecision jailDecision = null;
     private int loopNumber = 0;
     private boolean playerRolled = false;
     private long sellAmount = 0;
-    private State state = State.AWAITING_JAIL; //JSON
+    private State state = State.AWAITING_JAIL;
     private Integer tileToBuy = null;
     private long timeoutStart = 0;
     private Timer timer;
     private int turnOf;
 
     public GameState(@NotNull Integer[] playerIDs, @NotNull Map map) {
-        this.playerIDs = playerIDs;
+        this.playerIDs = ArrayUtils.toPrimitive(playerIDs);
         this.playerBalances = new long[playerIDs.length];
         for (int i = 0; i < playerIDs.length; i++)
             this.playerBalances[i] = STARTING_BALANCE;
@@ -78,151 +77,6 @@ public class GameState {
             tileOwners[i] = null;
             tileLevels[i] = 0;
         }
-    }
-
-    public GameState(@NotNull JsonObject jsonObject) throws InvalidPacketException {
-        if (jsonObject.has("type")) {
-            //Check type
-            try {
-                JsonElement type = jsonObject.get("type");
-                if (type != null && type.isJsonPrimitive() && type.getAsString().equalsIgnoreCase(TYPE)) {
-                    //Decode values
-                    String mapID;
-                    JsonElement map = jsonObject.get("map");
-                    if (map != null && map.isJsonPrimitive()) mapID = map.getAsString();
-                    else throw new InvalidPacketException();
-
-                    Object o;
-                    try {
-                        o = Map.class.getClassLoader().loadClass(mapID).getConstructor().newInstance();
-                    } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                        error("Failed to load class!");
-                        error(e);
-                        throw new InvalidPacketException();
-                    }
-                    if (!(o instanceof Map)) throw new InvalidPacketException();
-
-                    this.map = (Map) o;
-
-                    JsonElement startingPlayerNum = jsonObject.get("startingPlayerNum");
-                    if (startingPlayerNum != null && startingPlayerNum.isJsonPrimitive())
-                        this.startingPlayerNum = startingPlayerNum.getAsInt();
-                    else throw new InvalidPacketException();
-
-                    JsonElement state = jsonObject.get("state");
-                    if (state != null && state.isJsonPrimitive())
-                        this.state = State.valueOf(state.getAsString());
-                    else throw new InvalidPacketException();
-
-                    JsonElement playerBalances = jsonObject.get("playerBalances");
-                    if (playerBalances != null && playerBalances.isJsonArray()) {
-                        final JsonArray array = playerBalances.getAsJsonArray();
-                        this.playerBalances = new long[array.size()];
-                        for (int i = 0; i < array.size(); i++) {
-                            JsonElement balance = array.get(i);
-                            if (balance != null && balance.isJsonPrimitive()) {
-                                this.playerBalances[i] = balance.getAsLong();
-                            } else throw new InvalidPacketException();
-                        }
-                    } else throw new InvalidPacketException();
-
-                    JsonElement playerBankrupt = jsonObject.get("playerBankrupt");
-                    if (playerBankrupt != null && playerBankrupt.isJsonArray()) {
-                        final JsonArray array = playerBankrupt.getAsJsonArray();
-                        this.playerBankrupt = new boolean[array.size()];
-                        for (int i = 0; i < array.size(); i++) {
-                            JsonElement isBankrupt = array.get(i);
-                            if (isBankrupt != null && isBankrupt.isJsonPrimitive()) {
-                                this.playerBankrupt[i] = isBankrupt.getAsBoolean();
-                            } else throw new InvalidPacketException();
-                        }
-                    } else throw new InvalidPacketException();
-
-                    JsonElement playerInJail = jsonObject.get("playerInJail");
-                    if (playerInJail != null && playerInJail.isJsonArray()) {
-                        final JsonArray array = playerInJail.getAsJsonArray();
-                        this.playerInJail = new boolean[array.size()];
-                        for (int i = 0; i < array.size(); i++) {
-                            JsonElement isInJail = array.get(i);
-                            if (isInJail != null && isInJail.isJsonPrimitive()) {
-                                this.playerInJail[i] = isInJail.getAsBoolean();
-                            } else throw new InvalidPacketException();
-                        }
-                    } else throw new InvalidPacketException();
-
-                    JsonElement playerInJailTurns = jsonObject.get("playerInJailTurns");
-                    if (playerInJailTurns != null && playerInJailTurns.isJsonArray()) {
-                        final JsonArray array = playerInJailTurns.getAsJsonArray();
-                        this.playerInJailTurns = new int[array.size()];
-                        for (int i = 0; i < array.size(); i++) {
-                            JsonElement inJailTurns = array.get(i);
-                            if (inJailTurns != null && inJailTurns.isJsonPrimitive()) {
-                                this.playerInJailTurns[i] = inJailTurns.getAsInt();
-                            } else throw new InvalidPacketException();
-                        }
-                    } else throw new InvalidPacketException();
-
-                    JsonElement playerPositions = jsonObject.get("playerPositions");
-                    if (playerPositions != null && playerPositions.isJsonArray()) {
-                        final JsonArray array = playerPositions.getAsJsonArray();
-                        this.playerPositions = new int[array.size()];
-                        for (int i = 0; i < array.size(); i++) {
-                            JsonElement position = array.get(i);
-                            if (position != null && position.isJsonPrimitive()) {
-                                this.playerPositions[i] = position.getAsInt();
-                            } else throw new InvalidPacketException();
-                        }
-                    } else throw new InvalidPacketException();
-
-                    JsonElement tileLevels = jsonObject.get("tileLevels");
-                    if (tileLevels != null && tileLevels.isJsonArray()) {
-                        final JsonArray array = tileLevels.getAsJsonArray();
-                        this.tileLevels = new int[array.size()];
-                        for (int i = 0; i < array.size(); i++) {
-                            JsonElement level = array.get(i);
-                            if (level != null && level.isJsonPrimitive()) {
-                                this.tileLevels[i] = level.getAsInt();
-                            } else throw new InvalidPacketException();
-                        }
-                    } else throw new InvalidPacketException();
-
-                    JsonElement tileOwners = jsonObject.get("tileOwners");
-                    if (tileOwners != null && tileOwners.isJsonArray()) {
-                        final JsonArray array = tileOwners.getAsJsonArray();
-                        this.tileOwners = new Integer[array.size()];
-                        for (int i = 0; i < array.size(); i++) {
-                            JsonElement owner = array.get(i);
-                            if (owner != null) {
-                                if (owner.isJsonPrimitive())
-                                    this.tileOwners[i] = owner.getAsInt();
-                                else if (owner.isJsonNull())
-                                    this.tileOwners[i] = null;
-                                else throw new InvalidPacketException();
-                            } else throw new InvalidPacketException();
-                        }
-                    } else throw new InvalidPacketException();
-
-                    JsonElement playerIDs = jsonObject.get("playerIDs");
-                    if (playerIDs != null && playerIDs.isJsonArray()) {
-                        final JsonArray array = playerIDs.getAsJsonArray();
-                        this.playerIDs = new Integer[array.size()];
-                        for (int i = 0; i < array.size(); i++) {
-                            JsonElement id = array.get(i);
-                            if (id != null) {
-                                if (id.isJsonPrimitive())
-                                    this.playerIDs[i] = id.getAsInt();
-                                else if (id.isJsonNull())
-                                    this.playerIDs[i] = null;
-                                else throw new InvalidPacketException();
-                            } else throw new InvalidPacketException();
-                        }
-                    } else throw new InvalidPacketException();
-
-                } else throw new InvalidPacketException();
-            } catch (ClassCastException ignored) {
-                throw new InvalidPacketException();
-            }
-        } else throw new InvalidPacketException();
     }
 
     public void onBuyDecision(int playerID, @NotNull BuyDecision decision) {
@@ -273,65 +127,6 @@ public class GameState {
         log("Rolled: " + Arrays.toString(rolledNumbers));
     }
 
-    @NotNull
-    public JsonObject toJsonObject() {
-        JsonObject out = new JsonObject();
-        out.addProperty("type", TYPE);
-        out.addProperty("map", map.getClass().getCanonicalName());
-        out.addProperty("state", state.name());
-        out.addProperty("startingPlayerNum", startingPlayerNum);
-
-        JsonArray playerBalances = new JsonArray();
-        for (long balance : this.playerBalances) {
-            playerBalances.add(balance);
-        }
-        out.add("playerBalances", playerBalances);
-
-        JsonArray playerBankrupt = new JsonArray();
-        for (boolean isBankrupt : this.playerBankrupt) {
-            playerBankrupt.add(isBankrupt);
-        }
-        out.add("playerBankrupt", playerBankrupt);
-
-        JsonArray playerInJail = new JsonArray();
-        for (boolean inJail : this.playerInJail) {
-            playerInJail.add(inJail);
-        }
-        out.add("playerInJail", playerInJail);
-
-        JsonArray playerInJailTurns = new JsonArray();
-        for (int inJailTurns : this.playerInJailTurns) {
-            playerInJailTurns.add(inJailTurns);
-        }
-        out.add("playerInJailTurns", playerInJailTurns);
-
-        JsonArray playerPositions = new JsonArray();
-        for (int position : this.playerPositions) {
-            playerPositions.add(position);
-        }
-        out.add("playerPositions", playerPositions);
-
-        JsonArray tileLevels = new JsonArray();
-        for (int level : this.tileLevels) {
-            tileLevels.add(level);
-        }
-        out.add("tileLevels", tileLevels);
-
-        JsonArray playerIDs = new JsonArray();
-        for (Integer id : this.playerIDs) {
-            playerIDs.add(id);
-        }
-        out.add("playerIDs", playerIDs);
-
-        JsonArray tileOwners = new JsonArray();
-        for (Integer owner : this.tileOwners) {
-            tileOwners.add(owner);
-        }
-        out.add("tileOwners", tileOwners);
-
-        return out;
-    }
-
     public void startTicking() {
         stopTicking();
         timer = new Timer();
@@ -356,7 +151,6 @@ public class GameState {
     private void gameTick() {
         switch (state) {
             case AWAITING_JAIL:
-                playerInJailTurns[turnOf]++;
                 if (!isPlayerInJail(turnOf)) {
                     //Player is not in jail
                     changeState(State.AWAITING_ROLL);
@@ -421,10 +215,10 @@ public class GameState {
                         playerRolled = false;
                     }
                 }
-                if (checkTimeout(state.getTimeout())) {
+                int num = 0;
+                for (int i = 0; i < NUM_DICES; i++) num += rolledNumbers[i];
+                if (checkTimeout(state.getTimeout() * num)) {
                     //Animation finished
-                    int num = 0;
-                    for (int i = 0; i < NUM_DICES; i++) num += rolledNumbers[i];
                     for (int i = 0; i < num; i++)
                         processTilePass(turnOf, boundInt(playerPositions[turnOf] - num + i, map.getTiles().length));
                     processTileEntry(turnOf, getPlayerPosition(turnOf));
@@ -445,6 +239,8 @@ public class GameState {
                         case DONT_BUY:
                             if (AUCTIONS_ENABLED && START_AUCTION_ON_DONT_BUY)
                                 startAuction(tileToBuy);
+                            else
+                                changeState(State.END_ROUND);
                             break;
                     }
                 } else if (checkTimeout(state.getTimeout(TIMEOUT_MULTIPLIER))) {
@@ -583,6 +379,8 @@ public class GameState {
     }
 
     private void endTurn() {
+        if (isPlayerInJail(turnOf))
+            playerInJailTurns[turnOf]++;
         if (getPlayersLeftInGame() < 2)
             endGame();
         turnOf = (turnOf + 1) % playerIDs.length;
@@ -699,7 +497,8 @@ public class GameState {
                     } else {
                         if (AUCTIONS_ENABLED && START_AUCTION_ON_INSUFFICIENT_FUNDS) {
                             startAuction(tile);
-                        }
+                        } else
+                            changeState(State.END_ROUND);
                     }
                 } else if (owner == player) {
                     changeState(State.END_ROUND);
@@ -800,7 +599,7 @@ public class GameState {
     private void movePlayerToTile(int player, int tileNumber) {
         playerPositions[player] = tileNumber;
         log("Moved player " + player + " to tile " + getPlayerPosition(player));
-        onPlayerMoved(player);
+        onPlayerMoved(player, false);
     }
 
     private int getTileNumber(Tile tile) {
@@ -829,11 +628,11 @@ public class GameState {
     private void movePlayer(int player, int numTiles) {
         playerPositions[player] = playerPositions[player] + numTiles;
         log("Moved player " + player + " to tile " + getPlayerPosition(player));
-        onPlayerMoved(player);
+        onPlayerMoved(player, true);
     }
 
-    private void onPlayerMoved(int player) {
-        sendPacketToAllPlayers(new PlayerMovedPacket(player, getPlayerPosition(player)));
+    private void onPlayerMoved(int player, boolean animate) {
+        sendPacketToAllPlayers(new PlayerMovedPacket(player, getPlayerPosition(player), animate));
     }
 
     private boolean isPlayerInJail(int player) {
@@ -975,7 +774,7 @@ public class GameState {
     }
 
     private void onStateChanged() {
-        sendPacketToAllPlayers(new GameStateChangedPacket(this));
+        sendPacketToAllPlayers(new GameStateChangedPacket(new GameState.Data(this)));
     }
 
     private void resetTimeout() {
@@ -1017,10 +816,10 @@ public class GameState {
     4.1. Player has extra move available, go to 0.
     4.2 (END_ROUND). Show end round menu (10s, unless some action is taken)
     */
-    enum State {
+    public enum State {
         AWAITING_JAIL(15000),
         AWAITING_ROLL(15000),
-        PLAYER_MOVING(1000),
+        PLAYER_MOVING(150),
         AWAITING_BUY(15000),
         AUCTION(60000), //TODO Set auction time with parameter
         SELL(45000),
@@ -1064,6 +863,331 @@ public class GameState {
         }
     }
 
+    public static class Data {
+        public static final String TYPE = "GAME_STATE_DATA";
+        private final Map map;
+        private final long[] playerBalances; //Player balance 
+        private final boolean[] playerBankrupt;
+        private final int[] playerIDs;
+        private final boolean[] playerInJail;
+        private final int[] playerInJailTurns;
+        private final int[] playerPositions; //Player positions on board
+        private final int startingPlayerNum;
+        private final State state;
+        private final int[] tileLevels;
+        private final Integer[] tileOwners;
+        private final long timeoutLeft;
+        private final int timeoutTotal;
+        private final int turnOf;
+
+        @Contract(pure = true)
+        Data(@NotNull GameState state) {
+            map = state.map;
+            playerBalances = state.playerBalances;
+            playerBankrupt = state.playerBankrupt;
+            playerIDs = state.playerIDs;
+            playerInJail = state.playerInJail;
+            playerInJailTurns = state.playerInJailTurns;
+            playerPositions = state.playerPositions;
+            startingPlayerNum = state.startingPlayerNum;
+            this.state = state.state;
+            tileLevels = state.tileLevels;
+            tileOwners = state.tileOwners;
+            turnOf = state.turnOf;
+            int timeout = 0;
+            switch (state.state) {
+                case AWAITING_JAIL:
+                case AWAITING_BUY:
+                case AWAITING_ROLL:
+                case AUCTION:
+                case SELL:
+                case END_ROUND:
+                    timeout = state.state.getTimeout(state.TIMEOUT_MULTIPLIER);
+                    break;
+                case PLAYER_MOVING:
+                    int num = 0;
+                    for (int i = 0; i < NUM_DICES; i++) num += state.rolledNumbers[i];
+                    timeout = state.state.getTimeout() * num;
+                    break;
+            }
+            timeoutTotal = timeout;
+            timeoutLeft = timeout - (System.nanoTime() - state.timeoutStart) / 1000000L;
+        }
+
+        public Data(@NotNull JsonObject jsonObject) throws InvalidPacketException {
+            if (jsonObject.has("type")) {
+                //Check type
+                try {
+                    JsonElement type = jsonObject.get("type");
+                    if (type != null && type.isJsonPrimitive() && type.getAsString().equalsIgnoreCase(TYPE)) {
+                        //Decode values
+                        String mapID;
+                        JsonElement map = jsonObject.get("map");
+                        if (map != null && map.isJsonPrimitive()) mapID = map.getAsString();
+                        else throw new InvalidPacketException();
+
+                        Object o;
+                        try {
+                            o = Map.class.getClassLoader().loadClass(mapID).getConstructor(Boolean.class).newInstance(true);
+                        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                            error("Failed to load class!");
+                            error(e);
+                            throw new InvalidPacketException();
+                        }
+                        if (!(o instanceof Map)) throw new InvalidPacketException();
+
+                        this.map = (Map) o;
+
+                        JsonElement startingPlayerNum = jsonObject.get("startingPlayerNum");
+                        if (startingPlayerNum != null && startingPlayerNum.isJsonPrimitive())
+                            this.startingPlayerNum = startingPlayerNum.getAsInt();
+                        else throw new InvalidPacketException();
+
+                        JsonElement turnOf = jsonObject.get("turnOf");
+                        if (turnOf != null && turnOf.isJsonPrimitive())
+                            this.turnOf = turnOf.getAsInt();
+                        else throw new InvalidPacketException();
+
+                        JsonElement timeoutTotal = jsonObject.get("timeoutTotal");
+                        if (timeoutTotal != null && timeoutTotal.isJsonPrimitive())
+                            this.timeoutTotal = timeoutTotal.getAsInt();
+                        else throw new InvalidPacketException();
+
+                        JsonElement timeoutLeft = jsonObject.get("timeoutLeft");
+                        if (timeoutLeft != null && timeoutLeft.isJsonPrimitive())
+                            this.timeoutLeft = timeoutLeft.getAsLong();
+                        else throw new InvalidPacketException();
+
+                        JsonElement state = jsonObject.get("state");
+                        if (state != null && state.isJsonPrimitive())
+                            this.state = State.valueOf(state.getAsString());
+                        else throw new InvalidPacketException();
+
+                        JsonElement playerBalances = jsonObject.get("playerBalances");
+                        if (playerBalances != null && playerBalances.isJsonArray()) {
+                            final JsonArray array = playerBalances.getAsJsonArray();
+                            this.playerBalances = new long[array.size()];
+                            for (int i = 0; i < array.size(); i++) {
+                                JsonElement balance = array.get(i);
+                                if (balance != null && balance.isJsonPrimitive()) {
+                                    this.playerBalances[i] = balance.getAsLong();
+                                } else throw new InvalidPacketException();
+                            }
+                        } else throw new InvalidPacketException();
+
+                        JsonElement playerBankrupt = jsonObject.get("playerBankrupt");
+                        if (playerBankrupt != null && playerBankrupt.isJsonArray()) {
+                            final JsonArray array = playerBankrupt.getAsJsonArray();
+                            this.playerBankrupt = new boolean[array.size()];
+                            for (int i = 0; i < array.size(); i++) {
+                                JsonElement isBankrupt = array.get(i);
+                                if (isBankrupt != null && isBankrupt.isJsonPrimitive()) {
+                                    this.playerBankrupt[i] = isBankrupt.getAsBoolean();
+                                } else throw new InvalidPacketException();
+                            }
+                        } else throw new InvalidPacketException();
+
+                        JsonElement playerInJail = jsonObject.get("playerInJail");
+                        if (playerInJail != null && playerInJail.isJsonArray()) {
+                            final JsonArray array = playerInJail.getAsJsonArray();
+                            this.playerInJail = new boolean[array.size()];
+                            for (int i = 0; i < array.size(); i++) {
+                                JsonElement isInJail = array.get(i);
+                                if (isInJail != null && isInJail.isJsonPrimitive()) {
+                                    this.playerInJail[i] = isInJail.getAsBoolean();
+                                } else throw new InvalidPacketException();
+                            }
+                        } else throw new InvalidPacketException();
+
+                        JsonElement playerInJailTurns = jsonObject.get("playerInJailTurns");
+                        if (playerInJailTurns != null && playerInJailTurns.isJsonArray()) {
+                            final JsonArray array = playerInJailTurns.getAsJsonArray();
+                            this.playerInJailTurns = new int[array.size()];
+                            for (int i = 0; i < array.size(); i++) {
+                                JsonElement inJailTurns = array.get(i);
+                                if (inJailTurns != null && inJailTurns.isJsonPrimitive()) {
+                                    this.playerInJailTurns[i] = inJailTurns.getAsInt();
+                                } else throw new InvalidPacketException();
+                            }
+                        } else throw new InvalidPacketException();
+
+                        JsonElement playerPositions = jsonObject.get("playerPositions");
+                        if (playerPositions != null && playerPositions.isJsonArray()) {
+                            final JsonArray array = playerPositions.getAsJsonArray();
+                            this.playerPositions = new int[array.size()];
+                            for (int i = 0; i < array.size(); i++) {
+                                JsonElement position = array.get(i);
+                                if (position != null && position.isJsonPrimitive()) {
+                                    this.playerPositions[i] = position.getAsInt();
+                                } else throw new InvalidPacketException();
+                            }
+                        } else throw new InvalidPacketException();
+
+                        JsonElement tileLevels = jsonObject.get("tileLevels");
+                        if (tileLevels != null && tileLevels.isJsonArray()) {
+                            final JsonArray array = tileLevels.getAsJsonArray();
+                            this.tileLevels = new int[array.size()];
+                            for (int i = 0; i < array.size(); i++) {
+                                JsonElement level = array.get(i);
+                                if (level != null && level.isJsonPrimitive()) {
+                                    this.tileLevels[i] = level.getAsInt();
+                                } else throw new InvalidPacketException();
+                            }
+                        } else throw new InvalidPacketException();
+
+                        JsonElement playerIDs = jsonObject.get("playerIDs");
+                        if (playerIDs != null && playerIDs.isJsonArray()) {
+                            final JsonArray array = playerIDs.getAsJsonArray();
+                            this.playerIDs = new int[array.size()];
+                            for (int i = 0; i < array.size(); i++) {
+                                JsonElement level = array.get(i);
+                                if (level != null && level.isJsonPrimitive()) {
+                                    this.playerIDs[i] = level.getAsInt();
+                                } else throw new InvalidPacketException();
+                            }
+                        } else throw new InvalidPacketException();
+
+                        JsonElement tileOwners = jsonObject.get("tileOwners");
+                        if (tileOwners != null && tileOwners.isJsonArray()) {
+                            final JsonArray array = tileOwners.getAsJsonArray();
+                            this.tileOwners = new Integer[array.size()];
+                            for (int i = 0; i < array.size(); i++) {
+                                JsonElement owner = array.get(i);
+                                if (owner != null) {
+                                    if (owner.isJsonPrimitive())
+                                        this.tileOwners[i] = owner.getAsInt();
+                                    else if (owner.isJsonNull())
+                                        this.tileOwners[i] = null;
+                                    else throw new InvalidPacketException();
+                                } else throw new InvalidPacketException();
+                            }
+                        } else throw new InvalidPacketException();
+                    } else throw new InvalidPacketException();
+                } catch (ClassCastException ignored) {
+                    throw new InvalidPacketException();
+                }
+            } else throw new InvalidPacketException();
+        }
+
+        public int getTimeoutTotal() {
+            return timeoutTotal;
+        }
+
+        public int getTurnOf() {
+            return turnOf;
+        }
+
+        public long getTimeoutLeft() {
+            return timeoutLeft;
+        }
+
+        public Map getMap() {
+            return map;
+        }
+
+        public long[] getPlayerBalances() {
+            return playerBalances;
+        }
+
+        public boolean[] getPlayerBankrupt() {
+            return playerBankrupt;
+        }
+
+        public int[] getPlayerIDs() {
+            return playerIDs;
+        }
+
+        public boolean[] getPlayerInJail() {
+            return playerInJail;
+        }
+
+        public int[] getPlayerInJailTurns() {
+            return playerInJailTurns;
+        }
+
+        public int[] getPlayerPositions() {
+            return playerPositions;
+        }
+
+        public int getStartingPlayerNum() {
+            return startingPlayerNum;
+        }
+
+        public State getState() {
+            return state;
+        }
+
+        public int[] getTileLevels() {
+            return tileLevels;
+        }
+
+        public Integer[] getTileOwners() {
+            return tileOwners;
+        }
+
+        @NotNull
+        public JsonObject toJsonObject() {
+            JsonObject out = new JsonObject();
+            out.addProperty("type", TYPE);
+            out.addProperty("map", map.getClass().getCanonicalName());
+            out.addProperty("state", state.name());
+            out.addProperty("startingPlayerNum", startingPlayerNum);
+            out.addProperty("timeoutLeft", timeoutLeft);
+            out.addProperty("turnOf", turnOf);
+            out.addProperty("timeoutTotal", timeoutTotal);
+
+            JsonArray playerBalances = new JsonArray();
+            for (long balance : this.playerBalances) {
+                playerBalances.add(balance);
+            }
+            out.add("playerBalances", playerBalances);
+
+            JsonArray playerBankrupt = new JsonArray();
+            for (boolean isBankrupt : this.playerBankrupt) {
+                playerBankrupt.add(isBankrupt);
+            }
+            out.add("playerBankrupt", playerBankrupt);
+
+            JsonArray playerInJail = new JsonArray();
+            for (boolean inJail : this.playerInJail) {
+                playerInJail.add(inJail);
+            }
+            out.add("playerInJail", playerInJail);
+
+            JsonArray playerInJailTurns = new JsonArray();
+            for (int inJailTurns : this.playerInJailTurns) {
+                playerInJailTurns.add(inJailTurns);
+            }
+            out.add("playerInJailTurns", playerInJailTurns);
+
+            JsonArray playerPositions = new JsonArray();
+            for (int position : this.playerPositions) {
+                playerPositions.add(position);
+            }
+            out.add("playerPositions", playerPositions);
+
+            JsonArray tileLevels = new JsonArray();
+            for (int level : this.tileLevels) {
+                tileLevels.add(level);
+            }
+            out.add("tileLevels", tileLevels);
+
+            JsonArray playerIDs = new JsonArray();
+            for (int id : this.playerIDs) {
+                playerIDs.add(id);
+            }
+            out.add("playerIDs", playerIDs);
+
+            JsonArray tileOwners = new JsonArray();
+            for (Integer owner : this.tileOwners) {
+                tileOwners.add(owner);
+            }
+            out.add("tileOwners", tileOwners);
+
+            return out;
+        }
+    }
+
     public static class PlayerState {
         public static String TYPE = "PLAYER_STATE";
         private final long balance;
@@ -1099,6 +1223,18 @@ public class GameState {
                     throw new InvalidPacketException();
                 }
             } else throw new InvalidPacketException();
+        }
+
+        public long getBalance() {
+            return balance;
+        }
+
+        public boolean isBankrupt() {
+            return bankrupt;
+        }
+
+        public boolean isJailed() {
+            return jailed;
         }
 
         public JsonObject toJsonObject() {

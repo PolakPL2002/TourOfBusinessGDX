@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
+import static pl.greenmc.tob.game.util.Utilities.boundInt;
 import static pl.greenmc.tob.graphics.GlobalTheme.playerColors;
 
 class Game3D extends Scene {
@@ -38,6 +40,8 @@ class Game3D extends Scene {
     private OrthographicCamera cam;
     private Environment environment;
     private ModelBatch modelBatch;
+    private PlayerMoveAnimation playerMoveAnimation = null;
+    private int[] playerPositions = new int[0];
 
     public Game3D(Map map) {
         this.map = map;
@@ -57,9 +61,16 @@ class Game3D extends Scene {
         Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         modelBatch.begin(cam);
         modelBatch.render(instances, environment);
-//        for (int i = 0; i < playerInstances.size(); i++) {
-//            playerInstances.get(i).transform.set(playerTileLocations.get(i).get(map.getTiles()[5]), new Quaternion(new Vector3(0, 0, 0), 0));
-//        }
+        for (int i = 0; i < playerPositions.length; i++) {
+            final Vector3 position;
+            if (playerMoveAnimation == null || playerMoveAnimation.getPlayer() != i)
+                position = playerTileLocations.get(i).get(map.getTiles()[playerPositions[i]]);
+            else {
+                position = playerMoveAnimation.getPosition();
+                if (playerMoveAnimation.isEnded()) playerMoveAnimation = null;
+            }
+            playerInstances.get(i).transform.set(position, new Quaternion(new Vector3(0, 0, 0), 0));
+        }
         modelBatch.render(playerInstances, environment);
         modelBatch.end();
     }
@@ -249,6 +260,21 @@ class Game3D extends Scene {
         cam.update();
     }
 
+    public void movePlayer(int player, int position, boolean animate) {
+        if (animate)
+            playerMoveAnimation = new PlayerMoveAnimation(player % playerPositions.length, playerPositions[player % playerPositions.length], position, 150);
+        playerPositions[player % playerPositions.length] = position;
+    }
+
+    public void setNumPlayers(int num) {
+        int[] oldPP = playerPositions;
+        playerPositions = new int[Math.min(num, playerInstances.size())];
+        if (Math.min(oldPP.length, playerPositions.length) >= 0)
+            System.arraycopy(oldPP, 0, playerPositions, 0, Math.min(oldPP.length, playerPositions.length));
+        for (int i = Math.min(oldPP.length, playerPositions.length); i < playerPositions.length; i++)
+            playerPositions[i] = 0;
+    }
+
     @Override
     public void resize(int width, int height) {
         modelBatch.dispose();
@@ -262,5 +288,47 @@ class Game3D extends Scene {
         boardModel.dispose();
         tileModels.forEach(Model::dispose);
         playerModels.forEach(Model::dispose);
+    }
+
+    private class PlayerMoveAnimation {
+        private final int duration;
+        private final int player;
+        private final Vector3[] waypoints;
+        private long startTime = -1;
+
+        public PlayerMoveAnimation(int player, int from, int to, int msPerTile) {
+            this.player = player;
+            int num = to - from;
+            if (num < 1) num += map.getTiles().length;
+            duration = num * msPerTile;
+            waypoints = new Vector3[num + 1];
+            for (int i = 0; i < num + 1; i++)
+                waypoints[i] = playerTileLocations.get(player).get(map.getTiles()[boundInt(to - num + i, map.getTiles().length)]);
+        }
+
+        public int getPlayer() {
+            return player;
+        }
+
+        public Vector3 getPosition() {
+            if (startTime == -1) startTime = System.currentTimeMillis();
+            float msPerWaypoint = duration / (float) (waypoints.length - 1);
+            long time = System.currentTimeMillis() - startTime;
+            int waypoint = (int) Math.floor(time / msPerWaypoint);
+            if (waypoint == waypoints.length - 1) waypoint--;
+            Vector3 fromWaypoint = waypoints[waypoint],
+                    toWaypoint = waypoints[waypoint + 1];
+            float deltaX = toWaypoint.x - fromWaypoint.x,
+                    deltaY = toWaypoint.y - fromWaypoint.y,
+                    deltaZ = toWaypoint.z - fromWaypoint.z;
+            float progress = (time - waypoint * msPerWaypoint) / msPerWaypoint;
+            if (progress > 1) progress = 1;
+            if (progress < 0) progress = 0;
+            return new Vector3(fromWaypoint.x + deltaX * progress, fromWaypoint.y + deltaY * progress, fromWaypoint.z + deltaZ * progress);
+        }
+
+        public boolean isEnded() {
+            return startTime != -1 && System.currentTimeMillis() - startTime > duration;
+        }
     }
 }

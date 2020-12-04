@@ -1,5 +1,6 @@
 package pl.greenmc.tob.game;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.audio.Music;
@@ -13,10 +14,15 @@ import pl.greenmc.tob.game.netty.client.NettyClient;
 import pl.greenmc.tob.game.netty.packets.ConfirmationPacket;
 import pl.greenmc.tob.game.netty.packets.Packet;
 import pl.greenmc.tob.game.netty.packets.game.GetSelfPacket;
+import pl.greenmc.tob.game.netty.packets.game.events.GameStateChangedPacket;
+import pl.greenmc.tob.game.netty.packets.game.events.PlayerMovedPacket;
+import pl.greenmc.tob.game.netty.packets.game.events.PlayerStateChangedPacket;
+import pl.greenmc.tob.game.netty.packets.game.events.TileModifiedPacket;
 import pl.greenmc.tob.game.netty.packets.game.events.lobby.*;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.scenes.ErrorScene;
 import pl.greenmc.tob.graphics.scenes.LoadingScene;
+import pl.greenmc.tob.graphics.scenes.game.GameScene;
 import pl.greenmc.tob.graphics.scenes.menus.JoinGameMenu;
 import pl.greenmc.tob.graphics.scenes.menus.LobbyMenu;
 import pl.greenmc.tob.graphics.scenes.menus.MainMenu;
@@ -172,6 +178,8 @@ public class TourOfBusinessGame {
                     try {
                         if (response == null) throw new InvalidPacketException();
                         self = GetSelfPacket.parseResponse(response);
+                        if (self != null)
+                            TOB.runOnGLThread(() -> Gdx.graphics.setTitle("TourOfBusiness - " + self.getName()));
                         if (self == null) throw new InvalidPacketException();
                         log("Got self data: name=" + self.getName() + ", id=" + self.getID());
                     } catch (InvalidPacketException e) {
@@ -236,6 +244,25 @@ public class TourOfBusinessGame {
                     if (scene instanceof LobbyMenu) {
                         PlayerReadyStateChanged playerReadyStateChanged = (PlayerReadyStateChanged) packet;
                         ((LobbyMenu) scene).onPlayerReadyStateChanged(playerReadyStateChanged.getPlayerID(), playerReadyStateChanged.isReady());
+                    }
+                } else if (packet instanceof GameStateChangedPacket) {
+                    if (scene instanceof GameScene) {
+                        ((GameScene) scene).onGameStateChanged(((GameStateChangedPacket) packet).getStateData());
+                    }
+                } else if (packet instanceof PlayerMovedPacket) {
+                    if (scene instanceof GameScene) {
+                        final PlayerMovedPacket playerMovedPacket = (PlayerMovedPacket) packet;
+                        ((GameScene) scene).onPlayerMoved(playerMovedPacket.getPlayer(), playerMovedPacket.getPosition(), playerMovedPacket.isAnimated());
+                    }
+                } else if (packet instanceof PlayerStateChangedPacket) {
+                    if (scene instanceof GameScene) {
+                        final PlayerStateChangedPacket playerStateChangedPacket = (PlayerStateChangedPacket) packet;
+                        ((GameScene) scene).onPlayerStateChanged(playerStateChangedPacket.getPlayer(), playerStateChangedPacket.getState());
+                    }
+                } else if (packet instanceof TileModifiedPacket) {
+                    if (scene instanceof GameScene) {
+                        final TileModifiedPacket tileModifiedPacket = (TileModifiedPacket) packet;
+                        ((GameScene) scene).onTileModified(tileModifiedPacket.getTile(), tileModifiedPacket.getOwner(), tileModifiedPacket.getLevel());
                     }
                 }
                 //There are no packets that require data response from client

@@ -11,9 +11,9 @@ public class GameStateChangedPacket extends Packet {
      * Packet data type identifier
      */
     public static String TYPE = "GAME_EVENTS_GAME_STATE_CHANGED";
-    private final GameState state;
+    private final GameState.Data state;
 
-    public GameStateChangedPacket(GameState state) {
+    public GameStateChangedPacket(GameState.Data state) {
         this.state = state;
     }
 
@@ -32,7 +32,7 @@ public class GameStateChangedPacket extends Packet {
                 if (type != null && type.isJsonPrimitive() && type.getAsString().equalsIgnoreCase(TYPE)) {
                     //Decode values
                     JsonElement state = objectToDecode.get("state");
-                    if (state != null && state.isJsonObject()) this.state = new GameState(state.getAsJsonObject());
+                    if (state != null && state.isJsonObject()) this.state = new GameState.Data(state.getAsJsonObject());
                     else throw new InvalidPacketException();
 
                 } else throw new InvalidPacketException();
@@ -42,7 +42,7 @@ public class GameStateChangedPacket extends Packet {
         } else throw new InvalidPacketException();
     }
 
-    public GameState getState() {
+    public GameState.Data getStateData() {
         return state;
     }
 

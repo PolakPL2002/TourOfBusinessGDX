@@ -2,6 +2,8 @@ package pl.greenmc.tob.game.netty.packets;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 
 import java.util.Base64;
@@ -72,6 +74,7 @@ public class HelloPacket extends Packet {
      * @param challengeData Challenge data
      * @return Response
      */
+    @NotNull
     public static JsonObject generateResponse(byte[] challengeData) {
         JsonObject response = new JsonObject();
         response.addProperty("challenge", Base64.getEncoder().encodeToString(challengeData));
@@ -83,7 +86,9 @@ public class HelloPacket extends Packet {
      * @return Response data
      * @throws InvalidPacketException On invalid data provided
      */
-    public static HelloResponse parseResponse(JsonObject response) throws InvalidPacketException {
+    @NotNull
+    @Contract("_ -> new")
+    public static HelloResponse parseResponse(@NotNull JsonObject response) throws InvalidPacketException {
         //Decode values
         JsonElement challenge = response.get("challenge");
         byte[] challengeData;

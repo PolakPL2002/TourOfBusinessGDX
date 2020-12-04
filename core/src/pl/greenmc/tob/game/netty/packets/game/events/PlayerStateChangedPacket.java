@@ -2,6 +2,7 @@ package pl.greenmc.tob.game.netty.packets.game.events;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.GameState;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.packets.Packet;
@@ -14,7 +15,7 @@ public class PlayerStateChangedPacket extends Packet {
     private final int player;
     private final GameState.PlayerState state;
 
-    public PlayerStateChangedPacket(int player, GameState.PlayerState state) {
+    public PlayerStateChangedPacket(int player, @NotNull GameState.PlayerState state) {
         this.player = player;
         this.state = state;
     }
@@ -53,6 +54,7 @@ public class PlayerStateChangedPacket extends Packet {
         return player;
     }
 
+    @NotNull
     public GameState.PlayerState getState() {
         return state;
     }

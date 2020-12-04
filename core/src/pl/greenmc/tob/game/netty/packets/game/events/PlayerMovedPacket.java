@@ -12,10 +12,12 @@ public class PlayerMovedPacket extends Packet {
     public static String TYPE = "GAME_EVENTS_PLAYER_MOVED";
     private final int player;
     private final int position;
+    private final boolean animate;
 
-    public PlayerMovedPacket(int player, int position) {
+    public PlayerMovedPacket(int player, int position, boolean animate) {
         this.player = player;
         this.position = position;
+        this.animate = animate;
     }
 
     /**
@@ -40,11 +42,19 @@ public class PlayerMovedPacket extends Packet {
                     if (position != null && position.isJsonPrimitive()) this.position = position.getAsInt();
                     else throw new InvalidPacketException();
 
+                    JsonElement animate = objectToDecode.get("animate");
+                    if (animate != null && animate.isJsonPrimitive()) this.animate = animate.getAsBoolean();
+                    else throw new InvalidPacketException();
+
                 } else throw new InvalidPacketException();
             } catch (ClassCastException ignored) {
                 throw new InvalidPacketException();
             }
         } else throw new InvalidPacketException();
+    }
+
+    public boolean isAnimated() {
+        return animate;
     }
 
     public int getPlayer() {
@@ -66,6 +76,7 @@ public class PlayerMovedPacket extends Packet {
         out.addProperty("type", TYPE);
         out.addProperty("player", player);
         out.addProperty("position", position);
+        out.addProperty("animate", animate);
         return out;
     }
 }

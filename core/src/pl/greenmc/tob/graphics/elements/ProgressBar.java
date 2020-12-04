@@ -14,6 +14,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
+import static com.badlogic.gdx.graphics.GL20.*;
 import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
 
 public class ProgressBar extends Element {
@@ -44,6 +45,14 @@ public class ProgressBar extends Element {
         setUp = true;
     }
 
+    public void setFontSize(int size) {
+        parameter.size = size;
+        parameter.characters = LATIN_EXTENDED;
+        if (font != null) font.dispose();
+        font = generator.generateFont(parameter);
+        layout = new GlyphLayout(font, text);
+    }
+
     @Override
     public void resize(int width, int height) {
         if (renderer != null) renderer.dispose();
@@ -51,14 +60,6 @@ public class ProgressBar extends Element {
 
         batch = new SpriteBatch();
         renderer = new ShapeRenderer();
-    }
-
-    public void setFontSize(int size) {
-        parameter.size = size;
-        parameter.characters = LATIN_EXTENDED;
-        if (font != null) font.dispose();
-        font = generator.generateFont(parameter);
-        layout = new GlyphLayout(font, text);
     }
 
     public String getText() {
@@ -139,6 +140,8 @@ public class ProgressBar extends Element {
         y = Math.round(y);
         w = Math.round(w);
         h = Math.round(h);
+        Gdx.gl.glEnable(GL_BLEND);
+        Gdx.gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         renderer.begin(ShapeRenderer.ShapeType.Line);
         renderer.setAutoShapeType(true);
         renderer.set(ShapeRenderer.ShapeType.Filled);

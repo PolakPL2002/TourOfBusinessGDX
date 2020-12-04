@@ -95,7 +95,7 @@ public class GetLobbiesPacket extends Packet {
             throw new InvalidPacketException();
         jsonArray = players.getAsJsonArray();
         Player[] outPlayers = new Player[jsonArray.size()];
-        for (int i = 0; i < out.length; i++) {
+        for (int i = 0; i < outPlayers.length; i++) {
             final JsonElement jsonElement = jsonArray.get(i);
             if (jsonElement == null || !jsonElement.isJsonObject())
                 throw new InvalidPacketException();

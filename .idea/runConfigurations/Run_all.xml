@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run all" type="CompoundRunConfigurationType">
+    <toRun name="Server" type="JarApplication" />
+    <toRun name="Client 1" type="JarApplication" />
+    <toRun name="Client 5" type="JarApplication" />
+    <toRun name="Client 8" type="JarApplication" />
+    <toRun name="Client 6" type="JarApplication" />
+    <toRun name="Client 2" type="JarApplication" />
+    <toRun name="Client 7" type="JarApplication" />
+    <toRun name="Client 3" type="JarApplication" />
+    <toRun name="Client 4" type="JarApplication" />
+    <method v="2" />
+  </configuration>
+</component>
