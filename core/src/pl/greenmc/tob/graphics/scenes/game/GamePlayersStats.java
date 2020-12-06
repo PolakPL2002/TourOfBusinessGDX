@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
 import org.jetbrains.annotations.NotNull;
-import pl.greenmc.tob.graphics.Interactable;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.elements.Image;
 import pl.greenmc.tob.graphics.elements.ProgressBar;
@@ -21,7 +20,7 @@ import static com.badlogic.gdx.graphics.GL20.*;
 import static pl.greenmc.tob.TourOfBusiness.TOB;
 import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
 
-class GamePlayersStats extends Scene implements Interactable {
+class GamePlayersStats extends Scene {
     private final int PLAYER_SLOTS = 8;
     private final DecimalFormat decimalFormat = new DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.US));
     private final FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Regular.ttf"));
@@ -38,10 +37,6 @@ class GamePlayersStats extends Scene implements Interactable {
     private long timeoutEnd = 0;
     private int timeoutTotal = 0;
     private int timerOnPlayer = -1;
-
-    @Override
-    public void onMouseMove(int x, int y) {
-    }
 
     public void setPlayerName(int player, String name) {
         players[player % players.length].name = name;

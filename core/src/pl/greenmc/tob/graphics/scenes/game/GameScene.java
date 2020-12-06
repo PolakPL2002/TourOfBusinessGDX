@@ -1,7 +1,9 @@
 package pl.greenmc.tob.graphics.scenes.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
 import com.google.gson.JsonObject;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.greenmc.tob.game.GameState;
@@ -14,18 +16,22 @@ import pl.greenmc.tob.game.netty.packets.game.GetGameStatePacket;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.Interactable;
 import pl.greenmc.tob.graphics.Scene;
+import pl.greenmc.tob.graphics.scenes.game.dialogs.*;
 
 import java.util.HashMap;
 import java.util.UUID;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
+import static pl.greenmc.tob.TourOfBusiness.TOB;
 import static pl.greenmc.tob.game.util.Logger.error;
 
 public class GameScene extends Scene implements Interactable {
     private final Map map;
+    private Dialog dialog = null;
     private Game3D game3D;
     private GamePlayersStats gamePlayersStats;
+    private Vector2 lastMousePos = null;
     private long[] playerBalances; //Player balance
     private boolean[] playerBankrupt;
     private int[] playerIDs;
@@ -33,6 +39,7 @@ public class GameScene extends Scene implements Interactable {
     private int[] playerInJailTurns;
     private HashMap<Integer, String> playerNames = new HashMap<>();
     private int[] playerPositions; //Player positions on board
+    private int selfNum = -1;
     private int startingPlayerNum;
     private GameState.State state;
     private int[] tileLevels;
@@ -44,17 +51,18 @@ public class GameScene extends Scene implements Interactable {
 
     @Override
     public void onMouseDown() {
-
+        if (dialog != null) dialog.onMouseDown();
     }
 
     @Override
     public void onMouseMove(int x, int y) {
-        gamePlayersStats.onMouseMove(x, y);
+        lastMousePos = new Vector2(x, y);
+        if (dialog != null) dialog.onMouseMove(x, y);
     }
 
     @Override
     public void onMouseUp() {
-
+        if (dialog != null) dialog.onMouseUp();
     }
 
     public void onPlayerMoved(int player, int position, boolean animate) {
@@ -80,7 +88,7 @@ public class GameScene extends Scene implements Interactable {
 
     @Override
     public void onScroll(float x, float y) {
-
+        if (dialog != null) dialog.onScroll(x, y);
     }
 
     public void onTileModified(int tile, Integer owner, int level) {
@@ -93,6 +101,7 @@ public class GameScene extends Scene implements Interactable {
         Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         game3D.render();
         gamePlayersStats.render();
+        if (dialog != null) dialog.draw();
     }
 
     @Override
@@ -105,6 +114,23 @@ public class GameScene extends Scene implements Interactable {
         gamePlayersStats = new GamePlayersStats();
         gamePlayersStats.setup();
         updateState();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        game3D.resize(width, height);
+        gamePlayersStats.resize(width, height);
+        if (dialog != null) dialog.resize(width, height);
+    }
+
+    /**
+     * Releases all resources of this object.
+     */
+    @Override
+    public void dispose() {
+        game3D.dispose();
+        gamePlayersStats.dispose();
+        if (dialog != null) dialog.dispose();
     }
 
     private void updateState() {
@@ -122,15 +148,18 @@ public class GameScene extends Scene implements Interactable {
                             }
                         } else {
                             error("Received empty response!");
+                            //TODO Leave with error
                         }
                     } catch (InvalidPacketException e) {
                         error(e);
+                        //TODO Leave with error
                     }
                 }
 
                 @Override
                 public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
                     error("Failed to get game state: " + reason);
+                    //TODO Leave with error
                 }
             }, false);
         } catch (ConnectionNotAliveException e) {
@@ -157,20 +186,54 @@ public class GameScene extends Scene implements Interactable {
         if (game3D != null)
             game3D.setNumPlayers(playerIDs.length);
         updatePlayersStats();
+        final Integer id = getPlayerByID(TOB.getGame().getSelf().getID());
+        if (id != null)
+            selfNum = id;
+        else {
+            //TODO Leave game
+        }
+        if (data.getTurnOf() == selfNum) {
+            switch (this.state) {
+                case AWAITING_JAIL:
+                    changeDialog(new JailDialog());
+                    break;
+                case AWAITING_ROLL:
+                    changeDialog(new RollDialog());
+                    break;
+                case AWAITING_BUY:
+                    changeDialog(new BuyDialog());
+                    break;
+                case END_ROUND:
+                    changeDialog(new EndDialog());
+                    break;
+                default:
+                    changeDialog(null);
+            }
+        } else if (this.state != GameState.State.AUCTION) {
+            changeDialog(null);
+        }
+        if (this.state == GameState.State.AUCTION) {
+            changeDialog(new AuctionDialog());
+        }
     }
 
-    @Override
-    public void resize(int width, int height) {
-        game3D.resize(width, height);
-        gamePlayersStats.resize(width, height);
+    private void changeDialog(@Nullable Dialog newDialog) {
+        TOB.runOnGLThread(() -> {
+            if (dialog != null) dialog.dispose();
+            dialog = newDialog;
+            if (newDialog != null) {
+                newDialog.setup();
+                if (lastMousePos != null) newDialog.onMouseMove((int) lastMousePos.x, (int) lastMousePos.y);
+            }
+        });
     }
 
-    /**
-     * Releases all resources of this object.
-     */
-    @Override
-    public void dispose() {
-        game3D.dispose();
-        gamePlayersStats.dispose();
+    @Nullable
+    @Contract(pure = true)
+    private Integer getPlayerByID(int playerID) {
+        for (int i = 0; i < playerIDs.length; i++)
+            if (playerIDs[i] == playerID)
+                return i;
+        return null;
     }
 }

@@ -82,14 +82,6 @@ public class Button extends Element implements Interactable {
         setUp = true;
     }
 
-    @Override
-    public void resize(int width, int height) {
-        if (renderer != null) renderer.dispose();
-        if (batch != null) batch.dispose();
-        batch = new SpriteBatch();
-        renderer = new ShapeRenderer();
-    }
-
     public void setFontSize(int size) {
         fontSize = size;
         if (renderer != null) {
@@ -99,6 +91,14 @@ public class Button extends Element implements Interactable {
             font = generator.generateFont(parameter);
             layout = new GlyphLayout(font, text);
         }
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        if (renderer != null) renderer.dispose();
+        if (batch != null) batch.dispose();
+        batch = new SpriteBatch();
+        renderer = new ShapeRenderer();
     }
 
     public String getText() {
@@ -143,10 +143,10 @@ public class Button extends Element implements Interactable {
 
     @Override
     public void draw(float x, float y, float w, float h) {
-        x = Math.round(x);
-        y = Math.round(y);
-        w = Math.round(w);
-        h = Math.round(h);
+        x = (int) Math.floor(x);
+        y = (int) Math.floor(y);
+        w = (int) Math.floor(w);
+        h = (int) Math.floor(h);
         renderer.begin(ShapeRenderer.ShapeType.Line);
         renderer.setAutoShapeType(true);
         renderer.set(ShapeRenderer.ShapeType.Filled);

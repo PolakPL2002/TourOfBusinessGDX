@@ -83,6 +83,7 @@ public class HSplitPane extends SplitPane {
             currentY[0] += height;
         });
         hitboxesFor = new Rectangle(x, y, w, h);
+        onMouseMove(Gdx.input.getX(), Gdx.input.getY());
     }
 
     public static class ElementOptions extends SplitPane.ElementOptions {

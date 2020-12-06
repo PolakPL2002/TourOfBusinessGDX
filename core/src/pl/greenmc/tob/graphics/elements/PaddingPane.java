@@ -9,19 +9,12 @@ import pl.greenmc.tob.graphics.*;
 import static com.badlogic.gdx.graphics.GL20.GL_SCISSOR_TEST;
 
 public class PaddingPane extends Element implements Interactable {
-    private Element child;
-
-    public void setChild(@NotNull Element child) {
-        this.child.dispose();
-        this.child = child;
-        child.setup();
-    }
-
     private final float paddingBottom;
     private final float paddingLeft;
     private final float paddingRight;
     private final float paddingTop;
     private SolidColor background;
+    private Element child;
     private Color color = GlobalTheme.backgroundColor;
     private boolean drawBackground = false;
     private Hitbox hitbox = null;
@@ -59,26 +52,6 @@ public class PaddingPane extends Element implements Interactable {
     }
 
     @Override
-    public void onMouseMove(int x, int y) {
-        if (child instanceof Interactable) {
-            boolean current = false;
-            if (hitbox.testMouseCoordinates(x, y)) {
-                if (!insideHitbox) {
-                    insideHitbox = true;
-                    ((Interactable) child).onMouseEnter();
-                }
-                current = true;
-                ((Interactable) child).onMouseMove(x, y);
-            }
-            if (insideHitbox && !current) {
-                ((Interactable) child).onMouseLeave();
-                insideHitbox = false;
-            }
-            ((Interactable) child).onMouseMove(x, y);
-        }
-    }
-
-    @Override
     public void onMouseUp() {
         if (child instanceof Interactable) {
             ((Interactable) child).onMouseUp();
@@ -90,6 +63,12 @@ public class PaddingPane extends Element implements Interactable {
         if (child instanceof Interactable) {
             ((Interactable) child).onScroll(x, y);
         }
+    }
+
+    public void setChild(@NotNull Element child) {
+        this.child.dispose();
+        this.child = child;
+        child.setup();
     }
 
     public PaddingPane setDrawBackground(boolean drawBackground) {
@@ -105,13 +84,15 @@ public class PaddingPane extends Element implements Interactable {
 
     @Override
     public void draw(float x, float y, float w, float h) {
-
         if (hitboxesFor == null ||
                 hitboxesFor.height != h ||
                 hitboxesFor.width != w ||
                 hitboxesFor.x != x ||
-                hitboxesFor.y != y)
+                hitboxesFor.y != y) {
+            hitboxesFor = new Rectangle(x, y, w, h);
             hitbox = new RectangularHitbox(x + paddingLeft, y + paddingBottom, w - paddingRight - paddingLeft, h - paddingTop - paddingBottom);
+            onMouseMove(Gdx.input.getX(), Gdx.input.getY());
+        }
 
         if (drawBackground)
             background.draw(x, y, w, h);
@@ -119,6 +100,26 @@ public class PaddingPane extends Element implements Interactable {
         Gdx.gl.glScissor((int) (x + paddingLeft), (int) (y + paddingBottom), (int) (w - paddingRight - paddingLeft), (int) (h - paddingTop - paddingBottom));
         child.draw(x + paddingLeft, y + paddingBottom, w - paddingRight - paddingLeft, h - paddingTop - paddingBottom);
         Gdx.gl.glDisable(GL_SCISSOR_TEST);
+    }
+
+    @Override
+    public void onMouseMove(int x, int y) {
+        if (child instanceof Interactable) {
+            boolean current = false;
+            if (hitbox != null && hitbox.testMouseCoordinates(x, y)) {
+                if (!insideHitbox) {
+                    insideHitbox = true;
+                    ((Interactable) child).onMouseEnter();
+                }
+                current = true;
+                ((Interactable) child).onMouseMove(x, y);
+            }
+            if (insideHitbox && !current) {
+                ((Interactable) child).onMouseLeave();
+                insideHitbox = false;
+            }
+            ((Interactable) child).onMouseMove(x, y);
+        }
     }
 
     @Override

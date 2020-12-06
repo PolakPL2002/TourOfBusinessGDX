@@ -76,6 +76,7 @@ public class VSplitPane extends SplitPane {
             currentX[0] += width;
         });
         hitboxesFor = new Rectangle(x, y, w, h);
+        onMouseMove(Gdx.input.getX(), Gdx.input.getY());
     }
 
     public VSplitPane addChild(@NotNull Element element, @NotNull ElementOptions elementOptions) {

@@ -105,10 +105,10 @@ public class Label extends Element {
 
     @Override
     public void draw(float x, float y, float w, float h) {
-        x = Math.round(x);
-        y = Math.round(y);
-        w = Math.round(w);
-        h = Math.round(h);
+        x = (int) Math.floor(x);
+        y = (int) Math.floor(y);
+        w = (int) Math.floor(w);
+        h = (int) Math.floor(h);
         renderer.begin(ShapeRenderer.ShapeType.Line);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);

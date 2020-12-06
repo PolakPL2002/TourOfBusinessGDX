@@ -63,8 +63,8 @@ public class DesktopLauncher {
                 config.width = dimension.width;
                 log("Setting resolution to " + dimension.width + "x" + dimension.height);
             } else {
-                config.height = 230;
-                config.width = 230;
+                config.height = 720;
+                config.width = 1280;
             }
             config.pauseWhenMinimized = false;
             config.samples = 16;

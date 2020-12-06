@@ -33,7 +33,7 @@ public class GameState {
     private static final boolean START_AUCTION_ON_INSUFFICIENT_FUNDS = true;
     private static final float START_STAND_MULTIPLIER = 2.0f;
     private final boolean ALLOW_ACTIONS_WHILE_IN_JAIL = false;
-    private final float TIMEOUT_MULTIPLIER = 0.1f;
+    private final float TIMEOUT_MULTIPLIER = 1f;
     private final ArrayList<AfterSellAction> afterSellActions = new ArrayList<>();
     private final Map map;
     private final long[] playerBalances; //Player balance 
@@ -219,7 +219,7 @@ public class GameState {
                 for (int i = 0; i < NUM_DICES; i++) num += rolledNumbers[i];
                 if (checkTimeout(state.getTimeout() * num)) {
                     //Animation finished
-                    for (int i = 0; i < num; i++)
+                    for (int i = 1; i < num; i++)
                         processTilePass(turnOf, boundInt(playerPositions[turnOf] - num + i, map.getTiles().length));
                     processTileEntry(turnOf, getPlayerPosition(turnOf));
                 }
@@ -876,6 +876,7 @@ public class GameState {
         private final State state;
         private final int[] tileLevels;
         private final Integer[] tileOwners;
+        private final Integer tileToBuy;
         private final long timeoutLeft;
         private final int timeoutTotal;
         private final int turnOf;
@@ -894,6 +895,7 @@ public class GameState {
             tileLevels = state.tileLevels;
             tileOwners = state.tileOwners;
             turnOf = state.turnOf;
+            tileToBuy = state.tileToBuy;
             int timeout = 0;
             switch (state.state) {
                 case AWAITING_JAIL:
@@ -952,6 +954,15 @@ public class GameState {
                         if (timeoutTotal != null && timeoutTotal.isJsonPrimitive())
                             this.timeoutTotal = timeoutTotal.getAsInt();
                         else throw new InvalidPacketException();
+
+                        JsonElement tileToBuy = jsonObject.get("tileToBuy");
+                        if (tileToBuy != null) {
+                            if (tileToBuy.isJsonPrimitive())
+                                this.tileToBuy = tileToBuy.getAsInt();
+                            else if (tileToBuy.isJsonNull())
+                                this.tileToBuy = null;
+                            else throw new InvalidPacketException();
+                        } else throw new InvalidPacketException();
 
                         JsonElement timeoutLeft = jsonObject.get("timeoutLeft");
                         if (timeoutLeft != null && timeoutLeft.isJsonPrimitive())
@@ -1069,6 +1080,10 @@ public class GameState {
             } else throw new InvalidPacketException();
         }
 
+        public Integer getTileToBuy() {
+            return tileToBuy;
+        }
+
         public int getTimeoutTotal() {
             return timeoutTotal;
         }
@@ -1135,6 +1150,7 @@ public class GameState {
             out.addProperty("timeoutLeft", timeoutLeft);
             out.addProperty("turnOf", turnOf);
             out.addProperty("timeoutTotal", timeoutTotal);
+            out.addProperty("tileToBuy", tileToBuy);
 
             JsonArray playerBalances = new JsonArray();
             for (long balance : this.playerBalances) {

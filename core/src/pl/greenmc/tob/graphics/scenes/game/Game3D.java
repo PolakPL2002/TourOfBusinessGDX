@@ -315,7 +315,7 @@ class Game3D extends Scene {
             float msPerWaypoint = duration / (float) (waypoints.length - 1);
             long time = System.currentTimeMillis() - startTime;
             int waypoint = (int) Math.floor(time / msPerWaypoint);
-            if (waypoint == waypoints.length - 1) waypoint--;
+            if (waypoint > waypoints.length - 2) waypoint = waypoints.length - 2;
             Vector3 fromWaypoint = waypoints[waypoint],
                     toWaypoint = waypoints[waypoint + 1];
             float deltaX = toWaypoint.x - fromWaypoint.x,

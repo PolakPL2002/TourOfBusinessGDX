@@ -12,6 +12,7 @@ import pl.greenmc.tob.game.netty.packets.ResponsePacket;
 import pl.greenmc.tob.game.netty.packets.game.GetGameStatePacket;
 import pl.greenmc.tob.game.netty.packets.game.GetPlayerPacket;
 import pl.greenmc.tob.game.netty.packets.game.GetSelfPacket;
+import pl.greenmc.tob.game.netty.packets.game.RollPacket;
 import pl.greenmc.tob.game.netty.packets.game.events.lobby.*;
 import pl.greenmc.tob.game.netty.packets.game.lobby.*;
 import pl.greenmc.tob.game.netty.server.NettyServer;
@@ -26,27 +27,9 @@ import static pl.greenmc.tob.game.util.Logger.log;
 import static pl.greenmc.tob.game.util.Logger.warning;
 
 public class TourOfBusinessServer {
+    private static TourOfBusinessServer instance;
     private final int LOBBY_MAX_PLAYERS = 7;
     private final ArrayList<Lobby> lobbies = new ArrayList<>();
-    private static TourOfBusinessServer instance;
-
-    public void sendPacketToPlayerByID(@NotNull Packet packet, int playerID) {
-        try {
-            Player player1 = NettyServer.getInstance().getDatabase().getPlayer(playerID);
-            if (player1 != null) {
-                ServerHandler client = NettyServer.getInstance().getClient(player1.getIdentity());
-                if (client != null) {
-                    client.send(packet, null, false);
-                }
-            }
-        } catch (ConnectionNotAliveException e) {
-            warning("Failed to send event packet.");
-            warning(e);
-        } catch (SQLException e) {
-            warning("Failed to get player from database.");
-            warning(e);
-        }
-    }
 
     public TourOfBusinessServer() {
         instance = this;
@@ -295,6 +278,25 @@ public class TourOfBusinessServer {
                         warning("Failed to get player from database.");
                         warning(e);
                     }
+                } else if (packet instanceof RollPacket) {
+                    try {
+                        final ServerHandler client = NettyServer.getInstance().getClient(identity);
+                        if (client != null) {
+                            Player player = getPlayerFromHandler(client);
+                            if (player == null) return;
+                            Lobby lobby = getLobbyByPlayer(player.getID());
+                            if (lobby != null && lobby.getGameState() != null) {
+                                lobby.getGameState().onRollPacket(player.getID());
+                            }
+                            client.send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
+                        }
+                    } catch (ConnectionNotAliveException e) {
+                        warning("Failed to send response packet.");
+                        warning(e);
+                    } catch (SQLException e) {
+                        warning("Failed to get player from database.");
+                        warning(e);
+                    }
                 } else
                     try {
                         final ServerHandler client = NettyServer.getInstance().getClient(identity);
@@ -306,6 +308,28 @@ public class TourOfBusinessServer {
                     }
             }
         });
+    }
+
+    public void sendPacketToPlayerByID(@NotNull Packet packet, int playerID) {
+        try {
+            Player player1 = NettyServer.getInstance().getDatabase().getPlayer(playerID);
+            if (player1 != null) {
+                ServerHandler client = NettyServer.getInstance().getClient(player1.getIdentity());
+                if (client != null) {
+                    client.send(packet, null, false);
+                }
+            }
+        } catch (ConnectionNotAliveException e) {
+            warning("Failed to send event packet.");
+            warning(e);
+        } catch (SQLException e) {
+            warning("Failed to get player from database.");
+            warning(e);
+        }
+    }
+
+    public static TourOfBusinessServer getServer() {
+        return instance;
     }
 
     private void onGameStarted(Lobby lobby) {
@@ -385,10 +409,6 @@ public class TourOfBusinessServer {
             }
         }
         sendPacketToPlayerByID(new PlayerLeftPacket(player.getID()), lobby.getOwner());
-    }
-
-    public static TourOfBusinessServer getServer() {
-        return instance;
     }
 
     @Nullable
