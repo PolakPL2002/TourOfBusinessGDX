@@ -62,6 +62,10 @@ public class VScrollPane extends ScrollPane {
 
     @Override
     public void draw(float x, float y, float w, float h) {
+        x = (int) Math.floor(x);
+        y = (int) Math.floor(y);
+        w = (int) Math.floor(w);
+        h = (int) Math.floor(h);
         if (hitboxesFor == null ||
                 hitboxesFor.height != h ||
                 hitboxesFor.width != w ||
@@ -103,11 +107,15 @@ public class VScrollPane extends ScrollPane {
         if (scroll > maxScroll) scroll = maxScroll;
 
         final double[] currentY = {y};
+        float finalX = x;
+        float finalY = y;
+        float finalW = w;
+        float finalH = h;
         children.forEach((element) -> {
             Gdx.gl.glEnable(GL_SCISSOR_TEST);
-            Gdx.gl.glScissor((int) x, (int) y, (int) (w - ((autoHideScroll && scrollDisabled) ? 0 : barWidth)), (int) h);
+            Gdx.gl.glScissor((int) finalX, (int) finalY, (int) (finalW - ((autoHideScroll && scrollDisabled) ? 0 : barWidth)), (int) finalH);
             float height = heights.get(element);
-            element.draw(x, (float) currentY[0] - s, w - ((autoHideScroll && scrollDisabled) ? 0 : barWidth), height);
+            element.draw(finalX, (float) currentY[0] - s, finalW - ((autoHideScroll && scrollDisabled) ? 0 : barWidth), height);
             currentY[0] += height;
         });
         Gdx.gl.glDisable(GL_SCISSOR_TEST);

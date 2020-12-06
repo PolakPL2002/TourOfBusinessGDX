@@ -19,6 +19,10 @@ public class HSplitPane extends SplitPane {
 
     @Override
     public void draw(float x, float y, float w, float h) {
+        x = (int) Math.floor(x);
+        y = (int) Math.floor(y);
+        w = (int) Math.floor(w);
+        h = (int) Math.floor(h);
         if (hitboxesFor == null ||
                 hitboxesFor.height != h ||
                 hitboxesFor.width != w ||
@@ -46,14 +50,18 @@ public class HSplitPane extends SplitPane {
         if (totalVariableWeight[0] == 0) totalVariableWeight[0] = 1;
         double pxPerWeight = (h - totalFixedHeight[0]) / totalVariableWeight[0];
         final double[] currentY = {y};
+        float finalX = x;
+        float finalY = y;
+        float finalW = w;
+        float finalH = h;
         children.forEach((element) -> {
             Gdx.gl.glEnable(GL_SCISSOR_TEST);
-            Gdx.gl.glScissor((int) x, (int) y, (int) w, (int) h);
+            Gdx.gl.glScissor((int) finalX, (int) finalY, (int) finalW, (int) finalH);
             ElementOptions elementOptions = (ElementOptions) options.get(element);
             float height = (float) (elementOptions.mode == ElementOptions.HeightMode.FIXED ?
                     elementOptions.height :
                     elementOptions.height * pxPerWeight);
-            element.draw(x, (float) currentY[0], w, height);
+            element.draw(finalX, (float) currentY[0], finalW, height);
             currentY[0] += height;
         });
         Gdx.gl.glDisable(GL_SCISSOR_TEST);

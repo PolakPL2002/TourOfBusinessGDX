@@ -12,6 +12,10 @@ import static com.badlogic.gdx.graphics.GL20.GL_SCISSOR_TEST;
 public class VSplitPane extends SplitPane {
     @Override
     public void draw(float x, float y, float w, float h) {
+        x = (int) Math.floor(x);
+        y = (int) Math.floor(y);
+        w = (int) Math.floor(w);
+        h = (int) Math.floor(h);
         if (hitboxesFor == null ||
                 hitboxesFor.height != h ||
                 hitboxesFor.width != w ||
@@ -39,14 +43,18 @@ public class VSplitPane extends SplitPane {
         if (totalVariableWeight[0] == 0) totalVariableWeight[0] = 1;
         double pxPerWeight = (w - totalFixedWidth[0]) / totalVariableWeight[0];
         final double[] currentX = {x};
+        float finalX = x;
+        float finalY = y;
+        float finalW = w;
+        float finalH = h;
         children.forEach((element) -> {
             Gdx.gl.glEnable(GL_SCISSOR_TEST);
-            Gdx.gl.glScissor((int) x, (int) y, (int) w, (int) h);
+            Gdx.gl.glScissor((int) finalX, (int) finalY, (int) finalW, (int) finalH);
             ElementOptions elementOptions = (ElementOptions) options.get(element);
             float width = (float) (elementOptions.mode == ElementOptions.WidthMode.FIXED ?
                     elementOptions.width :
                     elementOptions.width * pxPerWeight);
-            element.draw((float) currentX[0], y, width, h);
+            element.draw((float) currentX[0], finalY, width, finalH);
             currentX[0] += width;
         });
         Gdx.gl.glDisable(GL_SCISSOR_TEST);
