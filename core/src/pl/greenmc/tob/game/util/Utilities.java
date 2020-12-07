@@ -31,6 +31,26 @@ public class Utilities {
         return i;
     }
 
+    @NotNull
+    public static String makeMoney(long value) {
+        boolean negative = value < 0;
+        if (negative) value *= -1;
+        String s = String.valueOf(value);
+        int j = (3 - s.length() % 3) % 3;
+        StringBuilder out = new StringBuilder();
+        if (negative)
+            out.append("-");
+        for (int i = 0; i < s.length(); i++) {
+            out.append(s.charAt(i));
+            j++;
+            if (j == 3 && i < s.length() - 1) {
+                j = 0;
+                out.append(",");
+            }
+        }
+        return out.append("$").toString();
+    }
+
     /**
      * Compresses file to file.zip
      *

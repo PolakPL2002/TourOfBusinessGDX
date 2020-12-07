@@ -73,6 +73,21 @@ public class Button extends Element implements Interactable {
         this.clickColor = clickColor;
     }
 
+    public void applyYesTheme() {
+        setBackgroundColor(GlobalTheme.buttonYesBackgroundColor);
+        setClickColor(GlobalTheme.buttonYesClickColor);
+        setHoverColor(GlobalTheme.buttonYesHoverColor);
+        setBorderColor(GlobalTheme.buttonYesBorderColor);
+    }
+
+    public void applyNoTheme() {
+        setBackgroundColor(GlobalTheme.buttonNoBackgroundColor);
+        setClickColor(GlobalTheme.buttonNoClickColor);
+        setHoverColor(GlobalTheme.buttonNoHoverColor);
+        setBorderColor(GlobalTheme.buttonNoBorderColor);
+    }
+
+
     @Override
     public void setup() {
         if (setUp) return;

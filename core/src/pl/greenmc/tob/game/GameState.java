@@ -11,10 +11,7 @@ import pl.greenmc.tob.game.map.Map;
 import pl.greenmc.tob.game.map.Tile;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.packets.Packet;
-import pl.greenmc.tob.game.netty.packets.game.events.GameStateChangedPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.PlayerMovedPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.PlayerStateChangedPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.TileModifiedPacket;
+import pl.greenmc.tob.game.netty.packets.game.events.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -36,17 +33,18 @@ public class GameState {
     private final float TIMEOUT_MULTIPLIER = 1f;
     private final ArrayList<AfterSellAction> afterSellActions = new ArrayList<>();
     private final Map map;
-    private final long[] playerBalances; //Player balance 
+    private final long[] playerBalances; //Player balance
     private final boolean[] playerBankrupt;
     private final int[] playerIDs;
     private final boolean[] playerInJail;
     private final int[] playerInJailTurns;
-    private final int[] playerPositions; //Player positions on board 
+    private final int[] playerPositions; //Player positions on board
     private final ArrayList<Integer> propertiesToSell = new ArrayList<>();
     private final int[] rolledNumbers = new int[NUM_DICES]; //Last rolled numbers
     private final int startingPlayerNum;
     private final int[] tileLevels;
     private final Integer[] tileOwners;
+    private int DRAWS_TO_JAIL = 3;
     private BuyDecision buyDecision = null;
     private int drawsInRow = 0;
     private JailDecision jailDecision = null;
@@ -125,6 +123,17 @@ public class GameState {
             playerRolled = true;
         }
         log("Rolled: " + Arrays.toString(rolledNumbers));
+        onRolled();
+    }
+
+    private void onRolled() {
+        sendPacketToAllPlayers(new RollEventPacket(turnOf, rolledNumbers));
+    }
+
+    private void sendPacketToAllPlayers(Packet packet) {
+        for (int playerID : playerIDs) {
+            getServer().sendPacketToPlayerByID(packet, playerID);
+        }
     }
 
     public void startTicking() {
@@ -200,10 +209,30 @@ public class GameState {
                         draw = draw && rolledNumbers[i] == rolledNumbers[i + 1];
                     if (draw) drawsInRow++;
                     else drawsInRow = 0;
+                    if (drawsInRow >= DRAWS_TO_JAIL && !isPlayerInJail(turnOf)) {
+                        boolean moved = false;
+                        Tile[] tiles = map.getTiles();
+                        for (int i = 0; i < tiles.length; i++) {
+                            Tile tile = tiles[i];
+                            if (tile.getType() == Tile.TileType.JAIL) {
+                                setPlayerInJail(turnOf, true);
+                                movePlayerToTile(turnOf, i);
+                                moved = true;
+                                break;
+                            }
+                        }
+                        if (moved) {
+                            if (!ALLOW_ACTIONS_WHILE_IN_JAIL)
+                                endTurn();
+                            else
+                                changeState(State.END_ROUND);
+                            return;
+                        }
+                    }
                     if (isPlayerInJail(turnOf) && !draw) {
                         //Player stays in jail
                         //TODO Send some event?
-                        if (ALLOW_ACTIONS_WHILE_IN_JAIL)
+                        if (!ALLOW_ACTIONS_WHILE_IN_JAIL)
                             endTurn();
                         else
                             changeState(State.END_ROUND);
@@ -233,6 +262,7 @@ public class GameState {
                             if (isTileBuyable(tileToBuy) &&
                                     takePlayerMoney(turnOf, getPropertyPrice(tileToBuy))) {
                                 setTileOwner(tileToBuy, turnOf);
+                                changeState(State.END_ROUND);
                             } else
                                 setBuyDecision(BuyDecision.DONT_BUY);
                             break;
@@ -449,6 +479,7 @@ public class GameState {
         if (inJail && !isPlayerInJail(player)) {
             playerInJail[player] = true;
             playerInJailTurns[player] = 0;
+            drawsInRow = 0;
         } else if (!inJail && isPlayerInJail(player)) {
             playerInJail[player] = false;
         }
@@ -475,6 +506,7 @@ public class GameState {
     private void givePlayerMoney(int player, long amount) {
         playerBalances[player] += amount;
         onPlayerBalanceChanged(player);
+        onPay(null, player, amount);
     }
 
     private void processTileEntry(int player, int tile) {
@@ -507,7 +539,8 @@ public class GameState {
                     final long rent = getPropertyRent(tile);
                     if (!playerPayPlayer(player, owner, rent)) {
                         initiateSell(rent - getPlayerBalance(player), new AfterSellAction[]{new AfterSellAction(owner, rent)});
-                    }
+                    } else
+                        changeState(State.END_ROUND);
                 }
                 break;
             case JAIL:
@@ -613,7 +646,21 @@ public class GameState {
     }
 
     private long getPropertyRent(int tile) {
-        //TODO
+        Tile tile1 = getTile(tile);
+        switch (tile1.getType()) {
+            case CITY:
+                Tile.CityTileData cityTileData = (Tile.CityTileData) tile1.getData();
+                return cityTileData.getRent(getTileLevel(tile));
+            case STATION:
+                Tile.StationTileData stationTileData = (Tile.StationTileData) tile1.getData();
+                return stationTileData.getRent(getTileLevel(tile));
+            case UTILITY:
+                Tile.UtilityTileData utilityTileData = (Tile.UtilityTileData) tile1.getData();
+                long sum = 0;
+                for (int num : rolledNumbers)
+                    sum += num;
+                return utilityTileData.getMultiplier(getTileLevel(tile)) * sum;
+        }
         return 0;
     }
 
@@ -644,7 +691,12 @@ public class GameState {
             return false;
         playerBalances[player % playerIDs.length] -= amount;
         onPlayerBalanceChanged(player);
+        onPay(player, null, amount);
         return true;
+    }
+
+    private void onPay(@Nullable Integer from, @Nullable Integer to, long amount) {
+        sendPacketToAllPlayers(new PayEventPacket(from, to, amount));
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -655,6 +707,7 @@ public class GameState {
         playerBalances[to] += amount;
         onPlayerBalanceChanged(from);
         onPlayerBalanceChanged(to);
+        onPay(from, to, amount);
         return true;
     }
 
@@ -666,12 +719,6 @@ public class GameState {
 
     private void onPlayerBalanceChanged(int player) {
         sendPacketToAllPlayers(new PlayerStateChangedPacket(player, getPlayerState(player)));
-    }
-
-    private void sendPacketToAllPlayers(Packet packet) {
-        for (int playerID : playerIDs) {
-            getServer().sendPacketToPlayerByID(packet, playerID);
-        }
     }
 
     private void initiateSell(long amount, AfterSellAction[] actions) {
@@ -767,6 +814,10 @@ public class GameState {
 
     private void changeState(State newState) {
         //TODO Add some checks
+        if (newState == State.AWAITING_JAIL) {
+            if (!isPlayerInJail(turnOf))
+                newState = State.AWAITING_ROLL;
+        }
         log("State changed to " + newState);
         resetTimeout();
         state = newState;
@@ -823,7 +874,7 @@ public class GameState {
         AWAITING_BUY(15000),
         AUCTION(60000), //TODO Set auction time with parameter
         SELL(45000),
-        END_ROUND(15000); //TODO Reset on action
+        END_ROUND(0); //TODO Reset on action
 
         private final int timeout;
 

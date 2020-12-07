@@ -33,10 +33,7 @@ public class MainMenu extends Menu {
         button3.setFontSize(20);
         button4.setFontSize(20);
 
-        button4.setBackgroundColor(GlobalTheme.buttonNoBackgroundColor);
-        button4.setClickColor(GlobalTheme.buttonNoClickColor);
-        button4.setHoverColor(GlobalTheme.buttonNoHoverColor);
-        button4.setBorderColor(GlobalTheme.buttonNoBorderColor);
+        button4.applyNoTheme();
 
         button1.setClickCallback(this::onPlay);
         button2.setClickCallback(this::onProfile);

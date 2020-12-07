@@ -9,10 +9,7 @@ import pl.greenmc.tob.game.netty.PacketReceivedHandler;
 import pl.greenmc.tob.game.netty.packets.ConfirmationPacket;
 import pl.greenmc.tob.game.netty.packets.Packet;
 import pl.greenmc.tob.game.netty.packets.ResponsePacket;
-import pl.greenmc.tob.game.netty.packets.game.GetGameStatePacket;
-import pl.greenmc.tob.game.netty.packets.game.GetPlayerPacket;
-import pl.greenmc.tob.game.netty.packets.game.GetSelfPacket;
-import pl.greenmc.tob.game.netty.packets.game.RollPacket;
+import pl.greenmc.tob.game.netty.packets.game.*;
 import pl.greenmc.tob.game.netty.packets.game.events.lobby.*;
 import pl.greenmc.tob.game.netty.packets.game.lobby.*;
 import pl.greenmc.tob.game.netty.server.NettyServer;
@@ -287,6 +284,44 @@ public class TourOfBusinessServer {
                             Lobby lobby = getLobbyByPlayer(player.getID());
                             if (lobby != null && lobby.getGameState() != null) {
                                 lobby.getGameState().onRollPacket(player.getID());
+                            }
+                            client.send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
+                        }
+                    } catch (ConnectionNotAliveException e) {
+                        warning("Failed to send response packet.");
+                        warning(e);
+                    } catch (SQLException e) {
+                        warning("Failed to get player from database.");
+                        warning(e);
+                    }
+                } else if (packet instanceof SetJailDecisionPacket) {
+                    try {
+                        final ServerHandler client = NettyServer.getInstance().getClient(identity);
+                        if (client != null) {
+                            Player player = getPlayerFromHandler(client);
+                            if (player == null) return;
+                            Lobby lobby = getLobbyByPlayer(player.getID());
+                            if (lobby != null && lobby.getGameState() != null) {
+                                lobby.getGameState().onJailDecision(player.getID(), ((SetJailDecisionPacket) packet).getDecision());
+                            }
+                            client.send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
+                        }
+                    } catch (ConnectionNotAliveException e) {
+                        warning("Failed to send response packet.");
+                        warning(e);
+                    } catch (SQLException e) {
+                        warning("Failed to get player from database.");
+                        warning(e);
+                    }
+                } else if (packet instanceof SetBuyDecisionPacket) {
+                    try {
+                        final ServerHandler client = NettyServer.getInstance().getClient(identity);
+                        if (client != null) {
+                            Player player = getPlayerFromHandler(client);
+                            if (player == null) return;
+                            Lobby lobby = getLobbyByPlayer(player.getID());
+                            if (lobby != null && lobby.getGameState() != null) {
+                                lobby.getGameState().onBuyDecision(player.getID(), ((SetBuyDecisionPacket) packet).getDecision());
                             }
                             client.send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
                         }

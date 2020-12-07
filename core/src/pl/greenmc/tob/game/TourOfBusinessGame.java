@@ -14,10 +14,7 @@ import pl.greenmc.tob.game.netty.client.NettyClient;
 import pl.greenmc.tob.game.netty.packets.ConfirmationPacket;
 import pl.greenmc.tob.game.netty.packets.Packet;
 import pl.greenmc.tob.game.netty.packets.game.GetSelfPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.GameStateChangedPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.PlayerMovedPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.PlayerStateChangedPacket;
-import pl.greenmc.tob.game.netty.packets.game.events.TileModifiedPacket;
+import pl.greenmc.tob.game.netty.packets.game.events.*;
 import pl.greenmc.tob.game.netty.packets.game.events.lobby.*;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.scenes.ErrorScene;
@@ -263,6 +260,16 @@ public class TourOfBusinessGame {
                     if (scene instanceof GameScene) {
                         final TileModifiedPacket tileModifiedPacket = (TileModifiedPacket) packet;
                         ((GameScene) scene).onTileModified(tileModifiedPacket.getTile(), tileModifiedPacket.getOwner(), tileModifiedPacket.getLevel());
+                    }
+                } else if (packet instanceof PayEventPacket) {
+                    if (scene instanceof GameScene) {
+                        final PayEventPacket payEventPacket = (PayEventPacket) packet;
+                        ((GameScene) scene).onPay(payEventPacket.getFrom(), payEventPacket.getTo(), payEventPacket.getAmount());
+                    }
+                } else if (packet instanceof RollEventPacket) {
+                    if (scene instanceof GameScene) {
+                        final RollEventPacket rollEventPacket = (RollEventPacket) packet;
+                        ((GameScene) scene).onRoll(rollEventPacket.getPlayer(), rollEventPacket.getNumbers());
                     }
                 }
                 //There are no packets that require data response from client

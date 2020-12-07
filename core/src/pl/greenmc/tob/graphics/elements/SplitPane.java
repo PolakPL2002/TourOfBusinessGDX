@@ -22,6 +22,10 @@ public abstract class SplitPane extends Element implements Interactable {
     protected ShapeRenderer renderer;
     protected boolean setUp = false;
 
+    public Element[] getChildren() {
+        return children.toArray(new Element[0]);
+    }
+
     @Override
     public void onMouseDown() {
         children.forEach(element -> {

@@ -7,36 +7,52 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Align;
 import org.jetbrains.annotations.NotNull;
+import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.elements.Image;
 import pl.greenmc.tob.graphics.elements.ProgressBar;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
 import java.util.Locale;
 
 import static com.badlogic.gdx.graphics.GL20.*;
 import static pl.greenmc.tob.TourOfBusiness.TOB;
 import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
+import static pl.greenmc.tob.game.util.Utilities.makeMoney;
 
 class GamePlayersStats extends Scene {
     private final int PLAYER_SLOTS = 8;
     private final DecimalFormat decimalFormat = new DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.US));
-    private final FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Regular.ttf"));
-    private final FreeTypeFontGenerator generator2 = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Bold.ttf"));
+    private final FreeTypeFontGenerator generatorBold = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Bold.ttf"));
+    private final FreeTypeFontGenerator generatorRegular = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Regular.ttf"));
+    private final GlyphLayout layout = new GlyphLayout();
+    private final ArrayList<Message> messages = new ArrayList<>();
+    private final ArrayList<Message> messagesToRemove = new ArrayList<>();
     private final FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
     private SpriteBatch batch;
+    private BitmapFont fontMessages;
     private BitmapFont fontMoney;
     private BitmapFont fontNames;
     private Image[] images = new Image[PLAYER_SLOTS];
-    private GlyphLayout layout;
+    private Color messagesColor = GlobalTheme.textColor;
     private PlayerInfo[] players = new PlayerInfo[0];
     private Rectangle[] positions = new Rectangle[PLAYER_SLOTS];
     private ProgressBar progressBar;
     private long timeoutEnd = 0;
     private int timeoutTotal = 0;
     private int timerOnPlayer = -1;
+
+    public void setMessagesColor(Color messagesColor) {
+        this.messagesColor = messagesColor;
+    }
+
+    public void showMessage(String message, int delay) {
+        messages.add(new Message(message, System.currentTimeMillis() + delay));
+    }
 
     public void setPlayerName(int player, String name) {
         players[player % players.length].name = name;
@@ -54,19 +70,36 @@ class GamePlayersStats extends Scene {
         for (int i = 0; i < Math.min(players.length, PLAYER_SLOTS); i++) {
             drawStats(positions[i], players[i], images[i], i % 4 == 1 || i % 4 == 2, i == timerOnPlayer);
         }
+        messagesToRemove.clear();
+        for (Message message : messages) {
+            if (message.getExpiry() < System.currentTimeMillis())
+                messagesToRemove.add(message);
+        }
+        for (Message message : messagesToRemove)
+            messages.remove(message);
+        messagesToRemove.clear();
+
+        float height = 0;
+
+        for (Message message : messages) {
+            layout.setText(fontMessages, message.getMessage(), messagesColor, Gdx.graphics.getWidth() / 3f, Align.center, true);
+            fontMessages.draw(batch, layout, Gdx.graphics.getWidth() / 3f, Gdx.graphics.getHeight() * 0.9f - height);
+            height += layout.height + 30;
+        }
         batch.end();
     }
 
     private void drawStats(@NotNull Rectangle pos, @NotNull PlayerInfo player, @NotNull Image image, boolean alignRight, boolean drawTimer) {
         image.draw(pos.x, pos.y, pos.width, pos.height);
+        String money = makeMoney(player.getBalance());
         if (alignRight) {
             layout.setText(fontNames, player.getName());
             fontNames.draw(batch, player.getName(), pos.x + pos.width - pos.height / 3 / 5 - layout.width, pos.y + pos.height - pos.height / 3 / 4);
-            layout.setText(fontMoney, player.getBalance() + "$");
-            fontMoney.draw(batch, player.getBalance() + "$", pos.x + pos.width - pos.height / 3 / 5 - layout.width, pos.y + pos.height - 2 * pos.height / 3 / 4 - pos.height / 7);
+            layout.setText(fontMoney, money);
+            fontMoney.draw(batch, money, pos.x + pos.width - pos.height / 3 / 5 - layout.width, pos.y + pos.height - 2 * pos.height / 3 / 4 - pos.height / 7);
         } else {
             fontNames.draw(batch, player.getName(), pos.x + pos.height / 3 / 5, pos.y + pos.height - pos.height / 3 / 4);
-            fontMoney.draw(batch, player.getBalance() + "$", pos.x + pos.height / 3 / 5, pos.y + pos.height - 2 * pos.height / 3 / 4 - pos.height / 7);
+            fontMoney.draw(batch, money, pos.x + pos.height / 3 / 5, pos.y + pos.height - 2 * pos.height / 3 / 4 - pos.height / 7);
         }
         if (drawTimer && timeoutTotal > 0) {
             progressBar.setMax(timeoutTotal);
@@ -107,6 +140,7 @@ class GamePlayersStats extends Scene {
         batch = new SpriteBatch();
         setMoneyFontSize((int) (h / 9));
         setNamesFontSize((int) (h / 7));
+        setMessagesFontSize((int) (h / 7));
         updatePositions();
         progressBar = new ProgressBar();
         progressBar.setup();
@@ -121,16 +155,21 @@ class GamePlayersStats extends Scene {
         parameter.size = size;
         parameter.characters = LATIN_EXTENDED;
         if (fontMoney != null) fontMoney.dispose();
-        fontMoney = generator.generateFont(parameter);
-        layout = new GlyphLayout(fontMoney, "");
+        fontMoney = generatorRegular.generateFont(parameter);
+    }
+
+    public void setMessagesFontSize(int size) {
+        parameter.size = size;
+        parameter.characters = LATIN_EXTENDED;
+        if (fontMessages != null) fontMessages.dispose();
+        fontMessages = generatorRegular.generateFont(parameter);
     }
 
     public void setNamesFontSize(int size) {
         parameter.size = size;
         parameter.characters = LATIN_EXTENDED;
         if (fontNames != null) fontNames.dispose();
-        fontNames = generator2.generateFont(parameter);
-        layout = new GlyphLayout(fontNames, "");
+        fontNames = generatorBold.generateFont(parameter);
     }
 
     private void updatePositions() {
@@ -171,11 +210,30 @@ class GamePlayersStats extends Scene {
     public void dispose() {
         for (int i = 0; i < PLAYER_SLOTS; i++)
             images[i].dispose();
-        generator.dispose();
-        generator2.dispose();
+        generatorRegular.dispose();
+        generatorBold.dispose();
         if (batch != null) batch.dispose();
         fontMoney.dispose();
+        fontMessages.dispose();
         progressBar.dispose();
+    }
+
+    private static class Message {
+        private final long expiry;
+        private final String message;
+
+        public Message(String message, long expiry) {
+            this.message = message;
+            this.expiry = expiry;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public long getExpiry() {
+            return expiry;
+        }
     }
 
     private static class PlayerInfo {

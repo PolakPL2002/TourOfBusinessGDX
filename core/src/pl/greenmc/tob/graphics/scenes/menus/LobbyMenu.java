@@ -12,7 +12,6 @@ import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.SentPacket;
 import pl.greenmc.tob.game.netty.client.NettyClient;
 import pl.greenmc.tob.game.netty.packets.game.lobby.*;
-import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.elements.*;
 import pl.greenmc.tob.graphics.scenes.Menu;
 import pl.greenmc.tob.graphics.scenes.game.GameScene;
@@ -253,10 +252,10 @@ public class LobbyMenu extends Menu {
                 if (lobby.getOwner() != TOB.getGame().getSelf().getID()) {
                     readyButton = new Button(selfReady ? "Niegotowy" : "Gotowy");
 
-                    readyButton.setBackgroundColor(selfReady ? GlobalTheme.buttonNoBackgroundColor : GlobalTheme.buttonYesBackgroundColor);
-                    readyButton.setClickColor(selfReady ? GlobalTheme.buttonNoClickColor : GlobalTheme.buttonYesClickColor);
-                    readyButton.setHoverColor(selfReady ? GlobalTheme.buttonNoHoverColor : GlobalTheme.buttonYesHoverColor);
-                    readyButton.setBorderColor(selfReady ? GlobalTheme.buttonNoBorderColor : GlobalTheme.buttonYesBorderColor);
+                    if (selfReady)
+                        readyButton.applyNoTheme();
+                    else
+                        readyButton.applyYesTheme();
 
                     readyButton.setClickCallback(() -> {
                         synchronized (reloadLock) {
@@ -297,10 +296,11 @@ public class LobbyMenu extends Menu {
                     if (lobby.getPlayers().length == 0)
                         allReady = false;
 
-                    readyButton.setBackgroundColor(allReady ? GlobalTheme.buttonYesBackgroundColor : GlobalTheme.buttonNoBackgroundColor);
-                    readyButton.setClickColor(allReady ? GlobalTheme.buttonYesClickColor : GlobalTheme.buttonNoClickColor);
-                    readyButton.setHoverColor(allReady ? GlobalTheme.buttonYesHoverColor : GlobalTheme.buttonNoHoverColor);
-                    readyButton.setBorderColor(allReady ? GlobalTheme.buttonYesBorderColor : GlobalTheme.buttonNoBorderColor);
+                    if (allReady)
+                        readyButton.applyYesTheme();
+                    else
+                        readyButton.applyNoTheme();
+
                     if (allReady)
                         readyButton.setClickCallback(() -> {
                             synchronized (reloadLock) {
@@ -342,10 +342,7 @@ public class LobbyMenu extends Menu {
 
 
                 if (lobby.getOwner() == TOB.getGame().getSelf().getID()) {
-                    backButton.setBackgroundColor(GlobalTheme.buttonNoBackgroundColor);
-                    backButton.setClickColor(GlobalTheme.buttonNoClickColor);
-                    backButton.setHoverColor(GlobalTheme.buttonNoHoverColor);
-                    backButton.setBorderColor(GlobalTheme.buttonNoBorderColor);
+                    backButton.applyNoTheme();
                     backButton.setText("Opuść i usuń");
                 }
 
@@ -380,12 +377,8 @@ public class LobbyMenu extends Menu {
                         .addChild(
                                 new VSplitPane()
                                         .addChild(
-                                                new TransparentColor(),
-                                                new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                        )
-                                        .addChild(
                                                 backButton,
-                                                new VSplitPane.ElementOptions(300, VSplitPane.ElementOptions.WidthMode.FIXED)
+                                                new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
                                         )
                                         .addChild(
                                                 new TransparentColor(),
@@ -393,10 +386,6 @@ public class LobbyMenu extends Menu {
                                         )
                                         .addChild(
                                                 readyButton,
-                                                new VSplitPane.ElementOptions(300, VSplitPane.ElementOptions.WidthMode.FIXED)
-                                        )
-                                        .addChild(
-                                                new TransparentColor(),
                                                 new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
                                         ),
                                 new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED)
