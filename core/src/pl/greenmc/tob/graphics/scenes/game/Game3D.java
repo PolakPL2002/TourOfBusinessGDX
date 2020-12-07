@@ -1,11 +1,9 @@
 package pl.greenmc.tob.graphics.scenes.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
@@ -25,6 +23,7 @@ import java.util.HashMap;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
+import static pl.greenmc.tob.TourOfBusiness.TOB;
 import static pl.greenmc.tob.game.util.Utilities.boundInt;
 import static pl.greenmc.tob.graphics.GlobalTheme.playerColors;
 
@@ -42,6 +41,7 @@ class Game3D extends Scene {
     private ModelBatch modelBatch;
     private PlayerMoveAnimation playerMoveAnimation = null;
     private int[] playerPositions = new int[0];
+    private ModelInstance tmp;
 
     public Game3D(Map map) {
         this.map = map;
@@ -72,6 +72,9 @@ class Game3D extends Scene {
             playerInstances.get(i).transform.set(position, new Quaternion(new Vector3(0, 0, 0), 0));
         }
         modelBatch.render(playerInstances, environment);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        modelBatch.render(tmp, environment);
         modelBatch.end();
     }
 
@@ -84,6 +87,12 @@ class Game3D extends Scene {
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
         environment.add(new DirectionalLight().set(new Color(.7f, .7f, .7f, 1), cam.direction));
 
+        //TODO Implement this properly
+        Material material = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager().get("textures/ui/menu/background.png")));
+        material.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+        tmp = new ModelInstance(createPlane(new ModelBuilder(), 1, 1, material));
+        tmp.transform.translate(0, 1, 0);
+        //End of test code
         setupModels();
         generateHitboxes();
     }
@@ -258,6 +267,14 @@ class Game3D extends Scene {
         cam.near = 1f;
         cam.far = 300f;
         cam.update();
+    }
+
+    private Model createPlane(@NotNull ModelBuilder modelBuilder, float scaleX, float scaleZ, Material material) {
+        modelBuilder.begin();
+        int attr = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates;
+        modelBuilder.part("top", GL20.GL_TRIANGLES, attr, material)
+                .rect(-scaleX, 0, -scaleZ, -scaleX, 0, scaleZ, scaleX, 0, scaleZ, scaleX, 0, -scaleZ, 0, 1f, 0);
+        return modelBuilder.end();
     }
 
     public void movePlayer(int player, int position, boolean animate) {
