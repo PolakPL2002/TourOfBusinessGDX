@@ -51,7 +51,9 @@ class GamePlayersStats extends Scene {
     }
 
     public void showMessage(String message, int delay) {
-        messages.add(new Message(message, System.currentTimeMillis() + delay));
+        synchronized (messages) {
+            messages.add(new Message(message, System.currentTimeMillis() + delay));
+        }
     }
 
     public void setPlayerName(int player, String name) {
@@ -70,21 +72,23 @@ class GamePlayersStats extends Scene {
         for (int i = 0; i < Math.min(players.length, PLAYER_SLOTS); i++) {
             drawStats(positions[i], players[i], images[i], i % 4 == 1 || i % 4 == 2, i == timerOnPlayer);
         }
-        messagesToRemove.clear();
-        for (Message message : messages) {
-            if (message.getExpiry() < System.currentTimeMillis())
-                messagesToRemove.add(message);
-        }
-        for (Message message : messagesToRemove)
-            messages.remove(message);
-        messagesToRemove.clear();
+        synchronized (messages) {
+            messagesToRemove.clear();
+            for (Message message : messages) {
+                if (message.getExpiry() < System.currentTimeMillis())
+                    messagesToRemove.add(message);
+            }
+            for (Message message : messagesToRemove)
+                messages.remove(message);
+            messagesToRemove.clear();
 
-        float height = 0;
+            float height = 0;
 
-        for (Message message : messages) {
-            layout.setText(fontMessages, message.getMessage(), messagesColor, Gdx.graphics.getWidth() / 3f, Align.center, true);
-            fontMessages.draw(batch, layout, Gdx.graphics.getWidth() / 3f, Gdx.graphics.getHeight() * 0.9f - height);
-            height += layout.height + 30;
+            for (Message message : messages) {
+                layout.setText(fontMessages, message.getMessage(), messagesColor, Gdx.graphics.getWidth() / 3f, Align.center, true);
+                fontMessages.draw(batch, layout, Gdx.graphics.getWidth() / 3f, Gdx.graphics.getHeight() * 0.9f - height);
+                height += layout.height + 30;
+            }
         }
         batch.end();
     }

@@ -31,20 +31,38 @@ class Game3D extends Scene {
     private final HashMap<Tile, Hitbox> hitboxes = new HashMap<>();
     private final ArrayList<ModelInstance> instances = new ArrayList<>();
     private final Map map;
+    private final ArrayList<Model> models = new ArrayList<>();
     private final ArrayList<ModelInstance> playerInstances = new ArrayList<>();
-    private final ArrayList<Model> playerModels = new ArrayList<>();
     private final ArrayList<HashMap<Tile, Vector3>> playerTileLocations = new ArrayList<>();
-    private final ArrayList<Model> tileModels = new ArrayList<>();
+    private final HashMap<Tile, Integer> tileOwners = new HashMap<>();
+    private final ArrayList<HashMap<Tile, ModelInstance>> tilePlayerOverlay = new ArrayList<>();
+    private final HashMap<Tile, ModelInstance> tileSelectOverlay = new HashMap<>();
     private Model boardModel;
     private OrthographicCamera cam;
     private Environment environment;
     private ModelBatch modelBatch;
     private PlayerMoveAnimation playerMoveAnimation = null;
     private int[] playerPositions = new int[0];
-    private ModelInstance tmp;
+    private Integer selectedTile = null;
 
     public Game3D(Map map) {
         this.map = map;
+    }
+
+    public void setSelectedTile(Integer selectedTile) {
+        this.selectedTile = selectedTile;
+    }
+
+    public void setSelectedTile(Tile selectedTile) {
+        Tile[] tiles = map.getTiles();
+        for (int i = 0; i < tiles.length; i++) {
+            Tile tile = tiles[i];
+            if (tile == selectedTile) {
+                this.selectedTile = i;
+                return;
+            }
+        }
+        this.selectedTile = null;
     }
 
     public Map getMap() {
@@ -53,6 +71,10 @@ class Game3D extends Scene {
 
     public HashMap<Tile, Hitbox> getHitboxes() {
         return hitboxes;
+    }
+
+    public void setTileOwner(int tile, Integer owner) {
+        tileOwners.put(map.getTiles()[tile % map.getTiles().length], owner);
     }
 
     @Override
@@ -74,7 +96,13 @@ class Game3D extends Scene {
         modelBatch.render(playerInstances, environment);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        modelBatch.render(tmp, environment);
+        for (Tile tile : tileOwners.keySet()) {
+            Integer owner = tileOwners.get(tile);
+            if (owner != null)
+                modelBatch.render(tilePlayerOverlay.get(owner).get(tile), environment);
+        }
+        if (selectedTile != null)
+            modelBatch.render(tileSelectOverlay.get(map.getTiles()[selectedTile]), environment);
         modelBatch.end();
     }
 
@@ -87,12 +115,6 @@ class Game3D extends Scene {
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
         environment.add(new DirectionalLight().set(new Color(.7f, .7f, .7f, 1), cam.direction));
 
-        //TODO Implement this properly
-        Material material = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager().get("textures/ui/menu/background.png")));
-        material.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
-        tmp = new ModelInstance(createPlane(new ModelBuilder(), 1, 1, material));
-        tmp.transform.translate(0, 1, 0);
-        //End of test code
         setupModels();
         generateHitboxes();
     }
@@ -132,6 +154,48 @@ class Game3D extends Scene {
         }
     }
 
+    @Override
+    public void resize(int width, int height) {
+        modelBatch.dispose();
+        modelBatch = new ModelBatch();
+        generateHitboxes();
+        setupCamera();
+    }
+
+    private void setupCamera() {
+        if (Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight() < 1.67f)
+            cam = new OrthographicCamera(4.5f * 1.67f, 4.5f * 1.67f / Gdx.graphics.getWidth() * Gdx.graphics.getHeight());
+        else
+            cam = new OrthographicCamera(4.5f / Gdx.graphics.getHeight() * Gdx.graphics.getWidth(), 4.5f);
+        cam.position.set(-10f, 10f, 10f);
+        cam.lookAt(0, 0, 0);
+        cam.near = 1f;
+        cam.far = 300f;
+        cam.update();
+    }
+
+    @Override
+    public void dispose() {
+        modelBatch.dispose();
+        boardModel.dispose();
+        models.forEach(Model::dispose);
+    }
+
+    public void movePlayer(int player, int position, boolean animate) {
+        if (animate)
+            playerMoveAnimation = new PlayerMoveAnimation(player % playerPositions.length, playerPositions[player % playerPositions.length], position, 150);
+        playerPositions[player % playerPositions.length] = position;
+    }
+
+    public void setNumPlayers(int num) {
+        int[] oldPP = playerPositions;
+        playerPositions = new int[Math.min(num, playerInstances.size())];
+        if (Math.min(oldPP.length, playerPositions.length) >= 0)
+            System.arraycopy(oldPP, 0, playerPositions, 0, Math.min(oldPP.length, playerPositions.length));
+        for (int i = Math.min(oldPP.length, playerPositions.length); i < playerPositions.length; i++)
+            playerPositions[i] = 0;
+    }
+
     private void setupModels() {
         ModelBuilder modelBuilder = new ModelBuilder();
         boardModel = createModel(modelBuilder, 2.6f, 0.05f, 2.6f,
@@ -148,10 +212,38 @@ class Game3D extends Scene {
 
         for (Color ignored : playerColors) {
             playerTileLocations.add(new HashMap<>());
+            tilePlayerOverlay.add(new HashMap<>());
         }
 
         int numTiles = map.getTiles().length;
         float tileSizeBase = 5.2f / (numTiles / 4.0f + 3) / 2;
+
+        final ArrayList<Model> overlaysL = new ArrayList<>(), overlaysS = new ArrayList<>();
+        for (int i = 0; i < tilePlayerOverlay.size(); i++) {
+            Material materialS = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
+                    .get("textures/ui/game/player" + (i + 1) + "OverlayS.png")));
+            materialS.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+            Material materialL = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
+                    .get("textures/ui/game/player" + (i + 1) + "OverlayL.png")));
+            materialL.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+            overlaysS.add(createPlane(modelBuilder, 2 * tileSizeBase - 0.0025f, tileSizeBase - 0.0025f,
+                    materialS));
+            overlaysL.add(createPlane(modelBuilder, 2 * tileSizeBase - 0.0025f, 2 * tileSizeBase - 0.0025f,
+                    materialL));
+        }
+        Model selectOverlayL, selectOverlayS;
+        Material materialL = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
+                .get("textures/ui/game/overlayL.png")));
+        materialL.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+        models.add(selectOverlayL = createPlane(modelBuilder, 2 * tileSizeBase - 0.0025f, 2 * tileSizeBase - 0.0025f,
+                materialL));
+        Material materialS = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
+                .get("textures/ui/game/overlayL.png")));
+        materialS.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+        models.add(selectOverlayS = createPlane(modelBuilder, 2 * tileSizeBase - 0.0025f, tileSizeBase - 0.0025f,
+                materialS));
+        models.addAll(overlaysS);
+        models.addAll(overlaysL);
 
         int i = 0;
         for (Tile tile : map.getTiles()) {
@@ -170,7 +262,7 @@ class Game3D extends Scene {
             if (row % 2 == 1 && !bigTile)
                 instance.transform.rotate(new Vector3(0, 1, 0), 90);
             instances.add(instance);
-            tileModels.add(model);
+            models.add(model);
             i++;
             for (int j = 0; j < playerTileLocations.size(); j++) {
                 final float x = (j % 4 - 2) * (tileSizeBase / 2) + tileSizeBase / 4;
@@ -181,6 +273,22 @@ class Game3D extends Scene {
                 else
                     playerTileLocations.get(j).put(tile, getTileLocation(numTiles, tileSizeBase, idInRow, bigTile, row).add(z, y, x));
             }
+            for (int j = 0; j < tilePlayerOverlay.size(); j++) {
+                ModelInstance modelInstance = new ModelInstance((bigTile ? overlaysL : overlaysS).get(j));
+                Vector3 tileLocation = getTileLocation(numTiles, tileSizeBase, idInRow, bigTile, row);
+                tileLocation.y += 0.0152f;
+                modelInstance.transform.translate(tileLocation);
+                if (row % 2 == 1 && !bigTile)
+                    modelInstance.transform.rotate(new Vector3(0, 1, 0), 90);
+                tilePlayerOverlay.get(j).put(tile, modelInstance);
+            }
+            ModelInstance modelInstance = new ModelInstance(bigTile ? selectOverlayL : selectOverlayS);
+            Vector3 tileLocation = getTileLocation(numTiles, tileSizeBase, idInRow, bigTile, row);
+            tileLocation.y += 0.0154f;
+            modelInstance.transform.translate(tileLocation);
+            if (row % 2 == 1 && !bigTile)
+                modelInstance.transform.rotate(new Vector3(0, 1, 0), 90);
+            tileSelectOverlay.put(tile, modelInstance);
         }
 //        int j = 0;
         for (Color color : playerColors) {
@@ -198,7 +306,7 @@ class Game3D extends Scene {
 //            }
 //            j++;
             playerInstances.add(new ModelInstance(model));
-            playerModels.add(model);
+            models.add(model);
         }
 
     }
@@ -257,54 +365,12 @@ class Game3D extends Scene {
         return modelBuilder.end();
     }
 
-    private void setupCamera() {
-        if (Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight() < 1.67f)
-            cam = new OrthographicCamera(4.5f * 1.67f, 4.5f * 1.67f / Gdx.graphics.getWidth() * Gdx.graphics.getHeight());
-        else
-            cam = new OrthographicCamera(4.5f / Gdx.graphics.getHeight() * Gdx.graphics.getWidth(), 4.5f);
-        cam.position.set(-10f, 10f, 10f);
-        cam.lookAt(0, 0, 0);
-        cam.near = 1f;
-        cam.far = 300f;
-        cam.update();
-    }
-
     private Model createPlane(@NotNull ModelBuilder modelBuilder, float scaleX, float scaleZ, Material material) {
         modelBuilder.begin();
         int attr = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates;
         modelBuilder.part("top", GL20.GL_TRIANGLES, attr, material)
                 .rect(-scaleX, 0, -scaleZ, -scaleX, 0, scaleZ, scaleX, 0, scaleZ, scaleX, 0, -scaleZ, 0, 1f, 0);
         return modelBuilder.end();
-    }
-
-    public void movePlayer(int player, int position, boolean animate) {
-        if (animate)
-            playerMoveAnimation = new PlayerMoveAnimation(player % playerPositions.length, playerPositions[player % playerPositions.length], position, 150);
-        playerPositions[player % playerPositions.length] = position;
-    }
-
-    public void setNumPlayers(int num) {
-        int[] oldPP = playerPositions;
-        playerPositions = new int[Math.min(num, playerInstances.size())];
-        if (Math.min(oldPP.length, playerPositions.length) >= 0)
-            System.arraycopy(oldPP, 0, playerPositions, 0, Math.min(oldPP.length, playerPositions.length));
-        for (int i = Math.min(oldPP.length, playerPositions.length); i < playerPositions.length; i++)
-            playerPositions[i] = 0;
-    }
-
-    @Override
-    public void resize(int width, int height) {
-        modelBatch.dispose();
-        modelBatch = new ModelBatch();
-        setupCamera();
-    }
-
-    @Override
-    public void dispose() {
-        modelBatch.dispose();
-        boardModel.dispose();
-        tileModels.forEach(Model::dispose);
-        playerModels.forEach(Model::dispose);
     }
 
     private class PlayerMoveAnimation {

@@ -99,6 +99,25 @@ public class TourOfBusinessGame {
             texturesToLoad.add("textures/ui/game/player6.png");
             texturesToLoad.add("textures/ui/game/player7.png");
             texturesToLoad.add("textures/ui/game/player8.png");
+            texturesToLoad.add("textures/ui/game/player1OverlayS.png");
+            texturesToLoad.add("textures/ui/game/player2OverlayS.png");
+            texturesToLoad.add("textures/ui/game/player3OverlayS.png");
+            texturesToLoad.add("textures/ui/game/player4OverlayS.png");
+            texturesToLoad.add("textures/ui/game/player5OverlayS.png");
+            texturesToLoad.add("textures/ui/game/player6OverlayS.png");
+            texturesToLoad.add("textures/ui/game/player7OverlayS.png");
+            texturesToLoad.add("textures/ui/game/player8OverlayS.png");
+            texturesToLoad.add("textures/ui/game/player1OverlayL.png");
+            texturesToLoad.add("textures/ui/game/player2OverlayL.png");
+            texturesToLoad.add("textures/ui/game/player3OverlayL.png");
+            texturesToLoad.add("textures/ui/game/player4OverlayL.png");
+            texturesToLoad.add("textures/ui/game/player5OverlayL.png");
+            texturesToLoad.add("textures/ui/game/player6OverlayL.png");
+            texturesToLoad.add("textures/ui/game/player7OverlayL.png");
+            texturesToLoad.add("textures/ui/game/player8OverlayL.png");
+
+            texturesToLoad.add("textures/ui/game/overlayS.png");
+            texturesToLoad.add("textures/ui/game/overlayL.png");
 
             //Menu UI
             texturesToLoad.add("textures/ui/menu/background.png");

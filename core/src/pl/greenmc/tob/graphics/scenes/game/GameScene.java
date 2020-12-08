@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import pl.greenmc.tob.game.GameState;
 import pl.greenmc.tob.game.Player;
 import pl.greenmc.tob.game.map.Map;
+import pl.greenmc.tob.game.map.Tile;
 import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.SentPacket;
@@ -16,6 +17,7 @@ import pl.greenmc.tob.game.netty.client.NettyClient;
 import pl.greenmc.tob.game.netty.packets.game.GetGameStatePacket;
 import pl.greenmc.tob.game.netty.packets.game.GetPlayerPacket;
 import pl.greenmc.tob.graphics.GlobalTheme;
+import pl.greenmc.tob.graphics.Hitbox;
 import pl.greenmc.tob.graphics.Interactable;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.scenes.game.dialogs.*;
@@ -66,6 +68,10 @@ public class GameScene extends Scene implements Interactable {
         this.state = data.getState();
         tileLevels = data.getTileLevels();
         tileOwners = data.getTileOwners();
+        if (game3D != null) {
+            for (int i = 0; i < tileOwners.length; i++)
+                game3D.setTileOwner(i, tileOwners[i]);
+        }
         if (gamePlayersStats != null) {
             gamePlayersStats.setNumPlayers(playerIDs.length);
             gamePlayersStats.setTimeout(data.getTimeoutLeft(), this.state == GameState.State.PLAYER_MOVING ? 0 : data.getTimeoutTotal());
@@ -101,14 +107,10 @@ public class GameScene extends Scene implements Interactable {
                     TOB.runOnGLThread(() -> changeDialog(null));
             }
         } else if (this.state != GameState.State.AUCTION) {
-            TOB.runOnGLThread(() -> {
-                changeDialog(null);
-            });
+            TOB.runOnGLThread(() -> changeDialog(null));
         }
         if (this.state == GameState.State.AUCTION) {
-            TOB.runOnGLThread(() -> {
-                changeDialog(new AuctionDialog());
-            });
+            TOB.runOnGLThread(() -> changeDialog(new AuctionDialog()));
         }
     }
 
@@ -117,10 +119,12 @@ public class GameScene extends Scene implements Interactable {
         if (dialog != null) dialog.onMouseDown();
     }
 
-    @Override
-    public void onMouseMove(int x, int y) {
-        lastMousePos = new Vector2(x, y);
-        if (dialog != null) dialog.onMouseMove(x, y);
+    private void updatePlayersStats() {
+        if (gamePlayersStats != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
+                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
+            }
     }
 
     @Override
@@ -154,6 +158,24 @@ public class GameScene extends Scene implements Interactable {
         updatePlayersStats();
     }
 
+    @Override
+    public void onMouseMove(int x, int y) {
+        lastMousePos = new Vector2(x, y);
+        if (dialog != null) dialog.onMouseMove(x, y);
+        if (game3D != null) {
+            HashMap<Tile, Hitbox> hitboxes = game3D.getHitboxes();
+            boolean found = false;
+            for (Tile tile : hitboxes.keySet()) {
+                if (hitboxes.get(tile).testMouseCoordinates(x, y)) {
+                    game3D.setSelectedTile(tile);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) game3D.setSelectedTile((Integer) null);
+        }
+    }
+
     public void onRoll(int player, @NotNull int[] numbers) {
         StringBuilder n = new StringBuilder();
         int sum = 0;
@@ -166,21 +188,15 @@ public class GameScene extends Scene implements Interactable {
         gamePlayersStats.showMessage(getPlayerName(playerIDs[player]) + "\n" + n.toString(), 2500);
     }
 
-    private void updatePlayersStats() {
-        if (gamePlayersStats != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
-                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
-            }
-    }
-
     @Override
     public void onScroll(float x, float y) {
         if (dialog != null) dialog.onScroll(x, y);
     }
 
     public void onTileModified(int tile, Integer owner, int level) {
-
+        if (game3D != null) {
+            game3D.setTileOwner(tile, owner);
+        }
     }
 
     @Override
