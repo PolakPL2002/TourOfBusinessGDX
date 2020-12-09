@@ -99,6 +99,7 @@ public class TourOfBusinessGame {
             texturesToLoad.add("textures/ui/game/player6.png");
             texturesToLoad.add("textures/ui/game/player7.png");
             texturesToLoad.add("textures/ui/game/player8.png");
+
             texturesToLoad.add("textures/ui/game/player1OverlayS.png");
             texturesToLoad.add("textures/ui/game/player2OverlayS.png");
             texturesToLoad.add("textures/ui/game/player3OverlayS.png");
@@ -107,6 +108,7 @@ public class TourOfBusinessGame {
             texturesToLoad.add("textures/ui/game/player6OverlayS.png");
             texturesToLoad.add("textures/ui/game/player7OverlayS.png");
             texturesToLoad.add("textures/ui/game/player8OverlayS.png");
+
             texturesToLoad.add("textures/ui/game/player1OverlayL.png");
             texturesToLoad.add("textures/ui/game/player2OverlayL.png");
             texturesToLoad.add("textures/ui/game/player3OverlayL.png");
@@ -116,8 +118,23 @@ public class TourOfBusinessGame {
             texturesToLoad.add("textures/ui/game/player7OverlayL.png");
             texturesToLoad.add("textures/ui/game/player8OverlayL.png");
 
+            texturesToLoad.add("textures/ui/game/player1Piece.png");
+            texturesToLoad.add("textures/ui/game/player2Piece.png");
+            texturesToLoad.add("textures/ui/game/player3Piece.png");
+            texturesToLoad.add("textures/ui/game/player4Piece.png");
+            texturesToLoad.add("textures/ui/game/player5Piece.png");
+            texturesToLoad.add("textures/ui/game/player6Piece.png");
+            texturesToLoad.add("textures/ui/game/player7Piece.png");
+            texturesToLoad.add("textures/ui/game/player8Piece.png");
+
             texturesToLoad.add("textures/ui/game/overlayS.png");
             texturesToLoad.add("textures/ui/game/overlayL.png");
+
+            texturesToLoad.add("textures/ui/game/overlayTargetS.png");
+            texturesToLoad.add("textures/ui/game/overlayTargetL.png");
+
+            texturesToLoad.add("textures/ui/game/levelS.png");
+            texturesToLoad.add("textures/ui/game/levelL.png");
 
             //Menu UI
             texturesToLoad.add("textures/ui/menu/background.png");

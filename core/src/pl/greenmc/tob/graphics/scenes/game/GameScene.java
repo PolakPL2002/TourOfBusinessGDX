@@ -69,8 +69,12 @@ public class GameScene extends Scene implements Interactable {
         tileLevels = data.getTileLevels();
         tileOwners = data.getTileOwners();
         if (game3D != null) {
-            for (int i = 0; i < tileOwners.length; i++)
+            for (int i = 0; i < tileOwners.length; i++) {
                 game3D.setTileOwner(i, tileOwners[i]);
+            }
+            for (int i = 0; i < tileLevels.length; i++) {
+                game3D.setTileLevel(i, tileLevels[i]);
+            }
         }
         if (gamePlayersStats != null) {
             gamePlayersStats.setNumPlayers(playerIDs.length);
@@ -196,6 +200,7 @@ public class GameScene extends Scene implements Interactable {
     public void onTileModified(int tile, Integer owner, int level) {
         if (game3D != null) {
             game3D.setTileOwner(tile, owner);
+            game3D.setTileLevel(tile, level);
         }
     }
 

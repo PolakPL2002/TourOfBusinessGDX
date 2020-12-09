@@ -34,9 +34,12 @@ class Game3D extends Scene {
     private final ArrayList<Model> models = new ArrayList<>();
     private final ArrayList<ModelInstance> playerInstances = new ArrayList<>();
     private final ArrayList<HashMap<Tile, Vector3>> playerTileLocations = new ArrayList<>();
+    private final HashMap<Tile, ArrayList<ArrayList<ModelInstance>>> tileLevelModels = new HashMap<>(); //tile,level,models
+    private final HashMap<Tile, Integer> tileLevels = new HashMap<>();
     private final HashMap<Tile, Integer> tileOwners = new HashMap<>();
     private final ArrayList<HashMap<Tile, ModelInstance>> tilePlayerOverlay = new ArrayList<>();
     private final HashMap<Tile, ModelInstance> tileSelectOverlay = new HashMap<>();
+    private final HashMap<Tile, ModelInstance> tileTargetOverlay = new HashMap<>();
     private Model boardModel;
     private OrthographicCamera cam;
     private Environment environment;
@@ -77,11 +80,17 @@ class Game3D extends Scene {
         tileOwners.put(map.getTiles()[tile % map.getTiles().length], owner);
     }
 
+    public void setTileLevel(int tile, int level) {
+        tileLevels.put(map.getTiles()[tile % map.getTiles().length], level);
+    }
+
     @Override
     public void render() {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         modelBatch.begin(cam);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         modelBatch.render(instances, environment);
         for (int i = 0; i < playerPositions.length; i++) {
             final Vector3 position;
@@ -89,13 +98,18 @@ class Game3D extends Scene {
                 position = playerTileLocations.get(i).get(map.getTiles()[playerPositions[i]]);
             else {
                 position = playerMoveAnimation.getPosition();
+                modelBatch.render(tileTargetOverlay.get(map.getTiles()[playerMoveAnimation.getTo() % map.getTiles().length]), environment);
                 if (playerMoveAnimation.isEnded()) playerMoveAnimation = null;
             }
             playerInstances.get(i).transform.set(position, new Quaternion(new Vector3(0, 0, 0), 0));
         }
         modelBatch.render(playerInstances, environment);
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        for (Tile tile : tileLevels.keySet()) {
+            if (tile.getType() != Tile.TileType.CITY) continue;
+            Integer level = tileLevels.get(tile);
+            if (level != null && level > 0)
+                modelBatch.render(tileLevelModels.get(tile).get(level - 1), environment);
+        }
         for (Tile tile : tileOwners.keySet()) {
             Integer owner = tileOwners.get(tile);
             if (owner != null)
@@ -154,14 +168,6 @@ class Game3D extends Scene {
         }
     }
 
-    @Override
-    public void resize(int width, int height) {
-        modelBatch.dispose();
-        modelBatch = new ModelBatch();
-        generateHitboxes();
-        setupCamera();
-    }
-
     private void setupCamera() {
         if (Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight() < 1.67f)
             cam = new OrthographicCamera(4.5f * 1.67f, 4.5f * 1.67f / Gdx.graphics.getWidth() * Gdx.graphics.getHeight());
@@ -175,25 +181,18 @@ class Game3D extends Scene {
     }
 
     @Override
+    public void resize(int width, int height) {
+        modelBatch.dispose();
+        modelBatch = new ModelBatch();
+        generateHitboxes();
+        setupCamera();
+    }
+
+    @Override
     public void dispose() {
         modelBatch.dispose();
         boardModel.dispose();
         models.forEach(Model::dispose);
-    }
-
-    public void movePlayer(int player, int position, boolean animate) {
-        if (animate)
-            playerMoveAnimation = new PlayerMoveAnimation(player % playerPositions.length, playerPositions[player % playerPositions.length], position, 150);
-        playerPositions[player % playerPositions.length] = position;
-    }
-
-    public void setNumPlayers(int num) {
-        int[] oldPP = playerPositions;
-        playerPositions = new int[Math.min(num, playerInstances.size())];
-        if (Math.min(oldPP.length, playerPositions.length) >= 0)
-            System.arraycopy(oldPP, 0, playerPositions, 0, Math.min(oldPP.length, playerPositions.length));
-        for (int i = Math.min(oldPP.length, playerPositions.length); i < playerPositions.length; i++)
-            playerPositions[i] = 0;
     }
 
     private void setupModels() {
@@ -220,30 +219,40 @@ class Game3D extends Scene {
 
         final ArrayList<Model> overlaysL = new ArrayList<>(), overlaysS = new ArrayList<>();
         for (int i = 0; i < tilePlayerOverlay.size(); i++) {
-            Material materialS = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
-                    .get("textures/ui/game/player" + (i + 1) + "OverlayS.png")));
-            materialS.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
-            Material materialL = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
-                    .get("textures/ui/game/player" + (i + 1) + "OverlayL.png")));
-            materialL.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+            Material materialS = getMaterialWithTransparency("textures/ui/game/player" + (i + 1) + "OverlayS.png");
+            Material materialL = getMaterialWithTransparency("textures/ui/game/player" + (i + 1) + "OverlayL.png");
             overlaysS.add(createPlane(modelBuilder, 2 * tileSizeBase - 0.0025f, tileSizeBase - 0.0025f,
                     materialS));
             overlaysL.add(createPlane(modelBuilder, 2 * tileSizeBase - 0.0025f, 2 * tileSizeBase - 0.0025f,
                     materialL));
         }
-        Model selectOverlayL, selectOverlayS;
-        Material materialL = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
-                .get("textures/ui/game/overlayL.png")));
-        materialL.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
-        models.add(selectOverlayL = createPlane(modelBuilder, 2 * tileSizeBase - 0.0025f, 2 * tileSizeBase - 0.0025f,
-                materialL));
-        Material materialS = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
-                .get("textures/ui/game/overlayL.png")));
-        materialS.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
-        models.add(selectOverlayS = createPlane(modelBuilder, 2 * tileSizeBase - 0.0025f, tileSizeBase - 0.0025f,
-                materialS));
         models.addAll(overlaysS);
         models.addAll(overlaysL);
+
+        Model selectOverlayL, selectOverlayS;
+        Material materialL = getMaterialWithTransparency("textures/ui/game/overlayL.png");
+        models.add(selectOverlayL = createPlane(modelBuilder, 2 * tileSizeBase - 0.0025f, 2 * tileSizeBase - 0.0025f,
+                materialL));
+        Material materialS = getMaterialWithTransparency("textures/ui/game/overlayL.png");
+        models.add(selectOverlayS = createPlane(modelBuilder, 2 * tileSizeBase - 0.0025f, tileSizeBase - 0.0025f,
+                materialS));
+
+        Model targetOverlayL, targetOverlayS;
+        Material targetMaterialL = getMaterialWithTransparency("textures/ui/game/overlayTargetL.png");
+        models.add(targetOverlayL = createPlane(modelBuilder, 2 * tileSizeBase - 0.0025f, 2 * tileSizeBase - 0.0025f,
+                targetMaterialL));
+        Material targetMaterialS = getMaterialWithTransparency("textures/ui/game/overlayTargetL.png");
+        models.add(targetOverlayS = createPlane(modelBuilder, 2 * tileSizeBase - 0.0025f, tileSizeBase - 0.0025f,
+                targetMaterialS));
+
+        Model levelS, levelL;
+        Material materialLevelS = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
+                .get("textures/ui/game/levelS.png")));
+        Material materialLevelL = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
+                .get("textures/ui/game/levelL.png")));
+
+        models.add(levelS = createModel(modelBuilder, tileSizeBase / 6, tileSizeBase / 6, tileSizeBase / 6, materialLevelS, materialLevelS, materialLevelS, materialLevelS, materialLevelS, materialLevelS));
+        models.add(levelL = createModel(modelBuilder, tileSizeBase / 6, tileSizeBase / 6, tileSizeBase * 11 / 12, materialLevelL, materialLevelL, materialLevelL, materialLevelL, materialLevelL, materialLevelL));
 
         int i = 0;
         for (Tile tile : map.getTiles()) {
@@ -264,51 +273,87 @@ class Game3D extends Scene {
             instances.add(instance);
             models.add(model);
             i++;
+            //Player locations
             for (int j = 0; j < playerTileLocations.size(); j++) {
                 final float x = (j % 4 - 2) * (tileSizeBase / 2) + tileSizeBase / 4;
                 final float z = (float) ((Math.floor(j / 4.0f) - 1) * (tileSizeBase / 2) - (tileSizeBase / 4));
-                final float y = (tileSizeBase / 8) + 0.015f;
+                final float y = (tileSizeBase / 4 - 0.005f) + 0.015f;
                 if (row % 2 == 1 && !bigTile)
                     playerTileLocations.get(j).put(tile, getTileLocation(numTiles, tileSizeBase, idInRow, false, row).add(x, y, -z));
                 else
                     playerTileLocations.get(j).put(tile, getTileLocation(numTiles, tileSizeBase, idInRow, bigTile, row).add(z, y, x));
             }
+
+            //Player overlays
+            Vector3 tileLocation = getTileLocation(numTiles, tileSizeBase, idInRow, bigTile, row);
             for (int j = 0; j < tilePlayerOverlay.size(); j++) {
                 ModelInstance modelInstance = new ModelInstance((bigTile ? overlaysL : overlaysS).get(j));
-                Vector3 tileLocation = getTileLocation(numTiles, tileSizeBase, idInRow, bigTile, row);
-                tileLocation.y += 0.0152f;
                 modelInstance.transform.translate(tileLocation);
+                modelInstance.transform.translate(0, 0.0152f, 0);
                 if (row % 2 == 1 && !bigTile)
                     modelInstance.transform.rotate(new Vector3(0, 1, 0), 90);
                 tilePlayerOverlay.get(j).put(tile, modelInstance);
             }
-            ModelInstance modelInstance = new ModelInstance(bigTile ? selectOverlayL : selectOverlayS);
-            Vector3 tileLocation = getTileLocation(numTiles, tileSizeBase, idInRow, bigTile, row);
-            tileLocation.y += 0.0154f;
+
+            //Target overlay
+            ModelInstance modelInstance = new ModelInstance(bigTile ? targetOverlayL : targetOverlayS);
             modelInstance.transform.translate(tileLocation);
+            modelInstance.transform.translate(0, 0.0154f, 0);
+            if (row % 2 == 1 && !bigTile)
+                modelInstance.transform.rotate(new Vector3(0, 1, 0), 90);
+            tileTargetOverlay.put(tile, modelInstance);
+
+            //Select overlay
+            modelInstance = new ModelInstance(bigTile ? selectOverlayL : selectOverlayS);
+            modelInstance.transform.translate(tileLocation);
+            modelInstance.transform.translate(0, 0.0156f, 0);
             if (row % 2 == 1 && !bigTile)
                 modelInstance.transform.rotate(new Vector3(0, 1, 0), 90);
             tileSelectOverlay.put(tile, modelInstance);
+
+            //Level models
+            tileLevelModels.put(tile, new ArrayList<>());
+            for (int level = 0; level < map.getMaxCityLevel(); level++) {
+                ArrayList<ModelInstance> models = new ArrayList<>();
+                int bigModels = (level + 1) / 5;
+                int smallModels = (level + 1) % 5;
+                float y = 0.015f + tileSizeBase / 6;
+                for (int j = 0; j < bigModels; j++) {
+                    modelInstance = new ModelInstance(levelL);
+                    modelInstance.transform.translate(tileLocation);
+                    if (row % 2 == 1 && !bigTile) {
+                        modelInstance.transform.translate(0, y, -1.625f * tileSizeBase);
+                        modelInstance.transform.rotate(new Vector3(0, 1, 0), 90);
+                    } else
+                        modelInstance.transform.translate(1.625f * tileSizeBase, y, 0);
+                    models.add(modelInstance);
+                    y += tileSizeBase / 3;
+                }
+                for (int j = 0; j < smallModels; j++) {
+                    modelInstance = new ModelInstance(levelS);
+                    modelInstance.transform.translate(tileLocation);
+                    if (row % 2 == 1 && !bigTile)
+                        modelInstance.transform.translate(-0.75f * tileSizeBase + j * tileSizeBase / 2, y, -1.625f * tileSizeBase);
+                    else
+                        modelInstance.transform.translate(1.625f * tileSizeBase, y, -0.75f * tileSizeBase + j * tileSizeBase / 2);
+                    models.add(modelInstance);
+                }
+                tileLevelModels.get(tile).add(models);
+            }
         }
-//        int j = 0;
-        for (Color color : playerColors) {
-            Model model = createModel(modelBuilder, tileSizeBase / 4 - 0.005f, tileSizeBase / 8, tileSizeBase / 4 - 0.005f,
-                    new Material(ColorAttribute.createDiffuse(color)),
-                    new Material(ColorAttribute.createDiffuse(color)),
-                    new Material(ColorAttribute.createDiffuse(color)),
-                    new Material(ColorAttribute.createDiffuse(color)),
-                    new Material(ColorAttribute.createDiffuse(color)),
-                    new Material(ColorAttribute.createDiffuse(color)));
-//            for (Tile tile : map.getTiles()) {
-//                final ModelInstance e = new ModelInstance(model);
-//                e.transform.set(playerTileLocations.get(j).get(tile), new Quaternion(new Vector3(0, 0, 0), 0));
-//                playerInstances.add(e);
-//            }
-//            j++;
+        for (int j = 0; j < playerColors.length; j++) {
+            Material material = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
+                    .get("textures/ui/game/player" + (j + 1) + "Piece.png")));
+            Model model = createModel(modelBuilder, tileSizeBase / 4 - 0.005f, tileSizeBase / 4 - 0.005f, tileSizeBase / 4 - 0.005f,
+                    material,
+                    material,
+                    material,
+                    material,
+                    material,
+                    material);
             playerInstances.add(new ModelInstance(model));
             models.add(model);
         }
-
     }
 
     @NotNull
@@ -365,6 +410,21 @@ class Game3D extends Scene {
         return modelBuilder.end();
     }
 
+    public void movePlayer(int player, int position, boolean animate) {
+        if (animate)
+            playerMoveAnimation = new PlayerMoveAnimation(player % playerPositions.length, playerPositions[player % playerPositions.length], position, 150);
+        playerPositions[player % playerPositions.length] = position;
+    }
+
+    public void setNumPlayers(int num) {
+        int[] oldPP = playerPositions;
+        playerPositions = new int[Math.min(num, playerInstances.size())];
+        if (Math.min(oldPP.length, playerPositions.length) >= 0)
+            System.arraycopy(oldPP, 0, playerPositions, 0, Math.min(oldPP.length, playerPositions.length));
+        for (int i = Math.min(oldPP.length, playerPositions.length); i < playerPositions.length; i++)
+            playerPositions[i] = 0;
+    }
+
     private Model createPlane(@NotNull ModelBuilder modelBuilder, float scaleX, float scaleZ, Material material) {
         modelBuilder.begin();
         int attr = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates;
@@ -373,20 +433,34 @@ class Game3D extends Scene {
         return modelBuilder.end();
     }
 
+    @NotNull
+    private Material getMaterialWithTransparency(String s) {
+        Material targetMaterialL = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
+                .get(s)));
+        targetMaterialL.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+        return targetMaterialL;
+    }
+
     private class PlayerMoveAnimation {
         private final int duration;
         private final int player;
+        private final int to;
         private final Vector3[] waypoints;
         private long startTime = -1;
 
         public PlayerMoveAnimation(int player, int from, int to, int msPerTile) {
             this.player = player;
-            int num = to - from;
+            this.to = to;
+            int num = this.to - from;
             if (num < 1) num += map.getTiles().length;
             duration = num * msPerTile;
             waypoints = new Vector3[num + 1];
             for (int i = 0; i < num + 1; i++)
                 waypoints[i] = playerTileLocations.get(player).get(map.getTiles()[boundInt(to - num + i, map.getTiles().length)]);
+        }
+
+        public int getTo() {
+            return to;
         }
 
         public int getPlayer() {

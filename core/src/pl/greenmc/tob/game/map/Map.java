@@ -12,6 +12,7 @@ import static pl.greenmc.tob.TourOfBusiness.TOB;
 public class Map {
     private final Texture texture;
     private final ArrayList<Tile> tiles = new ArrayList<>();
+    private int maxCityLevel = 0;
 
     public Map(@NotNull Texture texture, @NotNull Tile[] tiles) {
         this(texture);
@@ -22,6 +23,10 @@ public class Map {
         this.texture = texture;
         if (texture != null)
             texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
+    }
+
+    public int getMaxCityLevel() {
+        return maxCityLevel;
     }
 
     @Nullable
@@ -42,7 +47,7 @@ public class Map {
         //Requirements:
         // - Total is multiple of 4 and in range <8; 40>
         // - Exactly 1 START
-        // - Each JAIL has at least 1 GO_TO_JAIL in group
+        // - Each JAIL has at least 1 GO_TO_JAIL in group //Removed
         // - Each GO_TO_JAIL has exactly 1 JAIL in group
         // - No group contains more that one type of following: CITY, STATION, UTILITY
         // - No group that contains JAIL, GO_TO_JAIL cannot contain CITY, STATION, UTILITY and vice versa
@@ -54,14 +59,12 @@ public class Map {
             if (tile.getType() == Tile.TileType.START) numStart++;
             else if (tile.getType() == Tile.TileType.JAIL) {
                 int numJail = 0;
-                int numGTJ = 0;
                 for (Tile tile1 : ((Tile.JailTileData) tile.getData()).getTileGroup().getTiles()) {
                     if (tile1.getType() == Tile.TileType.JAIL) numJail++;
-                    else if (tile1.getType() == Tile.TileType.GO_TO_JAIL) numGTJ++;
-                    else throw new RuntimeException("Group of jail contains non-(JAIL/GO_TO_JAIL) tile.");
+                    else if (tile1.getType() != Tile.TileType.GO_TO_JAIL)
+                        throw new RuntimeException("Group of jail contains non-(JAIL/GO_TO_JAIL) tile.");
                 }
                 if (numJail != 1) throw new RuntimeException("Group of JAIL contains invalid number of JAIL.");
-                if (numGTJ < 1) throw new RuntimeException("Group of JAIL contains invalid number of GO_TO_JAIL.");
             } else if (tile.getType() == Tile.TileType.GO_TO_JAIL) {
                 int numJail = 0;
                 int numGTJ = 0;
@@ -74,7 +77,10 @@ public class Map {
                 if (numGTJ < 1)
                     throw new RuntimeException("Group of GO_TO_JAIL contains invalid number of GO_TO_JAIL.");
             } else if (tile.getType() == Tile.TileType.CITY) {
-                for (Tile tile1 : ((Tile.CityTileData) tile.getData()).getTileGroup().getTiles()) {
+                Tile.CityTileData cityTileData = (Tile.CityTileData) tile.getData();
+                if (maxCityLevel < cityTileData.getMaxLevel())
+                    maxCityLevel = cityTileData.getMaxLevel();
+                for (Tile tile1 : cityTileData.getTileGroup().getTiles()) {
                     if (tile1.getType() != Tile.TileType.CITY)
                         throw new RuntimeException("Group of CITY contains non-CITY tile.");
                 }
