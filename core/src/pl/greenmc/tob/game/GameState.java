@@ -45,6 +45,7 @@ public class GameState {
     private final int[] tileLevels;
     private final Integer[] tileOwners;
     private int DRAWS_TO_JAIL = 3;
+    private boolean REQUIRE_ALL_TILES_IN_GROUP_TO_UPGRADE = true;
     private BuyDecision buyDecision = null;
     private int drawsInRow = 0;
     private JailDecision jailDecision = null;
@@ -398,9 +399,21 @@ public class GameState {
     private void setTileOwner(int tile, Integer owner) {
         tileOwners[tile % map.getTiles().length] = owner;
         if (owner == null) {
-            //TODO Remove all upgrades from tile
-            //TODO In all tiles in group for upgrades mode remove upgrades from all tiles
+            if (REQUIRE_ALL_TILES_IN_GROUP_TO_UPGRADE) {
+                Tile tile1 = getTile(tile);
+                if (tile1.getType() == Tile.TileType.CITY) {
+                    for (Tile tile2 : ((Tile.CityTileData) tile1.getData()).getTileGroup().getTiles()) {
+                        setTileLevel(getTileNumber(tile2), 0);
+                    }
+                }
+            }
+            setTileLevel(tile, 0);
         }
+        onTileModified(tile);
+    }
+
+    private void setTileLevel(int tile, int level) {
+        tileLevels[tile % map.getTiles().length] = level;
         onTileModified(tile);
     }
 
