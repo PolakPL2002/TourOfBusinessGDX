@@ -1,6 +1,10 @@
 package pl.greenmc.tob.graphics.scenes.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.math.Vector2;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Contract;
@@ -22,6 +26,7 @@ import pl.greenmc.tob.graphics.Interactable;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.scenes.game.dialogs.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
@@ -36,7 +41,10 @@ public class GameScene extends Scene implements Interactable {
     private final Map map;
     private final HashSet<Integer> nameRequestsSent = new HashSet<>();
     private final HashMap<Integer, String> playerNames = new HashMap<>();
+    private SpriteBatch batch;
     private Dialog dialog = null;
+    private EndGamePage endGamePage = EndGamePage.MAIN;
+    private FrameBuffer frameBuffer;
     private Game3D game3D;
     private GamePlayersStats gamePlayersStats;
     private Vector2 lastMousePos = null;
@@ -65,6 +73,7 @@ public class GameScene extends Scene implements Interactable {
         playerInJailTurns = data.getPlayerInJailTurns();
         playerPositions = data.getPlayerPositions();
         startingPlayerNum = data.getStartingPlayerNum();
+        GameState.State previousState = this.state;
         this.state = data.getState();
         tileLevels = data.getTileLevels();
         tileOwners = data.getTileOwners();
@@ -105,7 +114,10 @@ public class GameScene extends Scene implements Interactable {
                         TOB.runOnGLThread(() -> changeDialog(new BuyDialog(map.getTiles()[tileToBuy % map.getTiles().length])));
                     break;
                 case END_ROUND:
-                    TOB.runOnGLThread(() -> changeDialog(new EndDialog()));
+                    if (previousState != GameState.State.END_ROUND) {
+                        endGamePage = EndGamePage.MAIN;
+                        changeEndDialog();
+                    }
                     break;
                 default:
                     TOB.runOnGLThread(() -> changeDialog(null));
@@ -123,12 +135,22 @@ public class GameScene extends Scene implements Interactable {
         if (dialog != null) dialog.onMouseDown();
     }
 
-    private void updatePlayersStats() {
-        if (gamePlayersStats != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
-                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
+    @Override
+    public void onMouseMove(int x, int y) {
+        lastMousePos = new Vector2(x, y);
+        if (dialog != null) dialog.onMouseMove(x, y);
+        if (game3D != null) {
+            HashMap<Tile, Hitbox> hitboxes = game3D.getHitboxes();
+            boolean found = false;
+            for (Tile tile : hitboxes.keySet()) {
+                if (hitboxes.get(tile).testMouseCoordinates(x, y)) {
+                    game3D.setSelectedTile(tile);
+                    found = true;
+                    break;
+                }
             }
+            if (!found) game3D.setSelectedTile((Integer) null);
+        }
     }
 
     @Override
@@ -163,21 +185,28 @@ public class GameScene extends Scene implements Interactable {
     }
 
     @Override
-    public void onMouseMove(int x, int y) {
-        lastMousePos = new Vector2(x, y);
-        if (dialog != null) dialog.onMouseMove(x, y);
-        if (game3D != null) {
-            HashMap<Tile, Hitbox> hitboxes = game3D.getHitboxes();
-            boolean found = false;
-            for (Tile tile : hitboxes.keySet()) {
-                if (hitboxes.get(tile).testMouseCoordinates(x, y)) {
-                    game3D.setSelectedTile(tile);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) game3D.setSelectedTile((Integer) null);
-        }
+    public void render() {
+        frameBuffer.begin();
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        Gdx.gl.glClearColor(0, 0, 0, 0);
+        Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //AA disabled
+        if (dialog != null) dialog.draw();
+
+        frameBuffer.end();
+//        Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        Gdx.gl.glClearColor(GlobalTheme.backgroundColor.r, GlobalTheme.backgroundColor.g, GlobalTheme.backgroundColor.b, GlobalTheme.backgroundColor.a);
+        Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //AA Enabled
+        game3D.render();
+        gamePlayersStats.render();
+
+        batch.begin();
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        batch.draw(frameBuffer.getColorBufferTexture(), 0, Gdx.graphics.getHeight(), Gdx.graphics.getWidth(), -Gdx.graphics.getHeight());
+        batch.end();
     }
 
     public void onRoll(int player, @NotNull int[] numbers) {
@@ -205,19 +234,9 @@ public class GameScene extends Scene implements Interactable {
     }
 
     @Override
-    public void render() {
-        Gdx.gl.glClearColor(GlobalTheme.backgroundColor.r, GlobalTheme.backgroundColor.g, GlobalTheme.backgroundColor.b, GlobalTheme.backgroundColor.a);
-        Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        game3D.render();
-        gamePlayersStats.render();
-        if (dialog != null) dialog.draw();
-    }
-
-    @Override
     public void setup() {
-        for (int i = 1; i <= 8; i++) {
-            playerNames.put(i + 12, "Client " + i);//TODO
-        }
+        batch = new SpriteBatch();
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
         game3D = new Game3D(map);
         game3D.setup();
         gamePlayersStats = new GamePlayersStats();
@@ -227,6 +246,12 @@ public class GameScene extends Scene implements Interactable {
 
     @Override
     public void resize(int width, int height) {
+        batch.dispose();
+        frameBuffer.dispose();
+
+        batch = new SpriteBatch();
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+
         game3D.resize(width, height);
         gamePlayersStats.resize(width, height);
         if (dialog != null) dialog.resize(width, height);
@@ -237,9 +262,62 @@ public class GameScene extends Scene implements Interactable {
      */
     @Override
     public void dispose() {
+        batch.dispose();
+        frameBuffer.dispose();
         game3D.dispose();
         gamePlayersStats.dispose();
         if (dialog != null) dialog.dispose();
+    }
+
+    private void updatePlayersStats() {
+        if (gamePlayersStats != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
+                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
+            }
+    }
+
+    private void changeEndDialog() {
+        switch (endGamePage) {
+            case MAIN:
+                TOB.runOnGLThread(() -> changeDialog(new EndDialog(() -> {
+                    endGamePage = EndGamePage.MANAGE;
+                    changeEndDialog();
+                }, () -> {
+                    endGamePage = EndGamePage.TRADE;
+                    changeEndDialog();
+                })));
+                break;
+            case MANAGE:
+                ArrayList<Tile.TileGroup> tileGroups = new ArrayList<>();
+                ArrayList<Tile> tiles = new ArrayList<>();
+                Tile[] mapTiles = map.getTiles();
+                for (int i = 0; i < mapTiles.length; i++) {
+                    Tile tile = mapTiles[i];
+                    Tile.TileGroup group = null;
+                    switch (tile.getType()) {
+                        case CITY:
+                            group = ((Tile.CityTileData) tile.getData()).getTileGroup();
+                            break;
+                        case UTILITY:
+                            group = ((Tile.UtilityTileData) tile.getData()).getTileGroup();
+                            break;
+                        case STATION:
+                            group = ((Tile.StationTileData) tile.getData()).getTileGroup();
+                            break;
+                    }
+                    if (tileOwners[i] != null && tileOwners[i] == selfNum) {
+                        tiles.add(tile);
+                        if (group != null && !tileGroups.contains(group))
+                            tileGroups.add(group);
+                    }
+                }
+                TOB.runOnGLThread(() -> changeDialog(new EndManageDialog(() -> {
+                    endGamePage = EndGamePage.MAIN;
+                    changeEndDialog();
+                }, tileGroups.toArray(new Tile.TileGroup[0]), tiles.toArray(new Tile[0]))));
+                break;
+        }
     }
 
     private void updateState() {
@@ -341,5 +419,11 @@ public class GameScene extends Scene implements Interactable {
             if (playerIDs[i] == playerID)
                 return i;
         return null;
+    }
+
+    private enum EndGamePage {
+        MAIN,
+        MANAGE,
+        TRADE
     }
 }

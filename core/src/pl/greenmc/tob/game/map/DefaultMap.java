@@ -56,17 +56,17 @@ public class DefaultMap extends Map {
                             Texture o17, Texture o18, Texture o19, Texture o20, Texture o21, Texture o22, Texture o23, Texture o24,
                             Texture o25, Texture o26, Texture o27, Texture o28, Texture o29, Texture o30, Texture o31, Texture o32,
                             Texture o33, Texture o34, Texture o35, Texture o36) {
-        final Tile.TileGroup group1 = new Tile.TileGroup();
-        final Tile.TileGroup group2 = new Tile.TileGroup();
-        final Tile.TileGroup group3 = new Tile.TileGroup();
-        final Tile.TileGroup group4 = new Tile.TileGroup();
-        final Tile.TileGroup group5 = new Tile.TileGroup();
-        final Tile.TileGroup group6 = new Tile.TileGroup();
-        final Tile.TileGroup group7 = new Tile.TileGroup();
-        final Tile.TileGroup group8 = new Tile.TileGroup();
-        final Tile.TileGroup jailGroup = new Tile.TileGroup();
-        final Tile.TileGroup stationGroup = new Tile.TileGroup();
-        final Tile.TileGroup utilityGroup = new Tile.TileGroup();
+        final Tile.TileGroup group1 = new Tile.TileGroup("Grupa brązowa");
+        final Tile.TileGroup group2 = new Tile.TileGroup("Grupa błękitna");
+        final Tile.TileGroup group3 = new Tile.TileGroup("Grupa różowa");
+        final Tile.TileGroup group4 = new Tile.TileGroup("Grupa pomarańczowa");
+        final Tile.TileGroup group5 = new Tile.TileGroup("Grupa czerwona");
+        final Tile.TileGroup group6 = new Tile.TileGroup("Grupa zółta");
+        final Tile.TileGroup group7 = new Tile.TileGroup("Grupa zielona");
+        final Tile.TileGroup group8 = new Tile.TileGroup("Grupa niebieska");
+        final Tile.TileGroup jailGroup = new Tile.TileGroup("Grupa więzienna");
+        final Tile.TileGroup stationGroup = new Tile.TileGroup("Stacje");
+        final Tile.TileGroup utilityGroup = new Tile.TileGroup("Media");
 
         setTiles(new Tile[]{
                 new Tile(o, new Tile.StartTileData(300000)),

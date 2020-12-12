@@ -43,55 +43,61 @@ public abstract class ScrollPane extends Element implements Interactable {
             scrollGrabbed = true;
             scrollStart = scroll;
         }
-        children.forEach(element -> {
-            if (element instanceof Interactable) ((Interactable) element).onMouseDown();
-        });
+        synchronized (children) {
+            children.forEach(element -> {
+                if (element instanceof Interactable) ((Interactable) element).onMouseDown();
+            });
+        }
     }
 
 
     @Override
     public void onMouseLeave() {
-        insideHitbox.clear();
-        children.forEach(element -> {
-            if (element instanceof Interactable) ((Interactable) element).onMouseLeave();
-        });
+        synchronized (children) {
+            insideHitbox.clear();
+            children.forEach(element -> {
+                if (element instanceof Interactable) ((Interactable) element).onMouseLeave();
+            });
+        }
     }
 
     @Override
     public void onMouseMove(int x, int y) {
-        if (scrollHitbox != null) {
-            overScroll = scrollHitbox.testMouseCoordinates(x, y);
-            if (scrollGrabbed) {
-                if (startX == null || startY == null) {
-                    startX = x;
-                    startY = y;
-                }
-                onScrollMove(x - startX, y - startY);
-            }
-        }
-
-        final HashMap<Element, Boolean> current = new HashMap<>();
-        hitboxes.keySet().forEach(hitbox -> {
-            if (hitbox.testMouseCoordinates(x, y)) {
-                Element element = hitboxes.get(hitbox);
-                if (element instanceof Interactable) {
-                    if (!insideHitbox.getOrDefault(element, false)) {
-                        insideHitbox.put(element, true);
-                        ((Interactable) element).onMouseEnter();
+        synchronized (children) {
+            if (scrollHitbox != null) {
+                overScroll = scrollHitbox.testMouseCoordinates(x, y);
+                if (scrollGrabbed) {
+                    if (startX == null || startY == null) {
+                        startX = x;
+                        startY = y;
                     }
-                    current.put(element, true);
-                    ((Interactable) element).onMouseMove(x, y);
+                    onScrollMove(x - startX, y - startY);
                 }
             }
-        });
-        insideHitbox.forEach((element, inside) -> {
-            if (inside && !current.containsKey(element)) {
-                if (element instanceof Interactable) {
-                    ((Interactable) element).onMouseLeave();
-                    insideHitbox.put(element, false);
+
+            final HashMap<Element, Boolean> current = new HashMap<>();
+            hitboxes.keySet().forEach(hitbox -> {
+                if (hitbox.testMouseCoordinates(x, y)) {
+                    Element element = hitboxes.get(hitbox);
+                    if (element instanceof Interactable) {
+                        if (!insideHitbox.getOrDefault(element, false)) {
+                            insideHitbox.put(element, true);
+                            ((Interactable) element).onMouseEnter();
+                        }
+                        current.put(element, true);
+                        ((Interactable) element).onMouseMove(x, y);
+                    }
                 }
-            }
-        });
+            });
+            insideHitbox.forEach((element, inside) -> {
+                if (inside && !current.containsKey(element)) {
+                    if (element instanceof Interactable) {
+                        ((Interactable) element).onMouseLeave();
+                        insideHitbox.put(element, false);
+                    }
+                }
+            });
+        }
     }
 
     protected abstract void onScrollMove(int deltaX, int deltaY);
@@ -103,20 +109,24 @@ public abstract class ScrollPane extends Element implements Interactable {
             startY = null;
             startX = null;
         }
-        children.forEach(element -> {
-            if (element instanceof Interactable) ((Interactable) element).onMouseUp();
-        });
+        synchronized (children) {
+            children.forEach(element -> {
+                if (element instanceof Interactable) ((Interactable) element).onMouseUp();
+            });
+        }
     }
 
     @Override
     public void onScroll(float x, float y) {
-        insideHitbox.forEach((element, inside) -> {
-            if (inside) {
-                if (element instanceof Interactable) {
-                    ((Interactable) element).onScroll(x, y);
+        synchronized (children) {
+            insideHitbox.forEach((element, inside) -> {
+                if (inside) {
+                    if (element instanceof Interactable) {
+                        ((Interactable) element).onScroll(x, y);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     public void setScroll(float scroll) {
@@ -141,7 +151,9 @@ public abstract class ScrollPane extends Element implements Interactable {
 
     @Override
     public void dispose() {
-        children.forEach(Element::dispose);
+        synchronized (children) {
+            children.forEach(Element::dispose);
+        }
         if (renderer != null) renderer.dispose();
     }
 
@@ -158,16 +170,20 @@ public abstract class ScrollPane extends Element implements Interactable {
         renderer.dispose();
 
         renderer = new ShapeRenderer();
-        children.forEach(child -> child.resize(width, height));
-        hitboxes.clear();
+        synchronized (children) {
+            children.forEach(child -> child.resize(width, height));
+            hitboxes.clear();
+        }
     }
 
     public abstract ScrollPane addChild(@NotNull Element element, float size);
 
     public void clearChildren() {
-        children.forEach(Disposable::dispose);
-        children.clear();
-        hitboxes.clear();
+        synchronized (children) {
+            children.forEach(Disposable::dispose);
+            children.clear();
+            hitboxes.clear();
+        }
     }
 
     protected abstract void updateHitboxes(float x, float y, float w, float h);

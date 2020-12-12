@@ -11,6 +11,7 @@ import pl.greenmc.tob.game.map.Map;
 import pl.greenmc.tob.game.map.Tile;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.packets.Packet;
+import pl.greenmc.tob.game.netty.packets.game.EndGameActionPacket;
 import pl.greenmc.tob.game.netty.packets.game.events.*;
 
 import java.lang.reflect.InvocationTargetException;
@@ -85,6 +86,15 @@ public class GameState {
             warning("Player " + playerID + " tried to set buy decision outside of their turn!");
     }
 
+    public void onEndGameAction(int playerID, EndGameActionPacket.EndGameAction action) {
+        if (Objects.equals(getPlayerNumFromID(playerID), turnOf) && state == State.END_ROUND) {
+            if (action instanceof EndGameActionPacket.ActionEndTurn) {
+                endTurn();
+            }
+        } else
+            warning("Player " + playerID + " tried to set end game action outside of their turn!");
+    }
+
     @Nullable
     @Contract(pure = true)
     private Integer getPlayerNumFromID(int playerID) {
@@ -92,6 +102,85 @@ public class GameState {
             if (playerIDs[i] == playerID)
                 return i;
         return null;
+    }
+
+    private void endTurn() {
+        if (isPlayerInJail(turnOf))
+            playerInJailTurns[turnOf]++;
+        if (getPlayersLeftInGame() < 2)
+            endGame();
+        turnOf = (turnOf + 1) % playerIDs.length;
+        if (turnOf == startingPlayerNum) loopNumber++;
+        while (isPlayerBankrupt(turnOf)) {
+            turnOf = (turnOf + 1) % playerIDs.length;
+            if (turnOf == startingPlayerNum) loopNumber++;
+        }
+
+        resetVariables();
+        changeState(State.AWAITING_JAIL);
+    }
+
+    private void endGame() {
+        //TODO
+    }
+
+    private boolean isPlayerBankrupt(int player) {
+        return playerBankrupt[player % playerIDs.length];
+    }
+
+    private int getPlayersLeftInGame() {
+        int i = 0;
+        for (boolean x : playerBankrupt)
+            if (!x) i++;
+        return i;
+    }
+
+    private void resetVariables() {
+        jailDecision = null;
+        buyDecision = null;
+        playerRolled = false;
+        tileToBuy = null;
+        sellAmount = 0;
+        afterSellActions.clear();
+        propertiesToSell.clear();
+    }
+
+    private boolean isPlayerInJail(int player) {
+        return playerInJail[player];
+    }
+
+    private void changeState(State newState) {
+        //TODO Add some checks
+        if (newState == State.AWAITING_JAIL) {
+            if (!isPlayerInJail(turnOf))
+                newState = State.AWAITING_ROLL;
+        }
+        log("State changed to " + newState);
+        resetTimeout();
+        state = newState;
+        onStateChanged();
+    }
+
+    private void onStateChanged() {
+        sendPacketToAllPlayers(new GameStateChangedPacket(new GameState.Data(this)));
+    }
+
+    private void sendPacketToAllPlayers(Packet packet) {
+        for (int playerID : playerIDs) {
+            getServer().sendPacketToPlayerByID(packet, playerID);
+        }
+    }
+
+    private void resetTimeout() {
+        timeoutStart = System.nanoTime();
+    }
+
+    public void onEndGameTimeoutReset(int playerID) {
+        if (Objects.equals(getPlayerNumFromID(playerID), turnOf) && state == State.END_ROUND) {
+            resetTimeout();
+            onStateChanged();
+        } else
+            warning("Player " + playerID + " tried to reset timeout outside of their turn!");
     }
 
     private void setBuyDecision(BuyDecision decision) {
@@ -129,12 +218,6 @@ public class GameState {
 
     private void onRolled() {
         sendPacketToAllPlayers(new RollEventPacket(turnOf, rolledNumbers));
-    }
-
-    private void sendPacketToAllPlayers(Packet packet) {
-        for (int playerID : playerIDs) {
-            getServer().sendPacketToPlayerByID(packet, playerID);
-        }
     }
 
     public void startTicking() {
@@ -421,47 +504,6 @@ public class GameState {
         sendPacketToAllPlayers(new TileModifiedPacket(tile, getTileOwner(tile), getTileLevel(tile)));
     }
 
-    private void endTurn() {
-        if (isPlayerInJail(turnOf))
-            playerInJailTurns[turnOf]++;
-        if (getPlayersLeftInGame() < 2)
-            endGame();
-        turnOf = (turnOf + 1) % playerIDs.length;
-        if (turnOf == startingPlayerNum) loopNumber++;
-        while (isPlayerBankrupt(turnOf)) {
-            turnOf = (turnOf + 1) % playerIDs.length;
-            if (turnOf == startingPlayerNum) loopNumber++;
-        }
-
-        resetVariables();
-        changeState(State.AWAITING_JAIL);
-    }
-
-    private void endGame() {
-        //TODO
-    }
-
-    private boolean isPlayerBankrupt(int player) {
-        return playerBankrupt[player % playerIDs.length];
-    }
-
-    private int getPlayersLeftInGame() {
-        int i = 0;
-        for (boolean x : playerBankrupt)
-            if (!x) i++;
-        return i;
-    }
-
-    private void resetVariables() {
-        jailDecision = null;
-        buyDecision = null;
-        playerRolled = false;
-        tileToBuy = null;
-        sellAmount = 0;
-        afterSellActions.clear();
-        propertiesToSell.clear();
-    }
-
     private int getJailMaxTurns(int tile) {
         Tile tile1 = getTile(tile);
         if (tile1.getType() == Tile.TileType.JAIL)
@@ -695,10 +737,6 @@ public class GameState {
         sendPacketToAllPlayers(new PlayerMovedPacket(player, getPlayerPosition(player), animate));
     }
 
-    private boolean isPlayerInJail(int player) {
-        return playerInJail[player];
-    }
-
     private boolean takePlayerMoney(int player, long amount) {
         if (getPlayerBalance(player) < amount)
             return false;
@@ -825,26 +863,6 @@ public class GameState {
         return playerBalances[player % playerIDs.length];
     }
 
-    private void changeState(State newState) {
-        //TODO Add some checks
-        if (newState == State.AWAITING_JAIL) {
-            if (!isPlayerInJail(turnOf))
-                newState = State.AWAITING_ROLL;
-        }
-        log("State changed to " + newState);
-        resetTimeout();
-        state = newState;
-        onStateChanged();
-    }
-
-    private void onStateChanged() {
-        sendPacketToAllPlayers(new GameStateChangedPacket(new GameState.Data(this)));
-    }
-
-    private void resetTimeout() {
-        timeoutStart = System.nanoTime();
-    }
-
     public enum BuyDecision {
         BUY,
         DONT_BUY
@@ -887,7 +905,7 @@ public class GameState {
         AWAITING_BUY(15000),
         AUCTION(60000), //TODO Set auction time with parameter
         SELL(45000),
-        END_ROUND(0); //TODO Reset on action
+        END_ROUND(10000); //TODO Reset on action
 
         private final int timeout;
 

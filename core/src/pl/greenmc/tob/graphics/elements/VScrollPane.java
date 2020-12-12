@@ -86,8 +86,9 @@ public class VScrollPane extends ScrollPane {
             renderer.rect(x + w - barWidth, y, barWidth, h);
         }
         final double[] totalFixedHeight = {0};
-        children.forEach(element -> totalFixedHeight[0] += heights.get(element));
-
+        synchronized (children) {
+            children.forEach(element -> totalFixedHeight[0] += heights.get(element));
+        }
         handleHeight = (float) (h / totalFixedHeight[0] * h);
 
         if (handleHeight < h / 10) handleHeight = h / 10;
@@ -111,20 +112,24 @@ public class VScrollPane extends ScrollPane {
         float finalY = y;
         float finalW = w;
         float finalH = h;
-        children.forEach((element) -> {
-            Gdx.gl.glEnable(GL_SCISSOR_TEST);
-            Gdx.gl.glScissor((int) finalX, (int) finalY, (int) (finalW - ((autoHideScroll && scrollDisabled) ? 0 : barWidth)), (int) finalH);
-            float height = heights.get(element);
-            element.draw(finalX, (float) currentY[0] - s, finalW - ((autoHideScroll && scrollDisabled) ? 0 : barWidth), height);
-            currentY[0] += height;
-        });
+        synchronized (children) {
+            children.forEach((element) -> {
+                Gdx.gl.glEnable(GL_SCISSOR_TEST);
+                Gdx.gl.glScissor((int) finalX, (int) finalY, (int) (finalW - ((autoHideScroll && scrollDisabled) ? 0 : barWidth)), (int) finalH);
+                float height = heights.get(element);
+                element.draw(finalX, (float) currentY[0] - s, finalW - ((autoHideScroll && scrollDisabled) ? 0 : barWidth), height);
+                currentY[0] += height;
+            });
+        }
         Gdx.gl.glDisable(GL_SCISSOR_TEST);
     }
 
     @Override
     public VScrollPane addChild(@NotNull Element element, float height) {
-        children.add(element);
-        heights.put(element, height);
+        synchronized (children) {
+            children.add(element);
+            heights.put(element, height);
+        }
         element.setup();
         return this;
     }

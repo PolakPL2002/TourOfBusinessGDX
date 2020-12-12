@@ -346,6 +346,16 @@ public class Tile {
     }
 
     public static class TileGroup {
+        private final String name;
+
+        public TileGroup(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
         private final ArrayList<Tile> tiles = new ArrayList<>();
 
         public void addTile(@NotNull Tile tile) {

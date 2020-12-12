@@ -16,14 +16,15 @@ public class VSplitPane extends SplitPane {
         y = (int) Math.floor(y);
         w = (int) Math.floor(w);
         h = (int) Math.floor(h);
-        if (hitboxesFor == null ||
-                hitboxesFor.height != h ||
-                hitboxesFor.width != w ||
-                hitboxesFor.x != x ||
-                hitboxesFor.y != y
-                || children.size() != hitboxes.size())
-            updateHitboxes(x, y, w, h);
-
+        synchronized (children) {
+            if (hitboxesFor == null ||
+                    hitboxesFor.height != h ||
+                    hitboxesFor.width != w ||
+                    hitboxesFor.x != x ||
+                    hitboxesFor.y != y
+                    || children.size() != hitboxes.size())
+                updateHitboxes(x, y, w, h);
+        }
         if (drawBackground) {
             renderer.begin(ShapeRenderer.ShapeType.Filled);
             renderer.setColor(backgroundColor);
@@ -33,13 +34,15 @@ public class VSplitPane extends SplitPane {
 
         final double[] totalFixedWidth = {0};
         final double[] totalVariableWeight = {0};
-        children.forEach(element -> {
-            ElementOptions elementOptions = (ElementOptions) options.get(element);
-            if (elementOptions.mode == ElementOptions.WidthMode.FIXED)
-                totalFixedWidth[0] += elementOptions.width;
-            else if (elementOptions.mode == ElementOptions.WidthMode.VARIABLE)
-                totalVariableWeight[0] += elementOptions.width;
-        });
+        synchronized (children) {
+            children.forEach(element -> {
+                ElementOptions elementOptions = (ElementOptions) options.get(element);
+                if (elementOptions.mode == ElementOptions.WidthMode.FIXED)
+                    totalFixedWidth[0] += elementOptions.width;
+                else if (elementOptions.mode == ElementOptions.WidthMode.VARIABLE)
+                    totalVariableWeight[0] += elementOptions.width;
+            });
+        }
         if (totalVariableWeight[0] == 0) totalVariableWeight[0] = 1;
         double pxPerWeight = (w - totalFixedWidth[0]) / totalVariableWeight[0];
         final double[] currentX = {x};
@@ -47,16 +50,18 @@ public class VSplitPane extends SplitPane {
         float finalY = y;
         float finalW = w;
         float finalH = h;
-        children.forEach((element) -> {
-            Gdx.gl.glEnable(GL_SCISSOR_TEST);
-            Gdx.gl.glScissor((int) finalX, (int) finalY, (int) finalW, (int) finalH);
-            ElementOptions elementOptions = (ElementOptions) options.get(element);
-            float width = (float) (elementOptions.mode == ElementOptions.WidthMode.FIXED ?
-                    elementOptions.width :
-                    elementOptions.width * pxPerWeight);
-            element.draw((float) currentX[0], finalY, width, finalH);
-            currentX[0] += width;
-        });
+        synchronized (children) {
+            children.forEach((element) -> {
+                Gdx.gl.glEnable(GL_SCISSOR_TEST);
+                Gdx.gl.glScissor((int) finalX, (int) finalY, (int) finalW, (int) finalH);
+                ElementOptions elementOptions = (ElementOptions) options.get(element);
+                float width = (float) (elementOptions.mode == ElementOptions.WidthMode.FIXED ?
+                        elementOptions.width :
+                        elementOptions.width * pxPerWeight);
+                element.draw((float) currentX[0], finalY, width, finalH);
+                currentX[0] += width;
+            });
+        }
         Gdx.gl.glDisable(GL_SCISSOR_TEST);
     }
 
@@ -65,32 +70,38 @@ public class VSplitPane extends SplitPane {
         hitboxes.clear();
         final double[] totalFixedWidth = {0};
         final double[] totalVariableWeight = {0};
-        children.forEach(element -> {
-            ElementOptions elementOptions = (ElementOptions) options.get(element);
-            if (elementOptions.mode == ElementOptions.WidthMode.FIXED)
-                totalFixedWidth[0] += elementOptions.width;
-            else if (elementOptions.mode == ElementOptions.WidthMode.VARIABLE)
-                totalVariableWeight[0] += elementOptions.width;
-        });
+        synchronized (children) {
+            children.forEach(element -> {
+                ElementOptions elementOptions = (ElementOptions) options.get(element);
+                if (elementOptions.mode == ElementOptions.WidthMode.FIXED)
+                    totalFixedWidth[0] += elementOptions.width;
+                else if (elementOptions.mode == ElementOptions.WidthMode.VARIABLE)
+                    totalVariableWeight[0] += elementOptions.width;
+            });
+        }
         if (totalVariableWeight[0] == 0) totalVariableWeight[0] = 1;
         double pxPerWeight = (w - totalFixedWidth[0]) / totalVariableWeight[0];
         final double[] currentX = {x};
-        children.forEach((element) -> {
-            ElementOptions elementOptions = (ElementOptions) options.get(element);
-            float width = (float) (elementOptions.mode == ElementOptions.WidthMode.FIXED ?
-                    elementOptions.width :
-                    elementOptions.width * pxPerWeight);
-            hitboxes.put(new RectangularHitbox((float) currentX[0], y, width, h), element);
-            currentX[0] += width;
-        });
+        synchronized (children) {
+            children.forEach((element) -> {
+                ElementOptions elementOptions = (ElementOptions) options.get(element);
+                float width = (float) (elementOptions.mode == ElementOptions.WidthMode.FIXED ?
+                        elementOptions.width :
+                        elementOptions.width * pxPerWeight);
+                hitboxes.put(new RectangularHitbox((float) currentX[0], y, width, h), element);
+                currentX[0] += width;
+            });
+        }
         hitboxesFor = new Rectangle(x, y, w, h);
         onMouseMove(Gdx.input.getX(), Gdx.input.getY());
     }
 
     public VSplitPane addChild(@NotNull Element element, @NotNull ElementOptions elementOptions) {
-        children.add(element);
-        options.put(element, elementOptions);
-        element.setup();
+        synchronized (children) {
+            children.add(element);
+            options.put(element, elementOptions);
+            element.setup();
+        }
         return this;
     }
 

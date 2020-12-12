@@ -2,10 +2,8 @@ package pl.greenmc.tob.graphics.scenes.game.dialogs;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import pl.greenmc.tob.game.GameState;
 import pl.greenmc.tob.game.map.Tile;
 import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
@@ -17,8 +15,6 @@ import pl.greenmc.tob.graphics.elements.Button;
 import pl.greenmc.tob.graphics.elements.HSplitPane;
 import pl.greenmc.tob.graphics.elements.Label;
 import pl.greenmc.tob.graphics.scenes.game.Dialog;
-
-import java.util.UUID;
 
 import static pl.greenmc.tob.game.util.Logger.error;
 
@@ -59,17 +55,7 @@ public class BuyDialog extends Dialog {
     private Runnable makeRunnable(@NotNull final GameState.BuyDecision decision) {
         return () -> {
             try {
-                NettyClient.getInstance().getClientHandler().send(new SetBuyDecisionPacket(decision), new SentPacket.Callback() {
-                    @Override
-                    public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
-
-                    }
-
-                    @Override
-                    public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
-                        error("Failed to roll the dice: " + reason);
-                    }
-                }, false);
+                NettyClient.getInstance().getClientHandler().send(new SetBuyDecisionPacket(decision), new SentPacket.Callback.BlankCallback(), false);
             } catch (ConnectionNotAliveException e) {
                 error(e);
             }

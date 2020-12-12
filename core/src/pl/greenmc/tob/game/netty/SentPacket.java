@@ -7,6 +7,8 @@ import pl.greenmc.tob.game.netty.packets.Packet;
 
 import java.util.UUID;
 
+import static pl.greenmc.tob.game.util.Logger.warning;
+
 /**
  * Stores information about sent packet
  */
@@ -131,5 +133,25 @@ public class SentPacket {
          * @param reason Reason why packet failed
          */
         public abstract void failure(@NotNull UUID uuid, @NotNull FailureReason reason);
+
+        public static class BlankCallback extends Callback {
+            /**
+             * @param uuid     Packet UUID
+             * @param response Response for packet
+             */
+            @Override
+            public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
+
+            }
+
+            /**
+             * @param uuid   Packet UUID
+             * @param reason Reason why packet failed
+             */
+            @Override
+            public void failure(@NotNull UUID uuid, @NotNull FailureReason reason) {
+                warning("Request failed: " + reason);
+            }
+        }
     }
 }

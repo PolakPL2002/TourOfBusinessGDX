@@ -22,23 +22,23 @@ public abstract class SplitPane extends Element implements Interactable {
     protected ShapeRenderer renderer;
     protected boolean setUp = false;
 
-    public Element[] getChildren() {
-        return children.toArray(new Element[0]);
-    }
-
     @Override
     public void onMouseDown() {
-        children.forEach(element -> {
-            if (element instanceof Interactable) ((Interactable) element).onMouseDown();
-        });
+        synchronized (children) {
+            children.forEach(element -> {
+                if (element instanceof Interactable) ((Interactable) element).onMouseDown();
+            });
+        }
     }
 
     @Override
     public void onMouseLeave() {
-        insideHitbox.clear();
-        children.forEach(element -> {
-            if (element instanceof Interactable) ((Interactable) element).onMouseLeave();
-        });
+        synchronized (children) {
+            insideHitbox.clear();
+            children.forEach(element -> {
+                if (element instanceof Interactable) ((Interactable) element).onMouseLeave();
+            });
+        }
     }
 
     @Override
@@ -69,9 +69,11 @@ public abstract class SplitPane extends Element implements Interactable {
 
     @Override
     public void onMouseUp() {
-        children.forEach(element -> {
-            if (element instanceof Interactable) ((Interactable) element).onMouseUp();
-        });
+        synchronized (children) {
+            children.forEach(element -> {
+                if (element instanceof Interactable) ((Interactable) element).onMouseUp();
+            });
+        }
     }
 
     @Override
@@ -85,6 +87,12 @@ public abstract class SplitPane extends Element implements Interactable {
         });
     }
 
+    public Element[] getChildren() {
+        synchronized (children) {
+            return children.toArray(new Element[0]);
+        }
+    }
+
     public void setDrawBackground(boolean drawBackground) {
         this.drawBackground = drawBackground;
     }
@@ -95,7 +103,9 @@ public abstract class SplitPane extends Element implements Interactable {
 
     @Override
     public void dispose() {
-        children.forEach(Element::dispose);
+        synchronized (children) {
+            children.forEach(Element::dispose);
+        }
         if (renderer != null) renderer.dispose();
     }
 
@@ -111,7 +121,9 @@ public abstract class SplitPane extends Element implements Interactable {
         renderer.dispose();
 
         renderer = new ShapeRenderer();
-        children.forEach(child -> child.resize(width, height));
+        synchronized (children) {
+            children.forEach(child -> child.resize(width, height));
+        }
     }
 
     protected abstract void updateHitboxes(float x, float y, float w, float h);
