@@ -1,5 +1,6 @@
 package pl.greenmc.tob.game.map;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -347,9 +348,15 @@ public class Tile {
 
     public static class TileGroup {
         private final String name;
+        private final Color color;
 
-        public TileGroup(String name) {
+        public TileGroup(String name, Color color) {
             this.name = name;
+            this.color = color;
+        }
+
+        public Color getColor() {
+            return color;
         }
 
         public String getName() {

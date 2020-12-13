@@ -33,7 +33,7 @@ public class NettyClient {
     private ClientHandler clientHandler;
     private boolean connected = false;
     private String host = "127.0.0.1";
-    private int port = 2137;
+    private int port = 21370;
     private boolean sslError = false;
 
     private NettyClient() {

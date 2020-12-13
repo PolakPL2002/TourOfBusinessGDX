@@ -24,7 +24,7 @@ public class Button extends Element implements Interactable {
     private Color clickColor = GlobalTheme.buttonClickColor;
     private boolean clicked = false;
     private BitmapFont font;
-    private int fontSize = 12;
+    private int fontSize = 18;
     private boolean hover = false;
     private Color hoverColor = GlobalTheme.buttonHoverColor;
     private GlyphLayout layout;

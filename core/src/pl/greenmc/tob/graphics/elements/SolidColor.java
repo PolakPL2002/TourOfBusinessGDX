@@ -9,6 +9,13 @@ public class SolidColor extends Element {
     private Color color = GlobalTheme.backgroundColor;
     private ShapeRenderer renderer;
 
+    public SolidColor() {
+    }
+
+    public SolidColor(Color color) {
+        this.color = color;
+    }
+
     public Color getColor() {
         return color;
     }

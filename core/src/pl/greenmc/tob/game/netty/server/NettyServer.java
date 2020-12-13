@@ -45,7 +45,7 @@ public class NettyServer {
     private final File certKeyFile = new File("certificate/cert.key");
     private final HashMap<String, ServerHandler> clients = new HashMap<>();
     private Database database;
-    private int port = 2137;
+    private int port = 21370;
     private SslContext sslCtx = null;
 
     private NettyServer() {

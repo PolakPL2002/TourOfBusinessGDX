@@ -1,5 +1,6 @@
 package pl.greenmc.tob.game.map;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import org.jetbrains.annotations.NotNull;
 
@@ -56,17 +57,17 @@ public class DefaultMap extends Map {
                             Texture o17, Texture o18, Texture o19, Texture o20, Texture o21, Texture o22, Texture o23, Texture o24,
                             Texture o25, Texture o26, Texture o27, Texture o28, Texture o29, Texture o30, Texture o31, Texture o32,
                             Texture o33, Texture o34, Texture o35, Texture o36) {
-        final Tile.TileGroup group1 = new Tile.TileGroup("Grupa brązowa");
-        final Tile.TileGroup group2 = new Tile.TileGroup("Grupa błękitna");
-        final Tile.TileGroup group3 = new Tile.TileGroup("Grupa różowa");
-        final Tile.TileGroup group4 = new Tile.TileGroup("Grupa pomarańczowa");
-        final Tile.TileGroup group5 = new Tile.TileGroup("Grupa czerwona");
-        final Tile.TileGroup group6 = new Tile.TileGroup("Grupa zółta");
-        final Tile.TileGroup group7 = new Tile.TileGroup("Grupa zielona");
-        final Tile.TileGroup group8 = new Tile.TileGroup("Grupa niebieska");
-        final Tile.TileGroup jailGroup = new Tile.TileGroup("Grupa więzienna");
-        final Tile.TileGroup stationGroup = new Tile.TileGroup("Stacje");
-        final Tile.TileGroup utilityGroup = new Tile.TileGroup("Media");
+        final Tile.TileGroup group1 = new Tile.TileGroup("Grupa brązowa", new Color(144 / 255f, 103 / 255f, 64 / 255f, 1));
+        final Tile.TileGroup group2 = new Tile.TileGroup("Grupa błękitna", new Color(79 / 255f, 198 / 255f, 228 / 255f, 1));
+        final Tile.TileGroup group3 = new Tile.TileGroup("Grupa różowa", new Color(221 / 255f, 64 / 255f, 138 / 255f, 1));
+        final Tile.TileGroup group4 = new Tile.TileGroup("Grupa pomarańczowa", new Color(235 / 255f, 168 / 255f, 64 / 255f, 1));
+        final Tile.TileGroup group5 = new Tile.TileGroup("Grupa czerwona", new Color(235 / 255f, 64 / 255f, 64 / 255f, 1));
+        final Tile.TileGroup group6 = new Tile.TileGroup("Grupa zółta", new Color(235 / 255f, 221 / 255f, 64 / 255f, 1));
+        final Tile.TileGroup group7 = new Tile.TileGroup("Grupa zielona", new Color(66 / 255f, 156 / 255f, 64 / 255f, 1));
+        final Tile.TileGroup group8 = new Tile.TileGroup("Grupa niebieska", new Color(64 / 255f, 74 / 255f, 156 / 255f, 1));
+        final Tile.TileGroup jailGroup = new Tile.TileGroup("Grupa więzienna", Color.BLACK);
+        final Tile.TileGroup stationGroup = new Tile.TileGroup("Stacje", Color.BLACK);
+        final Tile.TileGroup utilityGroup = new Tile.TileGroup("Media", Color.BLACK);
 
         setTiles(new Tile[]{
                 new Tile(o, new Tile.StartTileData(300000)),

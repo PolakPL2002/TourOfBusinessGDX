@@ -1,6 +1,7 @@
 package pl.greenmc.tob.graphics.scenes.game.dialogs;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.map.Tile;
 import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
@@ -46,18 +47,26 @@ public class EndManageDialog extends Dialog {
         groupsPane.addChild(groupAllButton, 30);
         for (Tile tile : playerTiles) {
             String name = "";
+            Color color = Color.BLACK;
+            String groupName = "";
             switch (tile.getType()) {
                 case START:
                     name = "Start";
                     break;
                 case CITY:
                     name = ((Tile.CityTileData) tile.getData()).getName();
+                    color = ((Tile.CityTileData) tile.getData()).getTileGroup().getColor();
+                    groupName = ((Tile.CityTileData) tile.getData()).getTileGroup().getName();
                     break;
                 case STATION:
                     name = ((Tile.StationTileData) tile.getData()).getName();
+                    color = ((Tile.StationTileData) tile.getData()).getTileGroup().getColor();
+                    groupName = ((Tile.StationTileData) tile.getData()).getTileGroup().getName();
                     break;
                 case UTILITY:
                     name = ((Tile.UtilityTileData) tile.getData()).getName();
+                    color = ((Tile.UtilityTileData) tile.getData()).getTileGroup().getColor();
+                    groupName = ((Tile.UtilityTileData) tile.getData()).getTileGroup().getName();
                     break;
                 case CHANCE:
                     name = "Szansa";
@@ -70,9 +79,13 @@ public class EndManageDialog extends Dialog {
                     break;
                 case JAIL:
                     name = "Więzienie";
+                    color = ((Tile.JailTileData) tile.getData()).getTileGroup().getColor();
+                    groupName = ((Tile.JailTileData) tile.getData()).getTileGroup().getName();
                     break;
                 case GO_TO_JAIL:
                     name = "Idź do więzienia";
+                    color = ((Tile.GoToJailTileData) tile.getData()).getTileGroup().getColor();
+                    groupName = ((Tile.GoToJailTileData) tile.getData()).getTileGroup().getName();
                     break;
                 case CHAMPIONSHIPS:
                     name = "Mistrzostwa";
@@ -87,7 +100,28 @@ public class EndManageDialog extends Dialog {
                     name = "Podatek luksusowy";
                     break;
             }
-            propertiesPane.addChild(new Button(name), 100);
+            VSplitPane property = new VSplitPane();
+
+            //Color bar
+            property.addChild(new SolidColor(color), new VSplitPane.ElementOptions(30, VSplitPane.ElementOptions.WidthMode.FIXED));
+            HSplitPane content = new HSplitPane();
+            property.addChild(new PaddingPane(content, 10), new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE));
+            VSplitPane topRow = new VSplitPane(), bottomRow = new VSplitPane();
+            topRow.addChild(new HSplitPane()
+                            .addChild(new Label(name, 24, false), new HSplitPane.ElementOptions(4, HSplitPane.ElementOptions.HeightMode.VARIABLE))
+                            .addChild(new Label(groupName, 18, false), new HSplitPane.ElementOptions(3, HSplitPane.ElementOptions.HeightMode.VARIABLE)),
+                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE));
+            Button sell = new Button("Sprzedaj");
+            sell.applyNoTheme();
+            topRow.addChild(sell, new VSplitPane.ElementOptions(100, VSplitPane.ElementOptions.WidthMode.FIXED));
+
+            content.addChild(bottomRow, new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE));
+            content.addChild(topRow, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED));
+
+            HSplitPane propertyContainer = new HSplitPane().addChild(new SolidColor(Color.BLACK), new HSplitPane.ElementOptions(2, HSplitPane.ElementOptions.HeightMode.FIXED))
+                    .addChild(property, new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE));
+
+            propertiesPane.addChild(propertyContainer, 150);
         }
     }
 
