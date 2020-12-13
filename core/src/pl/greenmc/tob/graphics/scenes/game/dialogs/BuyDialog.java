@@ -47,7 +47,7 @@ public class BuyDialog extends Dialog {
         dontBuy.applyNoTheme();
         doBuy.setClickCallback(makeRunnable(GameState.BuyDecision.BUY));
         doBuy.applyYesTheme();
-        label.setBackgroundColor(new Color(1, 1, 1, 0.5f));
+        label.setBackgroundColor(new Color(1, 1, 1, 0.75f));
     }
 
     @NotNull

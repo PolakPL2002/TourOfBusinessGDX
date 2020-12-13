@@ -332,6 +332,25 @@ public class TourOfBusinessServer {
                         warning("Failed to get player from database.");
                         warning(e);
                     }
+                } else if (packet instanceof SellPacket) {
+                    try {
+                        final ServerHandler client = NettyServer.getInstance().getClient(identity);
+                        if (client != null) {
+                            Player player = getPlayerFromHandler(client);
+                            if (player == null) return;
+                            Lobby lobby = getLobbyByPlayer(player.getID());
+                            if (lobby != null && lobby.getGameState() != null) {
+                                lobby.getGameState().onSellPacket(player.getID(), ((SellPacket) packet).getTile());
+                            }
+                            client.send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
+                        }
+                    } catch (ConnectionNotAliveException e) {
+                        warning("Failed to send response packet.");
+                        warning(e);
+                    } catch (SQLException e) {
+                        warning("Failed to get player from database.");
+                        warning(e);
+                    }
                 } else if (packet instanceof SetJailDecisionPacket) {
                     try {
                         final ServerHandler client = NettyServer.getInstance().getClient(identity);

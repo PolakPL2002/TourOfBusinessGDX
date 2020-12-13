@@ -5,7 +5,6 @@ import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
 import pl.greenmc.tob.game.netty.SentPacket;
 import pl.greenmc.tob.game.netty.client.NettyClient;
 import pl.greenmc.tob.game.netty.packets.game.EndGameActionPacket;
-import pl.greenmc.tob.game.netty.packets.game.EndGameTimeoutResetPacket;
 import pl.greenmc.tob.graphics.elements.Button;
 import pl.greenmc.tob.graphics.elements.HSplitPane;
 import pl.greenmc.tob.graphics.elements.TransparentColor;
@@ -13,6 +12,7 @@ import pl.greenmc.tob.graphics.scenes.game.Dialog;
 
 import static pl.greenmc.tob.TourOfBusiness.TOB;
 import static pl.greenmc.tob.game.util.Logger.warning;
+import static pl.greenmc.tob.graphics.scenes.game.GameScene.onEndAction;
 
 public class EndDialog extends Dialog {
     public EndDialog(@NotNull Runnable manageCallback, @NotNull Runnable tradeCallback) {
@@ -25,7 +25,7 @@ public class EndDialog extends Dialog {
 
         end.applyNoTheme();
         end.setClickCallback(() -> TOB.runOnGLThread(() -> {
-            onAction();
+            onEndAction();
             try {
                 NettyClient.getInstance().getClientHandler().send(
                         new EndGameActionPacket(new EndGameActionPacket.ActionEndTurn()),
@@ -36,11 +36,11 @@ public class EndDialog extends Dialog {
         }));
 
         manage.setClickCallback(() -> {
-            onAction();
+            onEndAction();
             manageCallback.run();
         });
         trade.setClickCallback(() -> {
-            onAction();
+            onEndAction();
             tradeCallback.run();
         });
 
@@ -48,15 +48,5 @@ public class EndDialog extends Dialog {
         pane.addChild(manage, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED));
         pane.addChild(new TransparentColor(), new HSplitPane.ElementOptions(15, HSplitPane.ElementOptions.HeightMode.FIXED));
         pane.addChild(end, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED));
-    }
-
-    private void onAction() {
-        try {
-            NettyClient.getInstance().getClientHandler().send(
-                    new EndGameTimeoutResetPacket(),
-                    new SentPacket.Callback.BlankCallback(), false);
-        } catch (ConnectionNotAliveException e) {
-            warning(e);
-        }
     }
 }

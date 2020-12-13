@@ -1,6 +1,7 @@
 package pl.greenmc.tob.graphics.scenes.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -18,8 +19,11 @@ import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.SentPacket;
 import pl.greenmc.tob.game.netty.client.NettyClient;
+import pl.greenmc.tob.game.netty.packets.game.EndGameTimeoutResetPacket;
 import pl.greenmc.tob.game.netty.packets.game.GetGameStatePacket;
 import pl.greenmc.tob.game.netty.packets.game.GetPlayerPacket;
+import pl.greenmc.tob.game.netty.packets.game.SellPacket;
+import pl.greenmc.tob.game.util.Utilities;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.Hitbox;
 import pl.greenmc.tob.graphics.Interactable;
@@ -34,10 +38,12 @@ import java.util.UUID;
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
 import static pl.greenmc.tob.TourOfBusiness.TOB;
-import static pl.greenmc.tob.game.util.Logger.error;
+import static pl.greenmc.tob.game.GameState.getPropertyValue;
+import static pl.greenmc.tob.game.util.Logger.*;
 import static pl.greenmc.tob.game.util.Utilities.makeMoney;
 
 public class GameScene extends Scene implements Interactable {
+    private final Object endGenerationLock = new Object();
     private final Map map;
     private final HashSet<Integer> nameRequestsSent = new HashSet<>();
     private final HashMap<Integer, String> playerNames = new HashMap<>();
@@ -62,6 +68,16 @@ public class GameScene extends Scene implements Interactable {
 
     public GameScene(Map map) {
         this.map = map;
+    }
+
+    public static void onEndAction() {
+        try {
+            NettyClient.getInstance().getClientHandler().send(
+                    new EndGameTimeoutResetPacket(),
+                    new SentPacket.Callback.BlankCallback(), false);
+        } catch (ConnectionNotAliveException e) {
+            warning(e);
+        }
     }
 
     public void onGameStateChanged(@NotNull GameState.Data data) {
@@ -184,6 +200,74 @@ public class GameScene extends Scene implements Interactable {
         updatePlayersStats();
     }
 
+    public void onRoll(int player, @NotNull int[] numbers) {
+        StringBuilder n = new StringBuilder();
+        int sum = 0;
+        for (int number : numbers) {
+            if (n.length() > 0) n.append(" + ");
+            n.append(number);
+            sum += number;
+        }
+        n.append(" = ").append(sum);
+        gamePlayersStats.showMessage(getPlayerName(playerIDs[player]) + "\n" + n.toString(), 2500);
+    }
+
+    @Override
+    public void onScroll(float x, float y) {
+        if (dialog != null) dialog.onScroll(x, y);
+    }
+
+    public void onTileModified(int tile, Integer owner, int level) {
+        if (game3D != null) {
+            game3D.setTileOwner(tile, owner);
+            game3D.setTileLevel(tile, level);
+        }
+        tileOwners[tile % map.getTiles().length] = owner;
+        tileLevels[tile % map.getTiles().length] = level;
+        //Synchronized to await end of generation
+        TOB.runOnGLThread(() -> {
+            synchronized (endGenerationLock) {
+                if (dialog != null)
+                    log(dialog.toString());
+                if (dialog != null && dialog instanceof EndManageDialog) {
+                    changeEndDialog();
+                }
+            }
+        });
+    }
+
+    public static String getTileName(@NotNull Tile tile) {
+        switch (tile.getType()) {
+            case START:
+                return "Start";
+            case CITY:
+                return ((Tile.CityTileData) tile.getData()).getName();
+            case STATION:
+                return ((Tile.StationTileData) tile.getData()).getName();
+            case UTILITY:
+                return ((Tile.UtilityTileData) tile.getData()).getName();
+            case CHANCE:
+                return "Szansa";
+            case COMMUNITY_CHEST:
+                return "Kasa społeczna";
+            case PLACEHOLDER:
+                return "Nic ciekawego";
+            case JAIL:
+                return "Więzienie";
+            case GO_TO_JAIL:
+                return "Idź do więzienia";
+            case CHAMPIONSHIPS:
+                return "Mistrzostwa";
+            case TRAVEL:
+                return "Podróż";
+            case INCOME_TAX:
+                return "Podatek dochodowy";
+            case LUXURY_TAX:
+                return "Podatek luksusowy";
+        }
+        return "";
+    }
+
     @Override
     public void render() {
         frameBuffer.begin();
@@ -207,30 +291,6 @@ public class GameScene extends Scene implements Interactable {
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         batch.draw(frameBuffer.getColorBufferTexture(), 0, Gdx.graphics.getHeight(), Gdx.graphics.getWidth(), -Gdx.graphics.getHeight());
         batch.end();
-    }
-
-    public void onRoll(int player, @NotNull int[] numbers) {
-        StringBuilder n = new StringBuilder();
-        int sum = 0;
-        for (int number : numbers) {
-            if (n.length() > 0) n.append(" + ");
-            n.append(number);
-            sum += number;
-        }
-        n.append(" = ").append(sum);
-        gamePlayersStats.showMessage(getPlayerName(playerIDs[player]) + "\n" + n.toString(), 2500);
-    }
-
-    @Override
-    public void onScroll(float x, float y) {
-        if (dialog != null) dialog.onScroll(x, y);
-    }
-
-    public void onTileModified(int tile, Integer owner, int level) {
-        if (game3D != null) {
-            game3D.setTileOwner(tile, owner);
-            game3D.setTileLevel(tile, level);
-        }
     }
 
     @Override
@@ -269,6 +329,38 @@ public class GameScene extends Scene implements Interactable {
         if (dialog != null) dialog.dispose();
     }
 
+    public static Color getTileGroupColor(@NotNull Tile tile) {
+        switch (tile.getType()) {
+            case CITY:
+                return ((Tile.CityTileData) tile.getData()).getTileGroup().getColor();
+            case STATION:
+                return ((Tile.StationTileData) tile.getData()).getTileGroup().getColor();
+            case UTILITY:
+                return ((Tile.UtilityTileData) tile.getData()).getTileGroup().getColor();
+            case JAIL:
+                return ((Tile.JailTileData) tile.getData()).getTileGroup().getColor();
+            case GO_TO_JAIL:
+                return ((Tile.GoToJailTileData) tile.getData()).getTileGroup().getColor();
+        }
+        return Color.BLACK;
+    }
+
+    public static String getTileGroupName(@NotNull Tile tile) {
+        switch (tile.getType()) {
+            case CITY:
+                return ((Tile.CityTileData) tile.getData()).getTileGroup().getName();
+            case STATION:
+                return ((Tile.StationTileData) tile.getData()).getTileGroup().getName();
+            case UTILITY:
+                return ((Tile.UtilityTileData) tile.getData()).getTileGroup().getName();
+            case JAIL:
+                return ((Tile.JailTileData) tile.getData()).getTileGroup().getName();
+            case GO_TO_JAIL:
+                return ((Tile.GoToJailTileData) tile.getData()).getTileGroup().getName();
+        }
+        return "";
+    }
+
     private void updatePlayersStats() {
         if (gamePlayersStats != null)
             for (int i = 0; i < playerBalances.length; i++) {
@@ -278,46 +370,63 @@ public class GameScene extends Scene implements Interactable {
     }
 
     private void changeEndDialog() {
-        switch (endGamePage) {
-            case MAIN:
-                TOB.runOnGLThread(() -> changeDialog(new EndDialog(() -> {
-                    endGamePage = EndGamePage.MANAGE;
-                    changeEndDialog();
-                }, () -> {
-                    endGamePage = EndGamePage.TRADE;
-                    changeEndDialog();
-                })));
-                break;
-            case MANAGE:
-                ArrayList<Tile.TileGroup> tileGroups = new ArrayList<>();
-                ArrayList<Tile> tiles = new ArrayList<>();
-                Tile[] mapTiles = map.getTiles();
-                for (int i = 0; i < mapTiles.length; i++) {
-                    Tile tile = mapTiles[i];
-                    Tile.TileGroup group = null;
-                    switch (tile.getType()) {
-                        case CITY:
-                            group = ((Tile.CityTileData) tile.getData()).getTileGroup();
-                            break;
-                        case UTILITY:
-                            group = ((Tile.UtilityTileData) tile.getData()).getTileGroup();
-                            break;
-                        case STATION:
-                            group = ((Tile.StationTileData) tile.getData()).getTileGroup();
-                            break;
+        synchronized (endGenerationLock) {
+            switch (endGamePage) {
+                case MAIN:
+                    TOB.runOnGLThread(() -> changeDialog(new EndDialog(() -> {
+                        endGamePage = EndGamePage.MANAGE;
+                        changeEndDialog();
+                    }, () -> {
+                        endGamePage = EndGamePage.TRADE;
+                        changeEndDialog();
+                    })));
+                    break;
+                case MANAGE:
+                    ArrayList<Tile.TileGroup> tileGroups = new ArrayList<>();
+                    ArrayList<Tile> tiles = new ArrayList<>();
+                    Tile[] mapTiles = map.getTiles();
+                    for (int i = 0; i < mapTiles.length; i++) {
+                        Tile tile = mapTiles[i];
+                        Tile.TileGroup group = null;
+                        switch (tile.getType()) {
+                            case CITY:
+                                group = ((Tile.CityTileData) tile.getData()).getTileGroup();
+                                break;
+                            case UTILITY:
+                                group = ((Tile.UtilityTileData) tile.getData()).getTileGroup();
+                                break;
+                            case STATION:
+                                group = ((Tile.StationTileData) tile.getData()).getTileGroup();
+                                break;
+                        }
+                        if (tileOwners[i] != null && tileOwners[i] == selfNum) {
+                            tiles.add(tile);
+                            if (group != null && !tileGroups.contains(group))
+                                tileGroups.add(group);
+                        }
                     }
-                    if (tileOwners[i] != null && tileOwners[i] == selfNum) {
-                        tiles.add(tile);
-                        if (group != null && !tileGroups.contains(group))
-                            tileGroups.add(group);
-                    }
-                }
-                TOB.runOnGLThread(() -> changeDialog(new EndManageDialog(() -> {
-                    endGamePage = EndGamePage.MAIN;
-                    changeEndDialog();
-                }, tileGroups.toArray(new Tile.TileGroup[0]), tiles.toArray(new Tile[0]))));
-                break;
+                    TOB.runOnGLThread(() -> changeDialog(new EndManageDialog(() -> {
+                        endGamePage = EndGamePage.MAIN;
+                        changeEndDialog();
+                    }, (@NotNull Tile tile) -> TOB.runOnGLThread(() -> changeDialog(new YesNoDialog(
+                            "Czy na pewno chcesz sprzedać " + getTileName(tile) + " za " + makeMoney(getPropertyValue(tile, tileLevels[getTileNumber(tile)])) + "?",
+                            () -> {
+                                try {
+                                    changeEndDialog();
+                                    NettyClient.getInstance().getClientHandler().send(new SellPacket(getTileNumber(tile)),
+                                            new SentPacket.Callback.BlankCallback(), false);
+                                } catch (ConnectionNotAliveException e) {
+                                    warning(e);
+                                }
+                            }, this::changeEndDialog, GameScene::onEndAction, 3000))),
+                            map, tileGroups.toArray(new Tile.TileGroup[0]), tiles.toArray(new Tile[0]))));
+                    break;
+            }
         }
+    }
+
+    private int getTileNumber(@NotNull Tile tile) {
+        return Utilities.getTileNumber(map, tile);
     }
 
     private void updateState() {

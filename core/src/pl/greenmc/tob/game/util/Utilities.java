@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.google.common.io.ByteStreams;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import pl.greenmc.tob.game.map.Tile;
 
 import java.io.*;
 import java.lang.reflect.Array;
@@ -29,6 +30,16 @@ public class Utilities {
         int i = x % y;
         if (i < 0) i += y;
         return i;
+    }
+
+    public static int getTileNumber(@NotNull pl.greenmc.tob.game.map.Map map, Tile tile) {
+        int i = 0;
+        for (Tile t : map.getTiles()) {
+            if (t == tile)
+                return i;
+            i++;
+        }
+        return -1;
     }
 
     @NotNull
