@@ -120,7 +120,17 @@ public class GameScene extends Scene implements Interactable {
             //TODO Show auction dialog
             switch (this.state) {
                 case AWAITING_JAIL:
-                    TOB.runOnGLThread(() -> changeDialog(new JailDialog()));
+                    Tile tile = map.getTiles()[playerPositions[selfNum] % map.getTiles().length];
+                    boolean showBail = false, showCard = false;
+                    long bailAmount = 0;
+                    if (tile.getType() == Tile.TileType.JAIL) {
+                        //TODO Check for cards
+                        bailAmount = ((Tile.JailTileData) tile.getData()).getBailMoney();
+                        showBail = playerBalances[selfNum % playerBalances.length] >= bailAmount;
+                    }
+                    long finalBailAmount = bailAmount;
+                    boolean finalShowBail = showBail;
+                    TOB.runOnGLThread(() -> changeDialog(new JailDialog(finalBailAmount, finalShowBail, showCard)));
                     break;
                 case AWAITING_ROLL:
                     TOB.runOnGLThread(() -> changeDialog(new RollDialog()));
@@ -155,6 +165,45 @@ public class GameScene extends Scene implements Interactable {
         }
     }
 
+    private void updatePlayersStats() {
+        if (gamePlayersStats != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
+                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
+                gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
+                gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
+            }
+        if (game3D != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                game3D.setShowPlayer(i, !playerBankrupt[i]);
+            }
+    }
+
+    @Override
+    public void onMouseDown() {
+        if (game3D != null)
+            clickOnTile = game3D.getSelectedTile();
+        if (dialog != null) dialog.onMouseDown();
+    }
+
+    @Override
+    public void onMouseMove(int x, int y) {
+        lastMousePos = new Vector2(x, y);
+        if (dialog != null) dialog.onMouseMove(x, y);
+        if (game3D != null) {
+            HashMap<Tile, Hitbox> hitboxes = game3D.getHitboxes();
+            boolean found = false;
+            for (Tile tile : hitboxes.keySet()) {
+                if (hitboxes.get(tile).testMouseCoordinates(x, y)) {
+                    game3D.setSelectedTile(tile);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) game3D.setSelectedTile((Integer) null);
+        }
+    }
+
     private void updateSellDialog() {
         long totalValue = 0;
         if (game3D != null) {
@@ -185,24 +234,6 @@ public class GameScene extends Scene implements Interactable {
         )));
     }
 
-    @Override
-    public void onMouseMove(int x, int y) {
-        lastMousePos = new Vector2(x, y);
-        if (dialog != null) dialog.onMouseMove(x, y);
-        if (game3D != null) {
-            HashMap<Tile, Hitbox> hitboxes = game3D.getHitboxes();
-            boolean found = false;
-            for (Tile tile : hitboxes.keySet()) {
-                if (hitboxes.get(tile).testMouseCoordinates(x, y)) {
-                    game3D.setSelectedTile(tile);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) game3D.setSelectedTile((Integer) null);
-        }
-    }
-
     private void changeDialog(@Nullable Dialog newDialog) {
         if (dialog != null) dialog.dispose();
         dialog = newDialog;
@@ -210,27 +241,6 @@ public class GameScene extends Scene implements Interactable {
             newDialog.setup();
             if (lastMousePos != null) newDialog.onMouseMove((int) lastMousePos.x, (int) lastMousePos.y);
         }
-    }
-
-    private void updatePlayersStats() {
-        if (gamePlayersStats != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
-                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
-                gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
-                gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
-            }
-        if (game3D != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                game3D.setShowPlayer(i, !playerBankrupt[i]);
-            }
-    }
-
-    @Override
-    public void onMouseDown() {
-        if (game3D != null)
-            clickOnTile = game3D.getSelectedTile();
-        if (dialog != null) dialog.onMouseDown();
     }
 
     public void onPay(@Nullable Integer from, @Nullable Integer to, long amount) {
@@ -252,6 +262,17 @@ public class GameScene extends Scene implements Interactable {
             game3D.movePlayer(player, position, animate);
     }
 
+    public void onPlayerStateChanged(int player, @NotNull GameState.PlayerState state) {
+        playerBalances[player] = state.getBalance();
+        if (state.isBankrupt() && !playerBankrupt[player])
+            gamePlayersStats.showMessage(getPlayerName(playerIDs[player]) + " zbankrutował!", 2500);
+        if (state.isJailed() && !playerInJail[player])
+            gamePlayersStats.showMessage(getPlayerName(playerIDs[player]) + " trafił do więzienia!", 2500);
+        playerBankrupt[player] = state.isBankrupt();
+        playerInJail[player] = state.isJailed();
+        updatePlayersStats();
+    }
+
     @Override
     public void onMouseUp() {
         if (game3D != null && clickOnTile != null && Objects.equals(clickOnTile, game3D.getSelectedTile()))
@@ -268,17 +289,6 @@ public class GameScene extends Scene implements Interactable {
             }
 
         if (dialog != null) dialog.onMouseUp();
-    }
-
-    public void onPlayerStateChanged(int player, @NotNull GameState.PlayerState state) {
-        playerBalances[player] = state.getBalance();
-        if (state.isBankrupt() && !playerBankrupt[player])
-            gamePlayersStats.showMessage(getPlayerName(playerIDs[player]) + " zbankrutował!", 2500);
-        if (state.isJailed() && !playerInJail[player])
-            gamePlayersStats.showMessage(getPlayerName(playerIDs[player]) + " trafił do więzienia!", 2500);
-        playerBankrupt[player] = state.isBankrupt();
-        playerInJail[player] = state.isJailed();
-        updatePlayersStats();
     }
 
     public void onRoll(int player, @NotNull int[] numbers) {
