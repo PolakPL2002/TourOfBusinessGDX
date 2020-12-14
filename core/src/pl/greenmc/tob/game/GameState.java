@@ -29,7 +29,7 @@ public class GameState {
     private final static int DRAWS_TO_JAIL = 3;
     private static final int NUM_DICES = 2;
     private final static boolean REQUIRE_ALL_TILES_IN_GROUP_TO_UPGRADE = true;
-    private static final long STARTING_BALANCE = 1000000L;
+    private static final long STARTING_BALANCE = 15000000L;
     private static final boolean START_AUCTION_ON_DONT_BUY = true;
     private static final boolean START_AUCTION_ON_INSUFFICIENT_FUNDS = true;
     private static final float START_STAND_MULTIPLIER = 2.0f;
