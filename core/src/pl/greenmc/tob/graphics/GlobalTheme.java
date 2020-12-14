@@ -4,6 +4,10 @@ package pl.greenmc.tob.graphics;
 import com.badlogic.gdx.graphics.Color;
 
 public class GlobalTheme {
+    public static final Color buttonDisabledBackgroundColor = new Color(0.7f, 0.7f, 0.7f, 1f);
+    public static final Color buttonDisabledBorderColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+    public static final Color buttonDisabledClickColor = buttonDisabledBackgroundColor;
+    public static final Color buttonDisabledHoverColor = buttonDisabledBackgroundColor;
     public static final Color buttonNoBackgroundColor = MaterialColor.RED.color200();
     public static final Color buttonNoBorderColor = MaterialColor.RED.color700();
     public static final Color buttonNoClickColor = MaterialColor.RED.color400();

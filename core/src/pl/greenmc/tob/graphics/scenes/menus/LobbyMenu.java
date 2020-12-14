@@ -303,7 +303,7 @@ public class LobbyMenu extends Menu {
                         if (allReady)
                             readyButton.applyYesTheme();
                         else
-                            readyButton.applyNoTheme();
+                            readyButton.applyDisabledTheme();
 
                         if (allReady)
                             readyButton.setClickCallback(() -> {
