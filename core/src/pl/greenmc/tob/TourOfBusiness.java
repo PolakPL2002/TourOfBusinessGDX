@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.TourOfBusinessGame;
@@ -16,6 +17,7 @@ import pl.greenmc.tob.graphics.overlays.NetworkActivityOverlay;
 import pl.greenmc.tob.graphics.scenes.LoadingScene;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.badlogic.gdx.graphics.GL20.*;
 import static pl.greenmc.tob.game.util.Logger.log;
@@ -24,6 +26,7 @@ public class TourOfBusiness extends ApplicationAdapter implements InputProcessor
     public static TourOfBusiness TOB;
     private final int GL_MULTISAMPLE = 32925;
     private final ArrayList<Overlay> overlays = new ArrayList<>();
+    private final ArrayList<Rectangle> scissors = new ArrayList<>();
     private final ArrayList<Runnable> tasksToExecute = new ArrayList<>();
     private boolean LMBPressed = false;
     private Scene currentScene = null;
@@ -82,8 +85,52 @@ public class TourOfBusiness extends ApplicationAdapter implements InputProcessor
         return game;
     }
 
+    public int getScissorLevel() {
+        return scissors.size();
+    }
+
+    public void glScissor(int lvl, int x, int y, int w, int h) {
+        if (lvl > scissors.size()) {
+            //Some child skipped.
+            //Copy last parent
+            if (scissors.size() == 0) {
+                scissors.add(new Rectangle(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
+            }
+            while (lvl != scissors.size()) {
+                scissors.add(scissors.get(scissors.size() - 1));
+            }
+        }
+        if (lvl == scissors.size()) {
+            //New child
+            scissors.add(new Rectangle(x, y, w, h));
+        } else if (lvl < scissors.size()) {
+            int i1 = scissors.size() - lvl;
+            for (int i = 0; i < i1; i++)
+                scissors.remove(scissors.size() - 1);
+            scissors.add(new Rectangle(x, y, w, h));
+        }
+        AtomicReference<Rectangle> scissor = new AtomicReference<>(new Rectangle(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
+        scissors.forEach((Rectangle r) -> scissor.set(getIntersection(scissor.get(), r)));
+        Rectangle rectangle = scissor.get();
+        Gdx.gl.glScissor((int) rectangle.x, (int) rectangle.y, (int) rectangle.width, (int) rectangle.height);
+    }
+
+    @NotNull
+    private Rectangle getIntersection(@NotNull Rectangle r1, @NotNull Rectangle r2) {
+        int x = (int) Math.max(r1.x, r2.x);
+        int w = (int) Math.min(r1.x + r1.width, r2.x + r2.width) - x;
+        int y = (int) Math.max(r1.y, r2.y);
+        int h = (int) Math.min(r1.y + r1.height, r2.y + r2.height) - y;
+        if (w < 0) w = 0;
+        if (h < 0) h = 0;
+        return new Rectangle(x, y, w, h);
+    }
+
     @Override
     public void render() {
+        scissors.clear();
+        Gdx.gl.glScissor(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        Gdx.gl.glDisable(GL_SCISSOR_TEST);
         synchronized (tasksToExecute) {
             while (tasksToExecute.size() > 0) {
                 tasksToExecute.remove(0).run();

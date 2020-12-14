@@ -21,6 +21,7 @@ import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
 import static pl.greenmc.tob.TourOfBusiness.TOB;
 
 public class Menu extends Scene implements Interactable {
+    protected boolean disposed = false;
     private Background background;
     private SpriteBatch batch;
     private Element element = null;
@@ -109,6 +110,7 @@ public class Menu extends Scene implements Interactable {
 
     @Override
     public void dispose() {
+        disposed = true;
         batch.dispose();
         frameBuffer.dispose();
         if (this.element != null) element.dispose();

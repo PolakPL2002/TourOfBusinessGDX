@@ -8,6 +8,7 @@ import pl.greenmc.tob.graphics.Element;
 import pl.greenmc.tob.graphics.RectangularHitbox;
 
 import static com.badlogic.gdx.graphics.GL20.GL_SCISSOR_TEST;
+import static pl.greenmc.tob.TourOfBusiness.TOB;
 
 public class HSplitPane extends SplitPane {
     public HSplitPane addChild(@NotNull Element element, @NotNull ElementOptions elementOptions) {
@@ -59,10 +60,11 @@ public class HSplitPane extends SplitPane {
         float finalY = y;
         float finalW = w;
         float finalH = h;
+        int lvl = TOB.getScissorLevel();
         synchronized (children) {
             children.forEach((element) -> {
                 Gdx.gl.glEnable(GL_SCISSOR_TEST);
-                Gdx.gl.glScissor((int) finalX, (int) finalY, (int) finalW, (int) finalH);
+                TOB.glScissor(lvl, (int) finalX, (int) finalY, (int) finalW, (int) finalH);
                 ElementOptions elementOptions = (ElementOptions) options.get(element);
                 float height = (float) (elementOptions.mode == ElementOptions.HeightMode.FIXED ?
                         elementOptions.height :

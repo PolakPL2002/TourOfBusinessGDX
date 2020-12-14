@@ -6,19 +6,23 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.greenmc.tob.game.map.Map;
 import pl.greenmc.tob.game.map.Tile;
+import pl.greenmc.tob.game.util.Utilities;
 import pl.greenmc.tob.graphics.elements.*;
 import pl.greenmc.tob.graphics.scenes.game.Dialog;
 
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import static pl.greenmc.tob.graphics.scenes.game.GameScene.*;
 
 public class EndManageDialog extends Dialog {
-
+    private final static boolean REQUIRE_ALL_TILES_IN_GROUP_TO_UPGRADE = true;
     @NotNull
     private final Map map;
+    @NotNull
+    private final LevelCallback onLevel;
     @NotNull
     private final SellCallback onSell;
     @NotNull
@@ -27,14 +31,18 @@ public class EndManageDialog extends Dialog {
     private final HashMap<Tile.TileGroup, Button> tileGroupButtons = new HashMap<>();
     @NotNull
     private final Tile.TileGroup[] tileGroups;
+    @NotNull
+    private final int[] tileLevels;
     private Timer timer;
 
-    public EndManageDialog(@NotNull Runnable onBack, @NotNull SellCallback onSell, @NotNull Map map, @NotNull Tile.TileGroup[] tileGroups, @NotNull Tile[] playerTiles) {
+    public EndManageDialog(@NotNull Runnable onBack, @NotNull SellCallback onSell, @NotNull LevelCallback onLevel, @NotNull Map map, @NotNull Tile.TileGroup[] tileGroups, @NotNull Tile[] playerTiles, @NotNull int[] tileLevels) {
         super(new HSplitPane(), Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         this.onSell = onSell;
+        this.onLevel = onLevel;
         this.map = map;
         this.tileGroups = tileGroups;
         this.playerTiles = playerTiles;
+        this.tileLevels = tileLevels;
         HSplitPane pane = (HSplitPane) getChild();
         HSplitPane innerPane = new HSplitPane();
         pane.addChild(new TransparentColor(), new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE))
@@ -108,6 +116,39 @@ public class EndManageDialog extends Dialog {
 
             sell.setClickCallback(() -> onSell.run(tile));
 
+            if (tile.getType() == Tile.TileType.CITY) {
+                boolean ok;
+                if (REQUIRE_ALL_TILES_IN_GROUP_TO_UPGRADE) {
+                    ok = true;
+                    for (Tile tile1 : ((Tile.CityTileData) tile.getData()).getTileGroup().getTiles()) {
+                        int tileID = Utilities.getTileNumber(map, tile1);
+                        ok = false;
+                        for (Tile tile2 : playerTiles) {
+                            if (Objects.equals(tileID, Utilities.getTileNumber(map, tile2))) {
+                                ok = true;
+                                break;
+                            }
+                        }
+                        if (!ok) break;
+                    }
+                } else
+                    ok = true;
+                if (ok) {
+                    Button lvlDown = new Button("-"), lvlUp = new Button("+");
+                    int tileLevel = tileLevels[Utilities.getTileNumber(map, tile)];
+                    Label lvl = new Label(String.valueOf(tileLevel), 24, false);
+                    if (tileLevel > 0) {
+                        topRow.addChild(lvlDown, new VSplitPane.ElementOptions(50, VSplitPane.ElementOptions.WidthMode.FIXED));
+                    }
+                    topRow.addChild(lvl, new VSplitPane.ElementOptions(50, VSplitPane.ElementOptions.WidthMode.FIXED));
+                    if (tileLevel < ((Tile.CityTileData) tile.getData()).getMaxLevel()) {
+                        topRow.addChild(lvlUp, new VSplitPane.ElementOptions(50, VSplitPane.ElementOptions.WidthMode.FIXED));
+                    }
+                    lvlDown.setClickCallback(() -> onLevel.run(tile, false));
+                    lvlUp.setClickCallback(() -> onLevel.run(tile, true));
+                }
+            }
+
             topRow.addChild(sell, new VSplitPane.ElementOptions(100, VSplitPane.ElementOptions.WidthMode.FIXED));
 
             content.addChild(bottomRow, new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE));
@@ -141,6 +182,10 @@ public class EndManageDialog extends Dialog {
     public void dispose() {
         super.dispose();
         if (timer != null) timer.cancel();
+    }
+
+    public interface LevelCallback {
+        void run(@NotNull Tile tile, boolean isUpgrade);
     }
 
     public interface SellCallback {

@@ -151,13 +151,13 @@ public class Tile {
     }
 
     public static class ChampionshipsTileData extends TileData {
-        private final int cost;
+        private final long cost;
 
-        public ChampionshipsTileData(int cost) {
+        public ChampionshipsTileData(long cost) {
             this.cost = cost;
         }
 
-        public int getCost() {
+        public long getCost() {
             return cost;
         }
     }
@@ -168,13 +168,13 @@ public class Tile {
     }
 
     public static class CityTileData extends TileData {
-        private final int improvementCost;
+        private final long improvementCost;
         private final String name;
-        private final ArrayList<Integer> rents = new ArrayList<>();
+        private final ArrayList<Long> rents = new ArrayList<>();
         private final TileGroup tileGroup;
-        private final int value;
+        private final long value;
 
-        public CityTileData(@NotNull String name, @NotNull TileGroup tileGroup, int value, int improvementCost, int rent) {
+        public CityTileData(@NotNull String name, @NotNull TileGroup tileGroup, long value, long improvementCost, long rent) {
             this.name = name;
             this.tileGroup = tileGroup;
             this.value = value;
@@ -182,7 +182,7 @@ public class Tile {
             rents.add(rent);
         }
 
-        public int getImprovementCost() {
+        public long getImprovementCost() {
             return improvementCost;
         }
 
@@ -194,16 +194,16 @@ public class Tile {
             return tileGroup;
         }
 
-        public int getValue() {
+        public long getValue() {
             return value;
         }
 
-        public CityTileData addRent(int rent) {
+        public CityTileData addRent(long rent) {
             rents.add(rent);
             return this;
         }
 
-        public int getRent(int level) {
+        public long getRent(int level) {
             if (level >= rents.size()) return rents.get(rents.size() - 1);
             return rents.get(level);
         }
@@ -231,29 +231,29 @@ public class Tile {
     }
 
     public static class IncomeTaxTileData extends TileData {
-        private final int cost;
+        private final long cost;
 
-        public IncomeTaxTileData(int cost) {
+        public IncomeTaxTileData(long cost) {
             this.cost = cost;
         }
 
-        public int getCost() {
+        public long getCost() {
             return cost;
         }
     }
 
     public static class JailTileData extends TileData {
-        private final int bailMoney;
+        private final long bailMoney;
         private final int maxRounds;
         private final TileGroup tileGroup;
 
-        public JailTileData(@NotNull TileGroup tileGroup, int bailMoney, int maxRounds) {
+        public JailTileData(@NotNull TileGroup tileGroup, long bailMoney, int maxRounds) {
             this.tileGroup = tileGroup;
             this.bailMoney = bailMoney;
             this.maxRounds = maxRounds;
         }
 
-        public int getBailMoney() {
+        public long getBailMoney() {
             return bailMoney;
         }
 
@@ -267,48 +267,48 @@ public class Tile {
     }
 
     public static class LuxuryTaxTileData extends TileData {
-        private final int cost;
+        private final long cost;
 
-        public LuxuryTaxTileData(int cost) {
+        public LuxuryTaxTileData(long cost) {
             this.cost = cost;
         }
 
-        public int getCost() {
+        public long getCost() {
             return cost;
         }
     }
 
     public static class PlaceholderTileData extends TileData {
-        private final int charge;
+        private final long charge;
 
-        public PlaceholderTileData(int charge) {
+        public PlaceholderTileData(long charge) {
             this.charge = charge;
         }
 
-        public int getCharge() {
+        public long getCharge() {
             return charge;
         }
     }
 
     public static class StartTileData extends TileData {
-        private final int startMoney;
+        private final long startMoney;
 
-        public StartTileData(int startMoney) {
+        public StartTileData(long startMoney) {
             this.startMoney = startMoney;
         }
 
-        public int getStartMoney() {
+        public long getStartMoney() {
             return startMoney;
         }
     }
 
     public static class StationTileData extends TileData {
         private final String name;
-        private final ArrayList<Integer> rents = new ArrayList<>();
+        private final ArrayList<Long> rents = new ArrayList<>();
         private final TileGroup tileGroup;
-        private final int value;
+        private final long value;
 
-        public StationTileData(@NotNull String name, @NotNull TileGroup tileGroup, int value, int rent) {
+        public StationTileData(@NotNull String name, @NotNull TileGroup tileGroup, long value, long rent) {
             this.name = name;
             this.tileGroup = tileGroup;
             this.value = value;
@@ -323,17 +323,17 @@ public class Tile {
             return tileGroup;
         }
 
-        public int getValue() {
+        public long getValue() {
             return value;
         }
 
 
-        public StationTileData addRent(int rent) {
+        public StationTileData addRent(long rent) {
             rents.add(rent);
             return this;
         }
 
-        public int getRent(int level) {
+        public long getRent(int level) {
             if (level >= rents.size()) return rents.get(rents.size() - 1);
             return rents.get(level);
         }
@@ -375,24 +375,24 @@ public class Tile {
     }
 
     public static class TravelTileData extends TileData {
-        private final int cost;
+        private final long cost;
 
-        public TravelTileData(int cost) {
+        public TravelTileData(long cost) {
             this.cost = cost;
         }
 
-        public int getCost() {
+        public long getCost() {
             return cost;
         }
     }
 
     public static class UtilityTileData extends TileData {
-        private final ArrayList<Integer> multipliers = new ArrayList<>();
+        private final ArrayList<Long> multipliers = new ArrayList<>();
         private final String name;
         private final TileGroup tileGroup;
-        private final int value;
+        private final long value;
 
-        public UtilityTileData(@NotNull String name, @NotNull TileGroup tileGroup, int value, int multiplier) {
+        public UtilityTileData(@NotNull String name, @NotNull TileGroup tileGroup, long value, long multiplier) {
             this.name = name;
             this.tileGroup = tileGroup;
             this.value = value;
@@ -407,16 +407,16 @@ public class Tile {
             return tileGroup;
         }
 
-        public int getValue() {
+        public long getValue() {
             return value;
         }
 
-        public UtilityTileData addMultiplier(int multiplier) {
+        public UtilityTileData addMultiplier(long multiplier) {
             multipliers.add(multiplier);
             return this;
         }
 
-        public int getMultiplier(int level) {
+        public long getMultiplier(int level) {
             if (level >= multipliers.size()) return multipliers.get(multipliers.size() - 1);
             return multipliers.get(level);
         }

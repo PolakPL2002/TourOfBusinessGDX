@@ -16,6 +16,8 @@ import pl.greenmc.tob.game.netty.packets.Packet;
 import pl.greenmc.tob.game.netty.packets.game.GetSelfPacket;
 import pl.greenmc.tob.game.netty.packets.game.events.*;
 import pl.greenmc.tob.game.netty.packets.game.events.lobby.*;
+import pl.greenmc.tob.game.netty.packets.game.lobby.GetLobbyPacket;
+import pl.greenmc.tob.game.netty.packets.game.lobby.GetSelfLobbyPacket;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.scenes.ErrorScene;
 import pl.greenmc.tob.graphics.scenes.LoadingScene;
@@ -193,6 +195,7 @@ public class TourOfBusinessGame {
                     @Override
                     public void run() {
                         TOB.runOnGLThread(() -> TOB.changeScene(new MainMenu()));
+                        checkInGame();
                     }
                 }, 100); //Delay to show done message
         }
@@ -201,6 +204,44 @@ public class TourOfBusinessGame {
 
     public AssetManager getAssetManager() {
         return assetManager;
+    }
+
+    private void checkInGame() {
+        try {
+            NettyClient.getInstance().getClientHandler().send(new GetSelfLobbyPacket(), new SentPacket.Callback() {
+                @Override
+                public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
+                    try {
+                        if (response == null) throw new InvalidPacketException();
+                        Lobby lobby = GetLobbyPacket.parseResponse(response).getLobby();
+
+                        if (lobby != null) {
+                            switch (lobby.getLobbyState()) {
+                                case CONFIGURING:
+                                case IN_GAME:
+                                    //Change to lobby
+                                    TOB.runOnGLThread(() -> TOB.changeScene(new LobbyMenu(lobby.getID())));
+                                    break;
+                            }
+                        }
+                        log("Got self lobby status.");
+                    } catch (InvalidPacketException e) {
+                        error("Failed to check in game status!");
+                        error(e);
+                    }
+                }
+
+                @Override
+                public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
+                    //TODO Handle some reasons?
+                    warning("Failed to check in game status! Trying again... (message=" + uuid + ", reason=" + reason + ")");
+                }
+            }, true);
+        } catch (ConnectionNotAliveException e) {
+            //TODO Handle?
+            error("Failed to check in game status!");
+            error(e);
+        }
     }
 
     private void updateSelf() {

@@ -199,7 +199,10 @@ public class LobbyMenu extends Menu {
                         players = getLobbyResponse.getPlayers();
                         if (lobby != null) {
                             log("Successfully downloaded lobby data! id=" + lobby.getID());
-                            updateView();
+                            if (lobby.getLobbyState() == Lobby.LobbyState.IN_GAME)
+                                onGameStarted(lobbyID);
+                            else
+                                updateView();
                         } else if (!removed) {
                             log("Not in lobby!");
                             TOB.runOnGLThread(() -> TOB.changeScene(new MainMenu("Not in lobby!")));
@@ -240,77 +243,33 @@ public class LobbyMenu extends Menu {
     }
 
     private void updateView() {
-        TOB.runOnGLThread(() -> {
-            if (lobby == null) {
-                Label label = new Label("Ładowanie...\nProszę czekać", 30, false);
-                label.setBackgroundColor(new Color(1, 1, 1, 0.75f));
-                container.setChild(label);
-            } else {
-                Button backButton = new Button("Opuść");
-                boolean selfReady = lobby.isPlayerReady(TOB.getGame().getSelf().getID());
-                Button readyButton;
-                if (lobby.getOwner() != TOB.getGame().getSelf().getID()) {
-                    readyButton = new Button(selfReady ? "Niegotowy" : "Gotowy");
-
-                    if (selfReady)
-                        readyButton.applyNoTheme();
-                    else
-                        readyButton.applyYesTheme();
-
-                    readyButton.setClickCallback(() -> {
-                        synchronized (reloadLock) {
-                            if (!reloadInProgress) {
-                                reloadInProgress = true;
-                                try {
-                                    NettyClient.getInstance().getClientHandler().send(new SetSelfReadyPacket(!selfReady), new SentPacket.Callback() {
-                                        @Override
-                                        public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
-                                            getLobbyDetails();
-                                        }
-
-                                        @Override
-                                        public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
-                                            warning("Failed to set ready state!");
-                                            reloadFinished();
-                                        }
-                                    }, false);
-                                } catch (ConnectionNotAliveException e) {
-                                    warning("Failed to set ready state!");
-                                    warning(e);
-                                    reloadFinished();
-                                }
-                            }
-                        }
-                    });
+        if (!disposed)
+            TOB.runOnGLThread(() -> {
+                if (lobby == null) {
+                    Label label = new Label("Ładowanie...\nProszę czekać", 30, false);
+                    label.setBackgroundColor(new Color(1, 1, 1, 0.75f));
+                    container.setChild(label);
                 } else {
-                    readyButton = new Button("Rozpocznij");
+                    Button backButton = new Button("Opuść");
+                    boolean selfReady = lobby.isPlayerReady(TOB.getGame().getSelf().getID());
+                    Button readyButton;
+                    if (lobby.getOwner() != TOB.getGame().getSelf().getID()) {
+                        readyButton = new Button(selfReady ? "Niegotowy" : "Gotowy");
 
-                    boolean allReady = true;
-                    for (int player : lobby.getPlayers()) {
-                        if (!lobby.isPlayerReady(player)) {
-                            allReady = false;
-                            break;
-                        }
-                    }
+                        if (selfReady)
+                            readyButton.applyNoTheme();
+                        else
+                            readyButton.applyYesTheme();
 
-                    if (lobby.getPlayers().length == 0)
-                        allReady = false;
-
-                    if (allReady)
-                        readyButton.applyYesTheme();
-                    else
-                        readyButton.applyNoTheme();
-
-                    if (allReady)
                         readyButton.setClickCallback(() -> {
                             synchronized (reloadLock) {
                                 if (!reloadInProgress) {
                                     reloadInProgress = true;
                                     try {
-                                        NettyClient.getInstance().getClientHandler().send(new StartGamePacket(), new SentPacket.Callback() {
+                                        NettyClient.getInstance().getClientHandler().send(new SetSelfReadyPacket(!selfReady), new SentPacket.Callback() {
                                             @Override
                                             public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
-                                                log("Successfully requested game start.");
+                                                getLobbyDetails();
                                             }
 
                                             @Override
@@ -327,115 +286,160 @@ public class LobbyMenu extends Menu {
                                 }
                             }
                         });
-                }
-                backButton.setFontSize(20);
-                readyButton.setFontSize(20);
+                    } else {
+                        readyButton = new Button("Rozpocznij");
 
-                backButton.setClickCallback(() -> {
-                    TOB.runOnGLThread(() -> TOB.changeScene(new MainMenu()));
-                    try {
-                        NettyClient.getInstance().getClientHandler().send(new LeaveLobbyPacket(), null, false);
-                    } catch (ConnectionNotAliveException e) {
-                        e.printStackTrace();
+                        boolean allReady = true;
+                        for (int player : lobby.getPlayers()) {
+                            if (!lobby.isPlayerReady(player)) {
+                                allReady = false;
+                                break;
+                            }
+                        }
+
+                        if (lobby.getPlayers().length == 0)
+                            allReady = false;
+
+                        if (allReady)
+                            readyButton.applyYesTheme();
+                        else
+                            readyButton.applyNoTheme();
+
+                        if (allReady)
+                            readyButton.setClickCallback(() -> {
+                                synchronized (reloadLock) {
+                                    if (!reloadInProgress) {
+                                        reloadInProgress = true;
+                                        try {
+                                            NettyClient.getInstance().getClientHandler().send(new StartGamePacket(), new SentPacket.Callback() {
+                                                @Override
+                                                public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
+                                                    log("Successfully requested game start.");
+                                                }
+
+                                                @Override
+                                                public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
+                                                    warning("Failed to set ready state!");
+                                                    reloadFinished();
+                                                }
+                                            }, false);
+                                        } catch (ConnectionNotAliveException e) {
+                                            warning("Failed to set ready state!");
+                                            warning(e);
+                                            reloadFinished();
+                                        }
+                                    }
+                                }
+                            });
                     }
-                });
+                    backButton.setFontSize(20);
+                    readyButton.setFontSize(20);
+
+                    backButton.setClickCallback(() -> {
+                        TOB.runOnGLThread(() -> TOB.changeScene(new MainMenu()));
+                        try {
+                            NettyClient.getInstance().getClientHandler().send(new LeaveLobbyPacket(), null, false);
+                        } catch (ConnectionNotAliveException e) {
+                            e.printStackTrace();
+                        }
+                    });
 
 
-                if (lobby.getOwner() == TOB.getGame().getSelf().getID()) {
-                    backButton.applyNoTheme();
-                    backButton.setText("Opuść i usuń");
-                }
+                    if (lobby.getOwner() == TOB.getGame().getSelf().getID()) {
+                        backButton.applyNoTheme();
+                        backButton.setText("Opuść i usuń");
+                    }
 
 
-                Label[] players = new Label[8]; //TODO Get max players from somewhere
-                for (int i = 0; i < 8; i++) {
-                    players[i] = new Label("<Wolne miejsce>", 18, false);
-                    players[i].setBackgroundColor(playerColors[i]);
-                }
+                    Label[] players = new Label[8]; //TODO Get max players from somewhere
+                    for (int i = 0; i < 8; i++) {
+                        players[i] = new Label("<Wolne miejsce>", 18, false);
+                        players[i].setBackgroundColor(playerColors[i]);
+                    }
 
-                Player player;
-                player = getPlayerByID(lobby.getOwner());
-                String name;
-                if (player != null)
-                    name = player.getName();
-                else
-                    name = "<Unknown player>";
-                players[0].setText(name + "\nWłaściciel");
-                int i = 1;
-                for (int playerID : lobby.getPlayers()) {
-                    player = getPlayerByID(playerID);
+                    Player player;
+                    player = getPlayerByID(lobby.getOwner());
+                    String name;
                     if (player != null)
                         name = player.getName();
                     else
                         name = "<Unknown player>";
-                    players[i].setText(name + "\n" + (lobby.isPlayerReady(playerID) ? "Gotowy" : "Niegotowy"));
-                    i++;
+                    players[0].setText(name + "\nWłaściciel");
+                    int i = 1;
+                    for (int playerID : lobby.getPlayers()) {
+                        player = getPlayerByID(playerID);
+                        if (player != null)
+                            name = player.getName();
+                        else
+                            name = "<Unknown player>";
+                        players[i].setText(name + "\n" + (lobby.isPlayerReady(playerID) ? "Gotowy" : "Niegotowy"));
+                        i++;
+                    }
+
+
+                    container.setChild(new HSplitPane()
+                            .addChild(
+                                    new VSplitPane()
+                                            .addChild(
+                                                    backButton,
+                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                            )
+                                            .addChild(
+                                                    new TransparentColor(),
+                                                    new VSplitPane.ElementOptions(20, VSplitPane.ElementOptions.WidthMode.FIXED)
+                                            )
+                                            .addChild(
+                                                    readyButton,
+                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                            ),
+                                    new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED)
+                            )
+                            .addChild(
+                                    new TransparentColor(),
+                                    new HSplitPane.ElementOptions(20, HSplitPane.ElementOptions.HeightMode.FIXED)
+                            )
+                            .addChild(
+                                    new VSplitPane()
+                                            .addChild(
+                                                    players[4],
+                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                            )
+                                            .addChild(
+                                                    players[5],
+                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                            )
+                                            .addChild(
+                                                    players[6],
+                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                            )
+                                            .addChild(
+                                                    players[7],
+                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                            ),
+                                    new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE))
+                            .addChild(
+                                    new VSplitPane()
+                                            .addChild(
+                                                    players[0],
+                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                            )
+                                            .addChild(
+                                                    players[1],
+                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                            )
+                                            .addChild(
+                                                    players[2],
+                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                            )
+                                            .addChild(
+                                                    players[3],
+                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                            ),
+                                    new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
+                            )
+                    );
                 }
-
-
-                container.setChild(new HSplitPane()
-                        .addChild(
-                                new VSplitPane()
-                                        .addChild(
-                                                backButton,
-                                                new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                        )
-                                        .addChild(
-                                                new TransparentColor(),
-                                                new VSplitPane.ElementOptions(20, VSplitPane.ElementOptions.WidthMode.FIXED)
-                                        )
-                                        .addChild(
-                                                readyButton,
-                                                new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                        ),
-                                new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED)
-                        )
-                        .addChild(
-                                new TransparentColor(),
-                                new HSplitPane.ElementOptions(20, HSplitPane.ElementOptions.HeightMode.FIXED)
-                        )
-                        .addChild(
-                                new VSplitPane()
-                                        .addChild(
-                                                players[4],
-                                                new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                        )
-                                        .addChild(
-                                                players[5],
-                                                new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                        )
-                                        .addChild(
-                                                players[6],
-                                                new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                        )
-                                        .addChild(
-                                                players[7],
-                                                new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                        ),
-                                new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE))
-                        .addChild(
-                                new VSplitPane()
-                                        .addChild(
-                                                players[0],
-                                                new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                        )
-                                        .addChild(
-                                                players[1],
-                                                new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                        )
-                                        .addChild(
-                                                players[2],
-                                                new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                        )
-                                        .addChild(
-                                                players[3],
-                                                new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                        ),
-                                new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
-                        )
-                );
-            }
-        });
+            });
     }
 
     @Nullable

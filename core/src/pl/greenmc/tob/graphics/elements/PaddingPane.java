@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.graphics.*;
 
 import static com.badlogic.gdx.graphics.GL20.GL_SCISSOR_TEST;
+import static pl.greenmc.tob.TourOfBusiness.TOB;
 
 public class PaddingPane extends Element implements Interactable {
     private final float paddingBottom;
@@ -97,7 +98,7 @@ public class PaddingPane extends Element implements Interactable {
         if (drawBackground)
             background.draw(x, y, w, h);
         Gdx.gl.glEnable(GL_SCISSOR_TEST);
-        Gdx.gl.glScissor((int) (x + paddingLeft), (int) (y + paddingBottom), (int) (w - paddingRight - paddingLeft), (int) (h - paddingTop - paddingBottom));
+        TOB.glScissor(TOB.getScissorLevel(), (int) (x + paddingLeft), (int) (y + paddingBottom), (int) (w - paddingRight - paddingLeft), (int) (h - paddingTop - paddingBottom));
         child.draw(x + paddingLeft, y + paddingBottom, w - paddingRight - paddingLeft, h - paddingTop - paddingBottom);
         Gdx.gl.glDisable(GL_SCISSOR_TEST);
     }

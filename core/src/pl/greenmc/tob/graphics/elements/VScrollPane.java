@@ -10,6 +10,7 @@ import pl.greenmc.tob.graphics.RectangularHitbox;
 import java.util.HashMap;
 
 import static com.badlogic.gdx.graphics.GL20.GL_SCISSOR_TEST;
+import static pl.greenmc.tob.TourOfBusiness.TOB;
 
 public class VScrollPane extends ScrollPane {
     private final HashMap<Element, Float> heights = new HashMap<>();
@@ -112,10 +113,11 @@ public class VScrollPane extends ScrollPane {
         float finalY = y;
         float finalW = w;
         float finalH = h;
+        int lvl = TOB.getScissorLevel();
         synchronized (children) {
             children.forEach((element) -> {
                 Gdx.gl.glEnable(GL_SCISSOR_TEST);
-                Gdx.gl.glScissor((int) finalX, (int) finalY, (int) (finalW - ((autoHideScroll && scrollDisabled) ? 0 : barWidth)), (int) finalH);
+                TOB.glScissor(lvl, (int) finalX, (int) finalY, (int) (finalW - ((autoHideScroll && scrollDisabled) ? 0 : barWidth)), (int) finalH);
                 float height = heights.get(element);
                 element.draw(finalX, (float) currentY[0] - s, finalW - ((autoHideScroll && scrollDisabled) ? 0 : barWidth), height);
                 currentY[0] += height;
