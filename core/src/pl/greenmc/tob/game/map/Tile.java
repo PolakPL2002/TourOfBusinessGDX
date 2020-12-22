@@ -163,7 +163,15 @@ public class Tile {
     }
 
     public static class ChanceTileData extends TileData {
-        public ChanceTileData() {
+        private final CardDeck deck;
+
+        public ChanceTileData(@NotNull CardDeck deck) {
+            this.deck = deck;
+        }
+
+        @NotNull
+        public CardDeck getDeck() {
+            return deck;
         }
     }
 
@@ -214,7 +222,15 @@ public class Tile {
     }
 
     public static class CommunityChestTileData extends TileData {
-        public CommunityChestTileData() {
+        private final CardDeck deck;
+
+        public CommunityChestTileData(@NotNull CardDeck deck) {
+            this.deck = deck;
+        }
+
+        @NotNull
+        public CardDeck getDeck() {
+            return deck;
         }
     }
 
@@ -347,8 +363,9 @@ public class Tile {
     }
 
     public static class TileGroup {
-        private final String name;
         private final Color color;
+        private final String name;
+        private final ArrayList<Tile> tiles = new ArrayList<>();
 
         public TileGroup(String name, Color color) {
             this.name = name;
@@ -362,8 +379,6 @@ public class Tile {
         public String getName() {
             return name;
         }
-
-        private final ArrayList<Tile> tiles = new ArrayList<>();
 
         public void addTile(@NotNull Tile tile) {
             tiles.add(tile);

@@ -995,7 +995,7 @@ public class GameState {
         AWAITING_BUY(15000),
         AUCTION(60000), //TODO Set auction time with parameter
         SELL(45000),
-        END_ROUND(10000); //TODO Reset on action
+        END_ROUND(10000);
 
         private final int timeout;
 

@@ -69,15 +69,20 @@ public class DefaultMap extends Map {
         final Tile.TileGroup stationGroup = new Tile.TileGroup("Stacje", Color.BLACK);
         final Tile.TileGroup utilityGroup = new Tile.TileGroup("Media", Color.BLACK);
 
+        final CardDeck deck = new CardDeck()
+                .addCard(new Card("Wyjdź bezpłatnie z więzienia", Card.CardType.GET_OUT_OF_JAIL))
+                .addCard(new Card("Płacisz podwójny czynsz", Card.CardType.MODIFIED_RENT, 2000))
+                .addCard(new Card("Płacisz połowę czynszu", Card.CardType.MODIFIED_RENT, 500));
+
         setTiles(new Tile[]{
                 new Tile(o, new Tile.StartTileData(2000000)),
                 new Tile(o2, new Tile.CityTileData("Grenada", group1, 600000, 500000, 20000).addRent(100000).addRent(300000).addRent(900000).addRent(1600000).addRent(2500000)),
-                new Tile(o3, new Tile.CommunityChestTileData()),
+                new Tile(o3, new Tile.CommunityChestTileData(deck)),
                 new Tile(o4, new Tile.CityTileData("Madryt", group1, 600000, 500000, 40000).addRent(200000).addRent(600000).addRent(1800000).addRent(3200000).addRent(4500000)),
                 new Tile(o5, new Tile.IncomeTaxTileData(2000000)),
                 new Tile(o6, new Tile.StationTileData("Stacja na Bali", stationGroup, 2000000, 250000).addRent(500000).addRent(1000000).addRent(2000000)),
                 new Tile(o7, new Tile.CityTileData("Hongkong", group2, 1000000, 500000, 60000).addRent(300000).addRent(900000).addRent(2700000).addRent(4000000).addRent(5500000)),
-                new Tile(o8, new Tile.ChanceTileData()),
+                new Tile(o8, new Tile.ChanceTileData(deck)),
                 new Tile(o9, new Tile.CityTileData("Pekin", group2, 1000000, 500000, 60000).addRent(300000).addRent(900000).addRent(2700000).addRent(4000000).addRent(5500000)),
                 new Tile(o10, new Tile.CityTileData("Szanghaj", group2, 1200000, 500000, 80000).addRent(400000).addRent(1000000).addRent(3000000).addRent(4500000).addRent(6000000)),
                 new Tile(o11, new Tile.JailTileData(jailGroup, 500000, 3)),
@@ -87,12 +92,12 @@ public class DefaultMap extends Map {
                 new Tile(o15, new Tile.CityTileData("Rzym", group3, 1600000, 1000000, 120000).addRent(600000).addRent(1800000).addRent(5000000).addRent(7000000).addRent(9000000)),
                 new Tile(o16, new Tile.StationTileData("Stacja na Cyprze", stationGroup, 2000000, 250000).addRent(500000).addRent(1000000).addRent(2000000)),
                 new Tile(o17, new Tile.CityTileData("Hamburg", group4, 1800000, 1000000, 140000).addRent(700000).addRent(2000000).addRent(5500000).addRent(7500000).addRent(9500000)),
-                new Tile(o3, new Tile.CommunityChestTileData()),
+                new Tile(o3, new Tile.CommunityChestTileData(deck)),
                 new Tile(o18, new Tile.CityTileData("Monachium", group4, 1800000, 1000000, 140000).addRent(700000).addRent(2000000).addRent(5500000).addRent(7500000).addRent(9500000)),
                 new Tile(o19, new Tile.CityTileData("Berlin", group4, 2000000, 1000000, 160000).addRent(800000).addRent(2200000).addRent(6000000).addRent(8000000).addRent(10000000)),
                 new Tile(o20, new Tile.PlaceholderTileData(0)),
                 new Tile(o21, new Tile.CityTileData("Londyn", group5, 2200000, 1500000, 180000).addRent(900000).addRent(2500000).addRent(7000000).addRent(8750000).addRent(10500000)),
-                new Tile(o8, new Tile.ChanceTileData()),
+                new Tile(o8, new Tile.ChanceTileData(deck)),
                 new Tile(o22, new Tile.CityTileData("Manchester", group5, 2200000, 1500000, 180000).addRent(900000).addRent(2500000).addRent(7000000).addRent(8750000).addRent(10500000)),
                 new Tile(o23, new Tile.CityTileData("Sydney", group5, 2400000, 1500000, 200000).addRent(1000000).addRent(3000000).addRent(7500000).addRent(9250000).addRent(11000000)),
                 new Tile(o24, new Tile.StationTileData("Stacja w Dubaju", stationGroup, 2000000, 250000).addRent(500000).addRent(1000000).addRent(2000000)),
@@ -103,10 +108,10 @@ public class DefaultMap extends Map {
                 new Tile(o29, new Tile.GoToJailTileData(jailGroup)),
                 new Tile(o30, new Tile.CityTileData("Lyon", group7, 3000000, 2000000, 260000).addRent(1300000).addRent(3900000).addRent(9000000).addRent(11000000).addRent(12750000)),
                 new Tile(o31, new Tile.CityTileData("Genewa", group7, 3000000, 2000000, 260000).addRent(1300000).addRent(3900000).addRent(9000000).addRent(11000000).addRent(12750000)),
-                new Tile(o3, new Tile.CommunityChestTileData()),
+                new Tile(o3, new Tile.CommunityChestTileData(deck)),
                 new Tile(o32, new Tile.CityTileData("Paryż", group7, 3200000, 2000000, 280000).addRent(1500000).addRent(4500000).addRent(10000000).addRent(12000000).addRent(14000000)),
                 new Tile(o33, new Tile.StationTileData("Stacja w Nicei", stationGroup, 2000000, 250000).addRent(500000).addRent(1000000).addRent(2000000)),
-                new Tile(o8, new Tile.ChanceTileData()),
+                new Tile(o8, new Tile.ChanceTileData(deck)),
                 new Tile(o34, new Tile.CityTileData("Kraków", group8, 3500000, 2000000, 350000).addRent(1750000).addRent(5000000).addRent(11000000).addRent(13000000).addRent(15000000)),
                 new Tile(o35, new Tile.LuxuryTaxTileData(1000000)),
                 new Tile(o36, new Tile.CityTileData("Warszawa", group8, 4000000, 2000000, 500000).addRent(2000000).addRent(6000000).addRent(14000000).addRent(17000000).addRent(20000000))
