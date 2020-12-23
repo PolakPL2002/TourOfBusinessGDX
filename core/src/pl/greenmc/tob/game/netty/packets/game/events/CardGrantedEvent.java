@@ -1,19 +1,24 @@
-package pl.greenmc.tob.game.netty.packets.game.events.lobby;
+package pl.greenmc.tob.game.netty.packets.game.events;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.jetbrains.annotations.NotNull;
+import pl.greenmc.tob.game.map.Card;
 import pl.greenmc.tob.game.netty.InvalidPacketException;
 import pl.greenmc.tob.game.netty.packets.Packet;
 
-public class LobbyRemovedPacket extends Packet {
+public class CardGrantedEvent extends Packet {
     /**
      * Packet data type identifier
      */
-    public static final String TYPE = "GAME_EVENTS_LOBBY_REMOVED";
-    private final int lobbyID;
+    public static final String TYPE = "GAME_EVENTS_CARD_GRANTED";
+    @NotNull
+    private final Card card;
+    private final int player;
 
-    public LobbyRemovedPacket(int lobbyID) {
-        this.lobbyID = lobbyID;
+    public CardGrantedEvent(int player, @NotNull Card card) {
+        this.player = player;
+        this.card = card;
     }
 
     /**
@@ -22,7 +27,7 @@ public class LobbyRemovedPacket extends Packet {
      * @param objectToDecode Object representing packet to be decoded
      * @throws InvalidPacketException Thrown on decoding error
      */
-    public LobbyRemovedPacket(JsonObject objectToDecode) throws InvalidPacketException {
+    public CardGrantedEvent(JsonObject objectToDecode) throws InvalidPacketException {
         super(objectToDecode);
         if (objectToDecode.has("type")) {
             //Check type
@@ -30,10 +35,13 @@ public class LobbyRemovedPacket extends Packet {
                 JsonElement type = objectToDecode.get("type");
                 if (type != null && type.isJsonPrimitive() && type.getAsString().equalsIgnoreCase(TYPE)) {
                     //Decode values
-                    JsonElement lobbyID = objectToDecode.get("lobbyID");
-                    if (lobbyID != null && lobbyID.isJsonPrimitive()) this.lobbyID = lobbyID.getAsInt();
+                    JsonElement player = objectToDecode.get("player");
+                    if (player != null && player.isJsonPrimitive()) this.player = player.getAsInt();
                     else throw new InvalidPacketException();
 
+                    JsonElement card = objectToDecode.get("card");
+                    if (card != null && card.isJsonObject()) this.card = new Card(card.getAsJsonObject());
+                    else throw new InvalidPacketException();
                 } else throw new InvalidPacketException();
             } catch (ClassCastException ignored) {
                 throw new InvalidPacketException();
@@ -41,8 +49,13 @@ public class LobbyRemovedPacket extends Packet {
         } else throw new InvalidPacketException();
     }
 
-    public int getLobbyID() {
-        return lobbyID;
+    @NotNull
+    public Card getCard() {
+        return card;
+    }
+
+    public int getPlayer() {
+        return player;
     }
 
     /**
@@ -54,7 +67,8 @@ public class LobbyRemovedPacket extends Packet {
     public JsonObject encode() {
         JsonObject out = new JsonObject();
         out.addProperty("type", TYPE);
-        out.addProperty("lobbyID", lobbyID);
+        out.addProperty("player", player);
+        out.add("card", card.toJsonObject());
         return out;
     }
 }

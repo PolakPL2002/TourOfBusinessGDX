@@ -114,7 +114,10 @@ public class Lobby {
             Integer[] players = new Integer[this.players.size() + 1];
             players[0] = owner;
             System.arraycopy(getPlayers(), 0, players, 1, players.length - 1);
-            gameState = new GameState(players, new DefaultMap(), () -> setLobbyState(LobbyState.ENDED), new GameState.GameSettings()); //TODO Allow for other maps
+            GameState.GameSettings gameSettings = new GameState.GameSettings();
+            gameSettings.setPriceModifier(10f);
+            gameSettings.setEventMoneyMultiplier(1.337f);
+            gameState = new GameState(players, new DefaultMap(), () -> setLobbyState(LobbyState.ENDED), gameSettings); //TODO Allow for other maps
             gameState.startTicking();
         }
     }

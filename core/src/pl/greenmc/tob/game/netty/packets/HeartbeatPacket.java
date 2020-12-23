@@ -11,7 +11,7 @@ public class HeartbeatPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "HEARTBEAT";
+    public static final String TYPE = "HEARTBEAT";
 
     /**
      * Default constructor

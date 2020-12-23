@@ -10,7 +10,7 @@ public class JoinLobbyPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_LOBBY_JOIN_LOBBY";
+    public static final String TYPE = "GAME_LOBBY_JOIN_LOBBY";
     private final int lobbyID;
 
     public int getLobbyID() {

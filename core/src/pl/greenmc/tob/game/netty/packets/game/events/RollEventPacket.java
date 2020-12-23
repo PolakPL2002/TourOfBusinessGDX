@@ -10,7 +10,7 @@ public class RollEventPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_EVENTS_ROLL";
+    public static final String TYPE = "GAME_EVENTS_ROLL";
     private final int[] numbers;
     private final int player;
 

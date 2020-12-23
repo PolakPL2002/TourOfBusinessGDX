@@ -10,7 +10,7 @@ public class GameStateChangedPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_EVENTS_GAME_STATE_CHANGED";
+    public static final String TYPE = "GAME_EVENTS_GAME_STATE_CHANGED";
     private final GameState.Data state;
 
     public GameStateChangedPacket(GameState.Data state) {

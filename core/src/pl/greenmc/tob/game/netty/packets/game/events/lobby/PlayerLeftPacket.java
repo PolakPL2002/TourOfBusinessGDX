@@ -9,7 +9,7 @@ public class PlayerLeftPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_EVENTS_LOBBY_PLAYER_LEFT";
+    public static final String TYPE = "GAME_EVENTS_LOBBY_PLAYER_LEFT";
     private final int playerID;
 
     public PlayerLeftPacket(int playerID) {

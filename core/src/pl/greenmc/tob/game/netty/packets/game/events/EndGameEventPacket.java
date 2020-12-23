@@ -9,7 +9,7 @@ public class EndGameEventPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_EVENTS_END_GAME";
+    public static final String TYPE = "GAME_EVENTS_END_GAME";
 
     /**
      * Default constructor

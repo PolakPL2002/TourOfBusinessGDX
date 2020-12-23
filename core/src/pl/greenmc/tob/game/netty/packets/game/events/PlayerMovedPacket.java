@@ -9,7 +9,7 @@ public class PlayerMovedPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_EVENTS_PLAYER_MOVED";
+    public static final String TYPE = "GAME_EVENTS_PLAYER_MOVED";
     private final int player;
     private final int position;
     private final boolean animate;

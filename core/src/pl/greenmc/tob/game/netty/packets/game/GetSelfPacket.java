@@ -12,7 +12,7 @@ public class GetSelfPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_GET_SELF";
+    public static final String TYPE = "GAME_GET_SELF";
 
     public GetSelfPacket() {
 

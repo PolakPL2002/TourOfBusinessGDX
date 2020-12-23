@@ -14,7 +14,7 @@ public class ResponsePacket extends ConfirmationPacket {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "RESPONSE";
+    public static final String TYPE = "RESPONSE";
     private final JsonObject response;
 
     /**

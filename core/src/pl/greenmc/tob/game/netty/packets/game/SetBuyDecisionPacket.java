@@ -10,7 +10,7 @@ public class SetBuyDecisionPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_SET_BUY_DECISION";
+    public static final String TYPE = "GAME_SET_BUY_DECISION";
     private final GameState.BuyDecision decision;
 
     public SetBuyDecisionPacket(GameState.BuyDecision decision) {

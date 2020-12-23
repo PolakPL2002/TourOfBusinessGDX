@@ -11,7 +11,7 @@ public class EndGameActionPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_END_GAME_ACTION";
+    public static final String TYPE = "GAME_END_GAME_ACTION";
     private final EndGameAction action;
 
     /**

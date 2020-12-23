@@ -9,7 +9,7 @@ public class EndGameTimeoutResetPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_END_GAME_TIMEOUT_RESET";
+    public static final String TYPE = "GAME_END_GAME_TIMEOUT_RESET";
 
     /**
      * Default constructor

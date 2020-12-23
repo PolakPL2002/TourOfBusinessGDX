@@ -11,7 +11,7 @@ public class CreateLobbyPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_LOBBY_CREATE_LOBBY";
+    public static final String TYPE = "GAME_LOBBY_CREATE_LOBBY";
 
     public CreateLobbyPacket() {
 

@@ -10,7 +10,7 @@ public class MultipleSellPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_MULTIPLE_SELL";
+    public static final String TYPE = "GAME_MULTIPLE_SELL";
     private final int[] tiles;
 
     /**

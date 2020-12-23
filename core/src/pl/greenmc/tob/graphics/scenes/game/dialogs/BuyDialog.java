@@ -19,22 +19,22 @@ import pl.greenmc.tob.graphics.scenes.game.Dialog;
 import static pl.greenmc.tob.game.util.Logger.error;
 
 public class BuyDialog extends Dialog {
-    public BuyDialog(@NotNull Tile tile) {
+    public BuyDialog(@NotNull Tile tile, @NotNull GameState.GameSettings gameSettings) {
         super(new HSplitPane(), Gdx.graphics.getWidth() / 2f, 300);
         String tileName = "<Unknown>";
         long price = -1;
         switch (tile.getType()) {
             case CITY:
                 tileName = ((Tile.CityTileData) tile.getData()).getName();
-                price = ((Tile.CityTileData) tile.getData()).getValue();
+                price = (long) (((Tile.CityTileData) tile.getData()).getValue() * gameSettings.getPriceModifier());
                 break;
             case STATION:
                 tileName = ((Tile.StationTileData) tile.getData()).getName();
-                price = ((Tile.StationTileData) tile.getData()).getValue();
+                price = (long) (((Tile.StationTileData) tile.getData()).getValue() * gameSettings.getPriceModifier());
                 break;
             case UTILITY:
                 tileName = ((Tile.UtilityTileData) tile.getData()).getName();
-                price = ((Tile.UtilityTileData) tile.getData()).getValue();
+                price = (long) (((Tile.UtilityTileData) tile.getData()).getValue() * gameSettings.getPriceModifier());
                 break;
         }
         Button doBuy, dontBuy;

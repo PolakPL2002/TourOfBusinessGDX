@@ -9,7 +9,7 @@ public class AutoSellPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_AUTO_SELL";
+    public static final String TYPE = "GAME_AUTO_SELL";
 
     /**
      * Default constructor

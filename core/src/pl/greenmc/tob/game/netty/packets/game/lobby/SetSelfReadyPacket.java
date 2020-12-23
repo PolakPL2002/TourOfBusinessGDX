@@ -9,7 +9,7 @@ public class SetSelfReadyPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_LOBBY_SET_SELF_READY";
+    public static final String TYPE = "GAME_LOBBY_SET_SELF_READY";
     private final boolean ready;
 
 

@@ -13,7 +13,7 @@ public class AuthenticationPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "AUTHENTICATION";
+    public static final String TYPE = "AUTHENTICATION";
     private final byte[] challenge;
     private final String clientID;
     private final byte[] response;

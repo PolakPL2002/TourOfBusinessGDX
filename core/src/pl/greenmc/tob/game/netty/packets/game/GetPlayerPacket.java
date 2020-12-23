@@ -12,7 +12,7 @@ public class GetPlayerPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_GET_PLAYER";
+    public static final String TYPE = "GAME_GET_PLAYER";
     private final int playerID;
 
     public GetPlayerPacket(int playerID) {

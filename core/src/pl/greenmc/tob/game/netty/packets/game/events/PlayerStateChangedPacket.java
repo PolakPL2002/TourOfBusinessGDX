@@ -11,7 +11,7 @@ public class PlayerStateChangedPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_EVENTS_PLAYER_STATE_CHANGED";
+    public static final String TYPE = "GAME_EVENTS_PLAYER_STATE_CHANGED";
     private final int player;
     private final GameState.PlayerState state;
 

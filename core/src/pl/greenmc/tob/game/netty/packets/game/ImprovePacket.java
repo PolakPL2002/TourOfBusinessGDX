@@ -9,7 +9,7 @@ public class ImprovePacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_IMPROVE";
+    public static final String TYPE = "GAME_IMPROVE";
     private final boolean isUpgrade;
     private final int tile;
 

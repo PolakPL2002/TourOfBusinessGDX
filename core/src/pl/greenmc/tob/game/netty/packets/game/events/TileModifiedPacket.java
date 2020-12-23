@@ -9,7 +9,7 @@ public class TileModifiedPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_EVENTS_TILE_MODIFIED";
+    public static final String TYPE = "GAME_EVENTS_TILE_MODIFIED";
     private final int level;
     private final Integer owner;
     private final int tile;

@@ -15,7 +15,7 @@ public class HelloPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "HELLO";
+    public static final String TYPE = "HELLO";
     private final String clientID;
 
     /**

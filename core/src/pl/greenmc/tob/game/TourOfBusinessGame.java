@@ -348,6 +348,11 @@ public class TourOfBusinessGame {
                         final RollEventPacket rollEventPacket = (RollEventPacket) packet;
                         ((GameScene) scene).onRoll(rollEventPacket.getPlayer(), rollEventPacket.getNumbers());
                     }
+                } else if (packet instanceof CardGrantedEvent) {
+                    if (scene instanceof GameScene) {
+                        final CardGrantedEvent cardGrantedEvent = (CardGrantedEvent) packet;
+                        ((GameScene) scene).onCardGranted(cardGrantedEvent.getPlayer(), cardGrantedEvent.getCard());
+                    }
                 }
                 //There are no packets that require data response from client
                 try {

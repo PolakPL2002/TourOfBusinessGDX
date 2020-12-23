@@ -9,7 +9,7 @@ public class GetSelfLobbyPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_LOBBY_GET_SELF_LOBBY";
+    public static final String TYPE = "GAME_LOBBY_GET_SELF_LOBBY";
 
     public GetSelfLobbyPacket() {
 

@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.greenmc.tob.game.GameState;
 import pl.greenmc.tob.game.Player;
+import pl.greenmc.tob.game.map.Card;
 import pl.greenmc.tob.game.map.Map;
 import pl.greenmc.tob.game.map.Tile;
 import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
@@ -33,8 +34,7 @@ import java.util.*;
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
 import static pl.greenmc.tob.TourOfBusiness.TOB;
-import static pl.greenmc.tob.game.GameState.getPropertyImprovementCost;
-import static pl.greenmc.tob.game.GameState.getPropertyValue;
+import static pl.greenmc.tob.game.GameState.*;
 import static pl.greenmc.tob.game.util.Logger.*;
 import static pl.greenmc.tob.game.util.Utilities.makeMoney;
 
@@ -50,9 +50,11 @@ public class GameScene extends Scene implements Interactable {
     private FrameBuffer frameBuffer;
     private Game3D game3D;
     private GamePlayersStats gamePlayersStats;
+    private GameState.GameSettings gameSettings;
     private Vector2 lastMousePos = null;
     private long[] playerBalances; //Player balance
     private boolean[] playerBankrupt;
+    private Card[][] playerCards;
     private int[] playerIDs;
     private boolean[] playerInJail;
     private int[] playerInJailTurns;
@@ -69,6 +71,14 @@ public class GameScene extends Scene implements Interactable {
         this.map = map;
     }
 
+    public void onCardGranted(int player, @NotNull Card card) {
+        gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[player]) + " otrzymał kartę " + card.getName(), 4000);
+    }
+
+    private String getPlayerName(int playerID) {
+        return playerNames.getOrDefault(playerID, "<Ładowanie...>");
+    }
+
     public static void onEndAction() {
         try {
             NettyClient.getInstance().getClientHandler().send(
@@ -80,6 +90,7 @@ public class GameScene extends Scene implements Interactable {
     }
 
     public void onGameStateChanged(@NotNull GameState.Data data) {
+        gameSettings = data.getGameSettings();
         playerBalances = data.getPlayerBalances();
         playerBankrupt = data.getPlayerBankrupt();
         playerIDs = data.getPlayerIDs();
@@ -93,6 +104,7 @@ public class GameScene extends Scene implements Interactable {
         sellAmount = data.getSellAmount();
         tileLevels = data.getTileLevels();
         tileOwners = data.getTileOwners();
+        playerCards = data.getPlayerCards();
         if (game3D != null) {
             for (int i = 0; i < tileOwners.length; i++) {
                 game3D.setTileOwner(i, tileOwners[i]);
@@ -124,13 +136,14 @@ public class GameScene extends Scene implements Interactable {
                     boolean showBail = false, showCard = false;
                     long bailAmount = 0;
                     if (tile.getType() == Tile.TileType.JAIL) {
-                        //TODO Check for cards
-                        bailAmount = ((Tile.JailTileData) tile.getData()).getBailMoney();
+                        bailAmount = (long) (((Tile.JailTileData) tile.getData()).getBailMoney() * gameSettings.getEventMoneyMultiplier());
                         showBail = playerBalances[selfNum % playerBalances.length] >= bailAmount;
+                        showCard = playerHasCard(Arrays.asList(playerCards[selfNum]), Card.CardType.GET_OUT_OF_JAIL);
                     }
-                    long finalBailAmount = bailAmount;
-                    boolean finalShowBail = showBail;
-                    TOB.runOnGLThread(() -> changeDialog(new JailDialog(finalBailAmount, finalShowBail, showCard)));
+                    final long finalBailAmount = bailAmount;
+                    final boolean finalShowBail = showBail;
+                    final boolean finalShowCard = showCard;
+                    TOB.runOnGLThread(() -> changeDialog(new JailDialog(finalBailAmount, finalShowCard, finalShowBail)));
                     break;
                 case AWAITING_ROLL:
                     TOB.runOnGLThread(() -> changeDialog(new RollDialog()));
@@ -138,7 +151,7 @@ public class GameScene extends Scene implements Interactable {
                 case AWAITING_BUY:
                     Integer tileToBuy = data.getTileToBuy();
                     if (tileToBuy != null)
-                        TOB.runOnGLThread(() -> changeDialog(new BuyDialog(map.getTiles()[tileToBuy % map.getTiles().length])));
+                        TOB.runOnGLThread(() -> changeDialog(new BuyDialog(map.getTiles()[tileToBuy % map.getTiles().length], gameSettings)));
                     break;
                 case SELL:
                     if (game3D != null) {
@@ -163,20 +176,6 @@ public class GameScene extends Scene implements Interactable {
         if (this.state == GameState.State.AUCTION) {
             TOB.runOnGLThread(() -> changeDialog(new AuctionDialog()));
         }
-    }
-
-    private void updatePlayersStats() {
-        if (gamePlayersStats != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
-                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
-                gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
-                gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
-            }
-        if (game3D != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                game3D.setShowPlayer(i, !playerBankrupt[i]);
-            }
     }
 
     @Override
@@ -204,11 +203,29 @@ public class GameScene extends Scene implements Interactable {
         }
     }
 
+    @Override
+    public void onMouseUp() {
+        if (game3D != null && clickOnTile != null && Objects.equals(clickOnTile, game3D.getSelectedTile()))
+            switch (tileClickAction) {
+                case SELECT:
+                    if (Objects.equals(tileOwners[clickOnTile], selfNum))
+                        game3D.toggleSelection(clickOnTile);
+                    if (dialog != null && dialog instanceof SellDialog)
+                        updateSellDialog();
+                    break;
+                case DETAILS:
+                    //TODO Open tile details if no other popup is shown (except end game)
+                    break;
+            }
+
+        if (dialog != null) dialog.onMouseUp();
+    }
+
     private void updateSellDialog() {
         long totalValue = 0;
         if (game3D != null) {
             for (Integer tile : game3D.getSelectedTiles()) {
-                totalValue += getPropertyValue(map.getTiles()[tile % map.getTiles().length], tileLevels[tile % map.getTiles().length]);
+                totalValue += getPropertyValue(map.getTiles()[tile % map.getTiles().length], tileLevels[tile % map.getTiles().length], gameSettings);
             }
         }
 
@@ -252,10 +269,6 @@ public class GameScene extends Scene implements Interactable {
         }
     }
 
-    private String getPlayerName(int playerID) {
-        return playerNames.getOrDefault(playerID, "<Ładowanie...>");
-    }
-
     public void onPlayerMoved(int player, int position, boolean animate) {
         playerPositions[player] = position;
         if (game3D != null)
@@ -273,22 +286,18 @@ public class GameScene extends Scene implements Interactable {
         updatePlayersStats();
     }
 
-    @Override
-    public void onMouseUp() {
-        if (game3D != null && clickOnTile != null && Objects.equals(clickOnTile, game3D.getSelectedTile()))
-            switch (tileClickAction) {
-                case SELECT:
-                    if (Objects.equals(tileOwners[clickOnTile], selfNum))
-                        game3D.toggleSelection(clickOnTile);
-                    if (dialog != null && dialog instanceof SellDialog)
-                        updateSellDialog();
-                    break;
-                case DETAILS:
-                    //TODO Open tile details if no other popup is shown (except end game)
-                    break;
+    private void updatePlayersStats() {
+        if (gamePlayersStats != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
+                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
+                gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
+                gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
             }
-
-        if (dialog != null) dialog.onMouseUp();
+        if (game3D != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                game3D.setShowPlayer(i, !playerBankrupt[i]);
+            }
     }
 
     public void onRoll(int player, @NotNull int[] numbers) {
@@ -495,7 +504,7 @@ public class GameScene extends Scene implements Interactable {
                                 changeEndDialog();
                             },
                             (@NotNull Tile tile) -> TOB.runOnGLThread(() -> changeDialog(new YesNoDialog(
-                                    "Czy na pewno chcesz sprzedać " + getTileName(tile) + " za " + makeMoney(getPropertyValue(tile, tileLevels[getTileNumber(tile)])) + "?",
+                                    "Czy na pewno chcesz sprzedać " + getTileName(tile) + " za " + makeMoney(getPropertyValue(tile, tileLevels[getTileNumber(tile)], gameSettings)) + "?",
                                     () -> {
                                         try {
                                             changeEndDialog();
@@ -506,7 +515,7 @@ public class GameScene extends Scene implements Interactable {
                                         }
                                     }, this::changeEndDialog, GameScene::onEndAction, 3000))),
                             (@NotNull Tile tile, boolean isUpgrade) -> TOB.runOnGLThread(() -> changeDialog(new YesNoDialog(
-                                    "Czy na pewno chcesz " + (isUpgrade ? "ulepszyć" : "sprzedać ulepszenie") + " " + getTileName(tile) + " za " + makeMoney(getPropertyImprovementCost(tile)) + "?",
+                                    "Czy na pewno chcesz " + (isUpgrade ? "ulepszyć" : "sprzedać ulepszenie") + " " + getTileName(tile) + " za " + makeMoney(getPropertyImprovementCost(tile, gameSettings)) + "?",
                                     () -> {
                                         try {
                                             changeEndDialog();

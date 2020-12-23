@@ -9,7 +9,7 @@ public class LobbyCreatedPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_EVENTS_LOBBY_CREATED";
+    public static final String TYPE = "GAME_EVENTS_LOBBY_CREATED";
     private final int lobbyID;
 
     public LobbyCreatedPacket(int lobbyID) {

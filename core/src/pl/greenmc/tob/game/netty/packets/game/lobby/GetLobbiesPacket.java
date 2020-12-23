@@ -14,7 +14,7 @@ public class GetLobbiesPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_LOBBY_GET_LOBBIES";
+    public static final String TYPE = "GAME_LOBBY_GET_LOBBIES";
 
     public GetLobbiesPacket() {
 

@@ -9,7 +9,7 @@ public class PayEventPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_EVENTS_PAY";
+    public static final String TYPE = "GAME_EVENTS_PAY";
     private final long amount;
     private final Integer from;
     private final Integer to;

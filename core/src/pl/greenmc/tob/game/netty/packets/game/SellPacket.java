@@ -9,7 +9,7 @@ public class SellPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_SELL";
+    public static final String TYPE = "GAME_SELL";
     private final int tile;
 
     /**

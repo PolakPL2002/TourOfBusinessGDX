@@ -12,7 +12,7 @@ public class GetGameStatePacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_EVENTS_GAME_STATE_CHANGED";
+    public static final String TYPE = "GAME_EVENTS_GAME_STATE_CHANGED";
 
     public GetGameStatePacket() {
 

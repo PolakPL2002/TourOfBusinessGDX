@@ -9,7 +9,7 @@ public class PlayerJoinedPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_EVENTS_LOBBY_PLAYER_JOINED";
+    public static final String TYPE = "GAME_EVENTS_LOBBY_PLAYER_JOINED";
     private final int playerID;
 
     public PlayerJoinedPacket(int playerID) {

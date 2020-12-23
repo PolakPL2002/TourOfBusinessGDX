@@ -9,7 +9,7 @@ public class PlayerReadyStateChanged extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_EVENTS_LOBBY_PLAYER_READY_STATE_CHANGED";
+    public static final String TYPE = "GAME_EVENTS_LOBBY_PLAYER_READY_STATE_CHANGED";
     private final int playerID;
     private final boolean ready;
 

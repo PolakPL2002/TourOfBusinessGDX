@@ -33,6 +33,7 @@ class GamePlayersStats extends Scene {
     private final ArrayList<Message> messages = new ArrayList<>();
     private final ArrayList<Message> messagesToRemove = new ArrayList<>();
     private final FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+    private final Object playersLock = new Object();
     private SpriteBatch batch;
     private BitmapFont fontMessages;
     private BitmapFont fontMoney;
@@ -78,7 +79,9 @@ class GamePlayersStats extends Scene {
         Gdx.gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         batch.begin();
         for (int i = 0; i < Math.min(players.length, PLAYER_SLOTS); i++) {
-            drawStats(positions[i], players[i], images[i], i % 4 == 1 || i % 4 == 2, i == timerOnPlayer);
+            synchronized (playersLock) {
+                drawStats(positions[i], players[i], images[i], i % 4 == 1 || i % 4 == 2, i == timerOnPlayer);
+            }
         }
         synchronized (messages) {
             messagesToRemove.clear();
@@ -99,24 +102,6 @@ class GamePlayersStats extends Scene {
             }
         }
         batch.end();
-    }
-
-    public void setNumPlayers(int num) {
-        PlayerInfo[] oldPI = players;
-        players = new PlayerInfo[num];
-        if (Math.min(oldPI.length, players.length) >= 0)
-            System.arraycopy(oldPI, 0, players, 0, Math.min(oldPI.length, players.length));
-        for (int i = Math.min(oldPI.length, players.length); i < players.length; i++)
-            players[i] = new PlayerInfo("", 0, false, false);
-    }
-
-    public void setTimeout(long timeoutLeft, int timeoutTotal) {
-        timeoutEnd = System.currentTimeMillis() + timeoutLeft - 150;
-        this.timeoutTotal = timeoutTotal;
-    }
-
-    public void setCurrentPlayer(int turnOf) {
-        timerOnPlayer = turnOf;
     }
 
     private void drawStats(@NotNull Rectangle pos, @NotNull PlayerInfo player, @NotNull Image image, boolean alignRight, boolean drawTimer) {
@@ -143,6 +128,26 @@ class GamePlayersStats extends Scene {
             progressBar.setText(decimalFormat.format(left) + "/" + decimalFormat.format(timeoutTotal / 1000f) + "s");
             progressBar.draw(pos.x + pos.width * 0.1f, pos.y + pos.height * 0.45f, pos.width * 0.8f, pos.height * 0.1f);
         }
+    }
+
+    public void setNumPlayers(int num) {
+        synchronized (playersLock) {
+            PlayerInfo[] oldPI = players;
+            players = new PlayerInfo[num];
+            if (Math.min(oldPI.length, players.length) >= 0)
+                System.arraycopy(oldPI, 0, players, 0, Math.min(oldPI.length, players.length));
+            for (int i = Math.min(oldPI.length, players.length); i < players.length; i++)
+                players[i] = new PlayerInfo("", 0, false, false);
+        }
+    }
+
+    public void setTimeout(long timeoutLeft, int timeoutTotal) {
+        timeoutEnd = System.currentTimeMillis() + timeoutLeft - 150;
+        this.timeoutTotal = timeoutTotal;
+    }
+
+    public void setCurrentPlayer(int turnOf) {
+        timerOnPlayer = turnOf;
     }
 
     @Override

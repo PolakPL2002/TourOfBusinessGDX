@@ -9,7 +9,7 @@ public class RollPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "GAME_ROLL";
+    public static final String TYPE = "GAME_ROLL";
 
     /**
      * Default constructor

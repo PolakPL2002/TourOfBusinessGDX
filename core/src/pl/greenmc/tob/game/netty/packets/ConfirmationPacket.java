@@ -13,7 +13,7 @@ public class ConfirmationPacket extends Packet {
     /**
      * Packet data type identifier
      */
-    public static String TYPE = "CONFIRMATION";
+    public static final String TYPE = "CONFIRMATION";
     private final boolean authenticated;
     private final boolean success;
     private final UUID uuid;
