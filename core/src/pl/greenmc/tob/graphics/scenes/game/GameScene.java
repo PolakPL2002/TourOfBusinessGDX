@@ -73,6 +73,7 @@ public class GameScene extends Scene implements Interactable {
 
     public void onCardGranted(int player, @NotNull Card card) {
         gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[player]) + " otrzymał kartę " + card.getName(), 4000);
+        updatePlayersStats();
     }
 
     private String getPlayerName(int playerID) {
@@ -293,6 +294,7 @@ public class GameScene extends Scene implements Interactable {
                 gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
                 gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
                 gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
+                gamePlayersStats.setPlayerCards(i, playerCards[i]);
             }
         if (game3D != null)
             for (int i = 0; i < playerBalances.length; i++) {

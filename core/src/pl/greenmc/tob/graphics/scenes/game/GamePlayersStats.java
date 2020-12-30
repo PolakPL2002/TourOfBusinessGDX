@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Align;
 import org.jetbrains.annotations.NotNull;
+import pl.greenmc.tob.game.map.Card;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.elements.Image;
@@ -58,19 +59,23 @@ class GamePlayersStats extends Scene {
     }
 
     public void setPlayerName(int player, String name) {
-        players[player % players.length].name = name;
+        if (players.length > 0) players[player % players.length].name = name;
     }
 
     public void setPlayerBalance(int player, long balance) {
-        players[player % players.length].balance = balance;
+        if (players.length > 0) players[player % players.length].balance = balance;
+    }
+
+    public void setPlayerCards(int player, Card[] cards) {
+        if (players.length > 0) players[player % players.length].cards = cards;
     }
 
     public void setPlayerInJail(int player, boolean inJail) {
-        players[player % players.length].inJail = inJail;
+        if (players.length > 0) players[player % players.length].inJail = inJail;
     }
 
     public void setPlayerBankrupt(int player, boolean isBankrupt) {
-        players[player % players.length].bankrupt = isBankrupt;
+        if (players.length > 0) players[player % players.length].bankrupt = isBankrupt;
     }
 
     @Override
@@ -104,32 +109,6 @@ class GamePlayersStats extends Scene {
         batch.end();
     }
 
-    private void drawStats(@NotNull Rectangle pos, @NotNull PlayerInfo player, @NotNull Image image, boolean alignRight, boolean drawTimer) {
-        image.draw(pos.x, pos.y, pos.width, pos.height);
-        String money = makeMoney(player.getBalance());
-        String modifiers = (player.inJail ? "W więzieniu\n" : "") + (player.bankrupt ? "Bankrut\n" : "");
-        if (alignRight) {
-            layout.setText(fontNames, player.getName());
-            fontNames.draw(batch, player.getName(), pos.x + pos.width - pos.height / 3 / 5 - layout.width, pos.y + pos.height - pos.height / 3 / 4);
-            layout.setText(fontMoney, money);
-            fontMoney.draw(batch, money, pos.x + pos.width - pos.height / 3 / 5 - layout.width, pos.y + pos.height - 2 * pos.height / 3 / 4 - pos.height / 7);
-            layout.setText(fontMoney, modifiers);
-            fontMoney.draw(batch, modifiers, pos.x + pos.width - pos.height / 3 / 5 - layout.width, pos.y + pos.height - 3 * pos.height / 3 / 4 - 2 * pos.height / 7);
-        } else {
-            fontNames.draw(batch, player.getName(), pos.x + pos.height / 3 / 5, pos.y + pos.height - pos.height / 3 / 4);
-            fontMoney.draw(batch, money, pos.x + pos.height / 3 / 5, pos.y + pos.height - 2 * pos.height / 3 / 4 - pos.height / 7);
-            fontMoney.draw(batch, modifiers, pos.x + pos.height / 3 / 5, pos.y + pos.height - 3 * pos.height / 3 / 4 - 2 * pos.height / 7);
-        }
-        if (drawTimer && timeoutTotal > 0) {
-            progressBar.setMax(timeoutTotal);
-            progressBar.setValue(timeoutEnd - System.currentTimeMillis());
-            float left = (timeoutEnd - System.currentTimeMillis()) / 1000f;
-            if (left < 0) left = 0;
-            progressBar.setText(decimalFormat.format(left) + "/" + decimalFormat.format(timeoutTotal / 1000f) + "s");
-            progressBar.draw(pos.x + pos.width * 0.1f, pos.y + pos.height * 0.45f, pos.width * 0.8f, pos.height * 0.1f);
-        }
-    }
-
     public void setNumPlayers(int num) {
         synchronized (playersLock) {
             PlayerInfo[] oldPI = players;
@@ -137,7 +116,35 @@ class GamePlayersStats extends Scene {
             if (Math.min(oldPI.length, players.length) >= 0)
                 System.arraycopy(oldPI, 0, players, 0, Math.min(oldPI.length, players.length));
             for (int i = Math.min(oldPI.length, players.length); i < players.length; i++)
-                players[i] = new PlayerInfo("", 0, false, false);
+                players[i] = new PlayerInfo();
+        }
+    }
+
+    private void drawStats(@NotNull Rectangle pos, @NotNull PlayerInfo player, @NotNull Image image, boolean alignRight, boolean drawTimer) {
+        image.draw(pos.x, pos.y, pos.width, pos.height);
+        String money = makeMoney(player.balance);
+        StringBuilder modifiers = new StringBuilder((player.inJail ? "W więzieniu\n" : "") + (player.bankrupt ? "Bankrut\n" : ""));
+        for (Card card : player.cards)
+            modifiers.append(card.getName()).append("\n");
+        if (alignRight) {
+            layout.setText(fontNames, player.name);
+            fontNames.draw(batch, player.name, pos.x + pos.width - pos.height / 3 / 5 - layout.width, pos.y + pos.height - pos.height / 3 / 4);
+            layout.setText(fontMoney, money);
+            fontMoney.draw(batch, money, pos.x + pos.width - pos.height / 3 / 5 - layout.width, pos.y + pos.height - 2 * pos.height / 3 / 4 - pos.height / 7);
+            layout.setText(fontMoney, modifiers.toString());
+            fontMoney.draw(batch, modifiers.toString(), pos.x + pos.width - pos.height / 3 / 5 - layout.width, pos.y + pos.height - 3 * pos.height / 3 / 4 - 2 * pos.height / 7);
+        } else {
+            fontNames.draw(batch, player.name, pos.x + pos.height / 3 / 5, pos.y + pos.height - pos.height / 3 / 4);
+            fontMoney.draw(batch, money, pos.x + pos.height / 3 / 5, pos.y + pos.height - 2 * pos.height / 3 / 4 - pos.height / 7);
+            fontMoney.draw(batch, modifiers.toString(), pos.x + pos.height / 3 / 5, pos.y + pos.height - 3 * pos.height / 3 / 4 - 2 * pos.height / 7);
+        }
+        if (drawTimer && timeoutTotal > 0) {
+            progressBar.setMax(timeoutTotal);
+            progressBar.setValue(timeoutEnd - System.currentTimeMillis());
+            float left = (timeoutEnd - System.currentTimeMillis()) / 1000f;
+            if (left < 0) left = 0;
+            progressBar.setText(decimalFormat.format(left) + "/" + decimalFormat.format(timeoutTotal / 1000f) + "s");
+            progressBar.draw(pos.x + pos.width * 0.1f, pos.y + pos.height * 0.49f, pos.width * 0.8f, pos.height * 0.1f);
         }
     }
 
@@ -260,22 +267,16 @@ class GamePlayersStats extends Scene {
     private static class PlayerInfo {
         private long balance;
         private boolean bankrupt;
+        private Card[] cards;
         private boolean inJail;
         private String name;
 
-        public PlayerInfo(String name, long balance, boolean inJail, boolean isBankrupt) {
-            this.name = name;
-            this.balance = balance;
-            this.inJail = inJail;
-            bankrupt = isBankrupt;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public long getBalance() {
-            return balance;
+        public PlayerInfo() {
+            this.name = "";
+            this.balance = 0;
+            this.inJail = false;
+            bankrupt = false;
+            cards = new Card[0];
         }
     }
 }

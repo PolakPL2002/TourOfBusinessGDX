@@ -50,16 +50,16 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     private String identity;
     private Player player;
 
+    public ServerHandler(@Nullable PacketReceivedHandler packetReceivedHandler) {
+        this.packetReceivedHandler = packetReceivedHandler;
+    }
+
     public String getIdentity() {
         return identity;
     }
 
     public Player getPlayer() {
         return player;
-    }
-
-    public ServerHandler(@Nullable PacketReceivedHandler packetReceivedHandler) {
-        this.packetReceivedHandler = packetReceivedHandler;
     }
 
     public ChannelHandlerContext getCtx() {
@@ -328,10 +328,12 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
      * @param uuid Packet UUID
      * @return {@link SentPacket} or null
      */
-    private @Nullable
-    SentPacket getPacketByUUID(UUID uuid) {
-        for (SentPacket packet : sentPackets)
-            if (packet.getUUID().equals(uuid)) return packet;
+    @Nullable
+    private SentPacket getPacketByUUID(UUID uuid) {
+        synchronized (sentPackets) {
+            for (SentPacket packet : sentPackets)
+                if (packet.getUUID().equals(uuid)) return packet;
+        }
         return null;
     }
 }

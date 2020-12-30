@@ -70,14 +70,51 @@ public class DefaultMap extends Map {
         final Tile.TileGroup utilityGroup = new Tile.TileGroup("Media", Color.BLACK);
 
         final CardDeck chanceDeck = new CardDeck()
-                .addCard(new Card("Wyjdź bezpłatnie z więzienia", Card.CardType.GET_OUT_OF_JAIL))
-                .addCard(new Card("Płacisz podwójny czynsz", Card.CardType.MODIFIED_RENT, 2000))
-                .addCard(new Card("Płacisz połowę czynszu", Card.CardType.MODIFIED_RENT, 500));
+                .addCard(new Card("Wyjdź bezpłatnie z więzienia", "", Card.CardType.GET_OUT_OF_JAIL))
+
+                .addCard(new Card("Czas na podróż pociągiem!", "", Card.CardType.GO_TO_NEAREST_OF_TYPE, Tile.TileType.STATION))
+                .addCard(new Card("Czas na podróż!", "Idź do najbliższego środka transportu.", Card.CardType.GO_TO_NEAREST_OF_TYPE, Tile.TileType.STATION))
+                .addCard(new Card("Czas na podróż!", "Idź do najbliższego środka transportu.", Card.CardType.GO_TO_NEAREST_OF_TYPE, Tile.TileType.STATION))
+                .addCard(new Card("Awaria prądu!", "Idź do najbliższej elektrowni.", Card.CardType.GO_TO_NEAREST_OF_TYPE, Tile.TileType.UTILITY))
+
+                .addCard(new Card("Pobierz 500k$ za swój pierwszy rower!", "Składasz rowery w Pekinie. Pobierz 500k$ za swój pierwszy egzemplarz", Card.CardType.BALANCE_CHANGE, 500000))
+                .addCard(new Card("Pobierz 1.5M$ pensji ze szkoły tańca!", "Twoja szkoła tańca brzucha w Kairze odnosi sukcesy! Pobierz pierwszą pensję 1.5M$.", Card.CardType.BALANCE_CHANGE, 1500000))
+                .addCard(new Card("Zapłać 150k$", "Zapłać 150k$ za umycie i wypolerowanie 32 kapsuł na London Eye.", Card.CardType.BALANCE_CHANGE, -150000))
+
+                .addCard(new Card("Przesuń się o 3 pola", "", Card.CardType.MOVE, 3))
+
+                .addCard(new Card("Idź na start!", "", Card.CardType.GO_TO_NEAREST_OF_TYPE, Tile.TileType.START))
+                .addCard(new Card("Idż do Londynu!", "", Card.CardType.GO_TO, 21))
+                .addCard(new Card("Idź do Krakowa!", "", Card.CardType.GO_TO, 37))
+
+                .addCard(new Card("Idź do więzienia!", "Zostałeś złapany na międzynarodowym oszustwie! Idź do więzienia.", Card.CardType.GO_TO_TELEPORT, 30))
+                .addCard(new Card("Leć do Monahium!", "", Card.CardType.GO_TO_TELEPORT, 18))
+
+                .addCard(new Card("Zapłać każdemu z graczy po 500k$ za gotowanie.", "Urządziłeś turniej na najdziwniejsze przysmaki świata. Zapłać każdemu z graczy po 500k$ za gotowanie.", Card.CardType.PAY_PLAYERS, 500000))
+
+                .addCard(new Card("Płacisz podwójny czynsz", "", Card.CardType.MODIFIED_RENT, 2000))
+                .addCard(new Card("Płacisz połowę czynszu", "", Card.CardType.MODIFIED_RENT, 500));
 
         final CardDeck communityDeck = new CardDeck()
-                .addCard(new Card("Otrzymujesz 1.000.000$", Card.CardType.BALANCE_CHANGE, 1000000))
-                .addCard(new Card("Tracisz 1.000.000$", Card.CardType.BALANCE_CHANGE, -1000000));
+                .addCard(new Card("Wyjdź bezpłatnie z więzienia", "", Card.CardType.GET_OUT_OF_JAIL))
 
+                .addCard(new Card("Zarobiłeś 1M$!", "Zorganizowałeś nowoczesną instalację w paryskim muzeum Georges Pompidou.", Card.CardType.BALANCE_CHANGE, 1000000))
+                .addCard(new Card("Pobierz 500k$", "Dostałeś zwrot podatku.", Card.CardType.BALANCE_CHANGE, 500000))
+                .addCard(new Card("Zarobiłeś 1M$!", "Zorganizowałeś festiwal muzyki szantowej na mazurach. Zarobiłeś aż 1M$!", Card.CardType.BALANCE_CHANGE, 1000000))
+                .addCard(new Card("Zapłać 500k$", "Zapłać 500k$ za pilnowanie porządku na twojej plaży Bondi Beach w Sydney.", Card.CardType.BALANCE_CHANGE, -500000))
+                .addCard(new Card("Zapłać 200k$", "Twój koronkowy strój na karnawał w Rio De Janeiro kosztował cię aż 200k$.", Card.CardType.BALANCE_CHANGE, -200000))
+                .addCard(new Card("Pobierz 250k$", "Dostałeś pierwszą premię! Pobierz 250k$ za sprzedaż najdroższej sukni dostępnej w Paryżu.", Card.CardType.BALANCE_CHANGE, 250000))
+                .addCard(new Card("Wydałeś 500k$", "Wydałeś 500k$ na świąteczne zakupy w Monachium.", Card.CardType.BALANCE_CHANGE, -500000))
+                .addCard(new Card("Zarobiłeś 2M$", "Twoje biuro podróży przeżywa prawdziwe oblężenie! Zarobiłeś 2M$.", Card.CardType.BALANCE_CHANGE, 2000000))
+                .addCard(new Card("Zarobiłeś 100k$", "Jesteś gospodarzem na imprezie karaoke w Japonii. Organizator płaci ci 100k$.", Card.CardType.BALANCE_CHANGE, 100000))
+                .addCard(new Card("Zapłać 1M$", "Wyjechałeś do Dublina, by tam uczcić dzień św. Patryka. Zapłać za podróż 1M$.", Card.CardType.BALANCE_CHANGE, -1000000))
+                .addCard(new Card("Otrzymujesz 1M$", "Dostajesz 1M$ za użyczenie jednego ze swoich alpejskich szczytów zapalonej grupie narciarzy.", Card.CardType.BALANCE_CHANGE, 1000000))
+
+                .addCard(new Card("Idź na start!", "", Card.CardType.GO_TO_NEAREST_OF_TYPE, Tile.TileType.START))
+
+                .addCard(new Card("Idź do więzienia!", "Zostałeś złapany na międzynarodowym oszustwie! Idź do więzienia.", Card.CardType.GO_TO_TELEPORT, 30))
+
+                .addCard(new Card("Zbierz od każdego z graczy po 100k$.", "Urządzasz wielką imprezę w samym sercu Queenstown. Zbierz od każdego z graczy po 100k$ na ten cel.", Card.CardType.PAY_PLAYERS, -100000));
         setTiles(new Tile[]{
                 new Tile(o, new Tile.StartTileData(2000000)),
                 new Tile(o2, new Tile.CityTileData("Grenada", group1, 600000, 500000, 20000).addRent(100000).addRent(300000).addRent(900000).addRent(1600000).addRent(2500000)),
