@@ -111,6 +111,7 @@ public class Button extends Element implements Interactable {
     }
 
     public void setFontSize(int size) {
+        if (size < 5) size = 5;
         fontSize = size;
         if (renderer != null) {
             parameter.size = size;

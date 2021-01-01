@@ -23,6 +23,8 @@ public class Label extends Element {
     private BitmapFont font;
     private int fontSize;
     private GlyphLayout layout;
+    private Color outlineColor = Color.WHITE;
+    private float outlineWidth = 0;
     private boolean renderBorder;
     private ShapeRenderer renderer;
     private boolean setUp = false;
@@ -33,6 +35,31 @@ public class Label extends Element {
         this.text = text;
         this.fontSize = fontSize;
         this.renderBorder = renderBorder;
+    }
+
+    public void setOutlineColor(Color outlineColor) {
+        this.outlineColor = outlineColor;
+        setFontSize(fontSize);
+    }
+
+    public void setFontSize(int size) {
+        if (size < 5) size = 5;
+        fontSize = size;
+        if (renderer != null) {
+            parameter.size = size;
+            parameter.characters = LATIN_EXTENDED;
+            parameter.color = textColor;
+            parameter.borderColor = outlineColor;
+            parameter.borderWidth = outlineWidth;
+            if (font != null) font.dispose();
+            font = generator.generateFont(parameter);
+            layout = new GlyphLayout(font, text);
+        }
+    }
+
+    public void setOutlineWidth(float outlineWidth) {
+        this.outlineWidth = outlineWidth;
+        setFontSize(fontSize);
     }
 
     public boolean isRenderBorder() {
@@ -50,17 +77,6 @@ public class Label extends Element {
         renderer = new ShapeRenderer();
         setFontSize(fontSize);
         setUp = true;
-    }
-
-    public void setFontSize(int size) {
-        fontSize = size;
-        if (renderer != null) {
-            parameter.size = size;
-            parameter.characters = LATIN_EXTENDED;
-            if (font != null) font.dispose();
-            font = generator.generateFont(parameter);
-            layout = new GlyphLayout(font, text);
-        }
     }
 
     @Override
@@ -85,6 +101,7 @@ public class Label extends Element {
 
     public void setTextColor(Color textColor) {
         this.textColor = textColor;
+        setFontSize(fontSize);
     }
 
     public Color getBackgroundColor() {
@@ -131,8 +148,7 @@ public class Label extends Element {
         renderer.end();
 
         batch.begin();
-        font.setColor(textColor);
-        layout.setText(font, text, textColor, (float) (w * 0.8), Align.center, true);
+        layout.setText(font, text, Color.WHITE, (float) (w * 0.8), Align.center, true);
 
         font.draw(batch, layout, x + (float) (w * 0.1), y + (h + layout.height) / 2);
         batch.end();

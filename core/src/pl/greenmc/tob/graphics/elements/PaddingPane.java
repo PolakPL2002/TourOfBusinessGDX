@@ -10,10 +10,6 @@ import static com.badlogic.gdx.graphics.GL20.GL_SCISSOR_TEST;
 import static pl.greenmc.tob.TourOfBusiness.TOB;
 
 public class PaddingPane extends Element implements Interactable {
-    private final float paddingBottom;
-    private final float paddingLeft;
-    private final float paddingRight;
-    private final float paddingTop;
     private SolidColor background;
     private Element child;
     private Color color = GlobalTheme.backgroundColor;
@@ -21,6 +17,10 @@ public class PaddingPane extends Element implements Interactable {
     private Hitbox hitbox = null;
     private Rectangle hitboxesFor = null;
     private boolean insideHitbox = false;
+    private float paddingBottom;
+    private float paddingLeft;
+    private float paddingRight;
+    private float paddingTop;
 
     public PaddingPane(@NotNull Element child, float padding) {
         this.child = child;
@@ -64,6 +64,34 @@ public class PaddingPane extends Element implements Interactable {
         if (child instanceof Interactable) {
             ((Interactable) child).onScroll(x, y);
         }
+    }
+
+    public void setPaddingBottom(float paddingBottom) {
+        this.paddingBottom = paddingBottom;
+        hitboxesFor = null;
+    }
+
+    public void setPaddingLeft(float paddingLeft) {
+        this.paddingLeft = paddingLeft;
+        hitboxesFor = null;
+    }
+
+    public void setPaddingRight(float paddingRight) {
+        this.paddingRight = paddingRight;
+        hitboxesFor = null;
+    }
+
+    public void setPaddingTop(float paddingTop) {
+        this.paddingTop = paddingTop;
+        hitboxesFor = null;
+    }
+
+    public void setPadding(float padding) {
+        paddingRight = padding;
+        paddingTop = padding;
+        paddingLeft = padding;
+        paddingBottom = padding;
+        hitboxesFor = null;
     }
 
     public void setChild(@NotNull Element child) {

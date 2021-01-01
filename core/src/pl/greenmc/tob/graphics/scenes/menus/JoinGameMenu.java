@@ -26,6 +26,7 @@ import static pl.greenmc.tob.game.util.Logger.*;
 public class JoinGameMenu extends Menu {
 
     private final Object reloadLock = new Object();
+    private Button button1;
     private VScrollPane element;
     private Lobby[] lobbies = new Lobby[0];
     private PaddingPane pane;
@@ -63,12 +64,11 @@ public class JoinGameMenu extends Menu {
     @Override
     public void setup() {
         super.setup();
-        Button button1 = new Button("Wróć");
-        button1.setFontSize(20);
+        button1 = new Button("Wróć");
 
         button1.setClickCallback(this::onBack);
 
-        Label label = new Label("Ładowanie...\nProszę czekać", 30, false);
+        Label label = new Label("Ładowanie...\nProszę czekać", (int) (TOB.getFontBase() / 4), false);
         label.setBackgroundColor(new Color(1, 1, 1, 0.75f));
         pane = new PaddingPane(label, 0);
         reloadLobbies();
@@ -76,8 +76,8 @@ public class JoinGameMenu extends Menu {
         HSplitPane menu = new HSplitPane()
                 .addChild(
                         button1,
-                        new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED)
-                ).addChild(pane, new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE));
+                        new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE)
+                ).addChild(pane, new HSplitPane.ElementOptions(526, HSplitPane.ElementOptions.HeightMode.VARIABLE));
         setElement(
                 new VSplitPane()
                         .addChild(
@@ -140,7 +140,7 @@ public class JoinGameMenu extends Menu {
                                     else name = "Lobby of unknown player";
                                     Button button = new Button(name);
                                     button.setClickCallback(() -> joinLobby(lobby));
-                                    JoinGameMenu.this.element.addChild(button, 120);
+                                    JoinGameMenu.this.element.addChild(button, 100);
                                 }
                             }
                         });
@@ -195,5 +195,15 @@ public class JoinGameMenu extends Menu {
 
     private void onBack() {
         TOB.runOnGLThread(() -> TOB.changeScene(new GameMenu()));
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        updateSizes();
+    }
+
+    private void updateSizes() {
+        if (button1 != null) button1.setFontSize((int) (TOB.getFontBase() / 6));
     }
 }

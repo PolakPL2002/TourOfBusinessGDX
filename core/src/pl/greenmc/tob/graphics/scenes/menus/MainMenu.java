@@ -12,6 +12,13 @@ import static pl.greenmc.tob.TourOfBusiness.TOB;
 
 public class MainMenu extends Menu {
     private final String error;
+    private Button button1 = null;
+    private Button button2 = null;
+    private Button button3 = null;
+    private Button button4 = null;
+    private Label errorLabel;
+    private PaddingPane menuPadding;
+    private PaddingPane padding1 = null;
 
     public MainMenu() {
         error = "";
@@ -24,14 +31,12 @@ public class MainMenu extends Menu {
     @Override
     public void setup() {
         super.setup();
-        Button button1 = new Button("Graj");
-        Button button2 = new Button("Profil");
-        Button button3 = new Button("Opcje");
-        Button button4 = new Button("Wyjdź");
-        button1.setFontSize(20);
-        button2.setFontSize(20);
-        button3.setFontSize(20);
-        button4.setFontSize(20);
+        button1 = new Button("Graj");
+        button2 = new Button("Profil");
+        button3 = new Button("Opcje");
+        button4 = new Button("Wyjdź");
+
+        updateSizes();
 
         button4.applyNoTheme();
 
@@ -43,39 +48,39 @@ public class MainMenu extends Menu {
         HSplitPane menu = new HSplitPane()
                 .addChild(
                         button4,
-                        new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED)
+                        new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                 )
                 .addChild(
                         new TransparentColor(),
-                        new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
+                        new HSplitPane.ElementOptions(54, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                 )
                 .addChild(
                         button3,
-                        new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED)
+                        new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                 )
                 .addChild(
                         new TransparentColor(),
-                        new HSplitPane.ElementOptions(10, HSplitPane.ElementOptions.HeightMode.FIXED)
+                        new HSplitPane.ElementOptions(10, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                 )
                 .addChild(
                         button2,
-                        new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED)
+                        new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                 )
                 .addChild(
                         new TransparentColor(),
-                        new HSplitPane.ElementOptions(10, HSplitPane.ElementOptions.HeightMode.FIXED)
+                        new HSplitPane.ElementOptions(10, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                 )
                 .addChild(
                         button1,
-                        new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED)
+                        new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                 );
         menu.setBackgroundColor(new Color(0, 0, 0, 0));
-        PaddingPane menuPadding = new PaddingPane(
+        menuPadding = new PaddingPane(
                 menu,
-                10
+                TOB.getFontBase() / 12
         );
         menuPadding.setColor(GlobalTheme.menuBackgroundColor);
-        Label errorLabel = new Label(error, 18, false);
+        errorLabel = new Label(error, (int) (TOB.getFontBase() / 7), false);
         if (error.length() > 0)
             errorLabel.setBackgroundColor(new Color(1, 1, 1, 0.75f));
         setElement(
@@ -88,14 +93,14 @@ public class MainMenu extends Menu {
                                 new HSplitPane()
                                         .addChild(
                                                 new TransparentColor(),
-                                                new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
+                                                new HSplitPane.ElementOptions(210, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                                         )
                                         .addChild(
-                                                new PaddingPane(
+                                                padding1 = new PaddingPane(
                                                         menuPadding,
-                                                        3
+                                                        TOB.getFontBase() / 40
                                                 ),
-                                                new HSplitPane.ElementOptions(300, HSplitPane.ElementOptions.HeightMode.FIXED)
+                                                new HSplitPane.ElementOptions(300, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                                         )
                                         .addChild(
                                                 new HSplitPane()
@@ -107,7 +112,7 @@ public class MainMenu extends Menu {
                                                                 new TransparentColor(),
                                                                 new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                                                         ),
-                                                new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
+                                                new HSplitPane.ElementOptions(210, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                                         ),
                                 new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
                         )
@@ -128,5 +133,21 @@ public class MainMenu extends Menu {
 
     private void onSettings() {
         TOB.runOnGLThread(() -> TOB.changeScene(new SettingsMenu()));
+    }
+
+    private void updateSizes() {
+        if (button1 != null) button1.setFontSize((int) (TOB.getFontBase() / 6));
+        if (button2 != null) button2.setFontSize((int) (TOB.getFontBase() / 6));
+        if (button3 != null) button3.setFontSize((int) (TOB.getFontBase() / 6));
+        if (button4 != null) button4.setFontSize((int) (TOB.getFontBase() / 6));
+        if (padding1 != null) padding1.setPadding(TOB.getFontBase() / 40);
+        if (menuPadding != null) menuPadding.setPadding(TOB.getFontBase() / 12);
+        if (errorLabel != null) errorLabel.setFontSize((int) (TOB.getFontBase() / 7));
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        updateSizes();
     }
 }

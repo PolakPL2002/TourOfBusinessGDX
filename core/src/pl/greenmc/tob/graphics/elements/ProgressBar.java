@@ -45,7 +45,12 @@ public class ProgressBar extends Element {
         setUp = true;
     }
 
+    public int getFontSize() {
+        return parameter.size;
+    }
+
     public void setFontSize(int size) {
+        if (size < 5) size = 5;
         parameter.size = size;
         parameter.characters = LATIN_EXTENDED;
         if (font != null) font.dispose();

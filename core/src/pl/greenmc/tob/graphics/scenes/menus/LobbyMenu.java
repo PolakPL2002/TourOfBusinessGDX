@@ -151,7 +151,7 @@ public class LobbyMenu extends Menu {
             }
         }
 
-        Label label = new Label("Ładowanie...\nProszę czekać", 30, false);
+        Label label = new Label("Ładowanie...\nProszę czekać", (int) (TOB.getFontBase() / 4), false);
         label.setBackgroundColor(new Color(1, 1, 1, 0.75f));
         container = new PaddingPane(label, 0);
         setElement(
@@ -181,6 +181,12 @@ public class LobbyMenu extends Menu {
                                 new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                         )
         );
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        updateView();
     }
 
     private void getLobbyDetails() {
@@ -246,7 +252,7 @@ public class LobbyMenu extends Menu {
         if (!disposed)
             TOB.runOnGLThread(() -> {
                 if (lobby == null) {
-                    Label label = new Label("Ładowanie...\nProszę czekać", 30, false);
+                    Label label = new Label("Ładowanie...\nProszę czekać", (int) (TOB.getFontBase() / 4), false);
                     label.setBackgroundColor(new Color(1, 1, 1, 0.75f));
                     container.setChild(label);
                 } else {
@@ -332,8 +338,8 @@ public class LobbyMenu extends Menu {
                                 }
                             });
                     }
-                    backButton.setFontSize(20);
-                    readyButton.setFontSize(20);
+                    backButton.setFontSize((int) (TOB.getFontBase() / 6));
+                    readyButton.setFontSize((int) (TOB.getFontBase() / 6));
 
                     backButton.setClickCallback(() -> {
                         TOB.runOnGLThread(() -> TOB.changeScene(new MainMenu()));
@@ -353,8 +359,10 @@ public class LobbyMenu extends Menu {
 
                     Label[] players = new Label[8]; //TODO Get max players from somewhere
                     for (int i = 0; i < 8; i++) {
-                        players[i] = new Label("<Wolne miejsce>", 18, false);
+                        players[i] = new Label("<Wolne miejsce>", (int) (TOB.getFontBase() / 6.66667f), true);
+                        players[i].setBorderColor(Color.BLACK);
                         players[i].setBackgroundColor(playerColors[i]);
+                        players[i].setOutlineWidth(TOB.getFontBase() / 90);
                     }
 
                     Player player;
@@ -377,65 +385,72 @@ public class LobbyMenu extends Menu {
                     }
 
 
+                    final HSplitPane playersContainer = new HSplitPane();
+                    playersContainer.setDrawBackground(true);
+                    playersContainer.setBackgroundColor(Color.BLACK);
                     container.setChild(new HSplitPane()
                             .addChild(
                                     new VSplitPane()
                                             .addChild(
                                                     backButton,
-                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                                    new VSplitPane.ElementOptions(374, VSplitPane.ElementOptions.WidthMode.VARIABLE)
                                             )
                                             .addChild(
                                                     new TransparentColor(),
-                                                    new VSplitPane.ElementOptions(20, VSplitPane.ElementOptions.WidthMode.FIXED)
+                                                    new VSplitPane.ElementOptions(20, VSplitPane.ElementOptions.WidthMode.VARIABLE)
                                             )
                                             .addChild(
                                                     readyButton,
-                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                                    new VSplitPane.ElementOptions(374, VSplitPane.ElementOptions.WidthMode.VARIABLE)
                                             ),
-                                    new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED)
+                                    new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                             )
                             .addChild(
                                     new TransparentColor(),
-                                    new HSplitPane.ElementOptions(20, HSplitPane.ElementOptions.HeightMode.FIXED)
+                                    new HSplitPane.ElementOptions(20, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                             )
                             .addChild(
-                                    new VSplitPane()
+                                    playersContainer
                                             .addChild(
-                                                    players[4],
-                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                            )
+                                                    new VSplitPane()
+                                                            .addChild(
+                                                                    players[4],
+                                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                                            )
+                                                            .addChild(
+                                                                    players[5],
+                                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                                            )
+                                                            .addChild(
+                                                                    players[6],
+                                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                                            )
+                                                            .addChild(
+                                                                    players[7],
+                                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                                            ),
+                                                    new HSplitPane.ElementOptions(186, HSplitPane.ElementOptions.HeightMode.VARIABLE))
                                             .addChild(
-                                                    players[5],
-                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                            )
-                                            .addChild(
-                                                    players[6],
-                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                            )
-                                            .addChild(
-                                                    players[7],
-                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                                    new VSplitPane()
+                                                            .addChild(
+                                                                    players[0],
+                                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                                            )
+                                                            .addChild(
+                                                                    players[1],
+                                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                                            )
+                                                            .addChild(
+                                                                    players[2],
+                                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                                            )
+                                                            .addChild(
+                                                                    players[3],
+                                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
+                                                            ),
+                                                    new HSplitPane.ElementOptions(186, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                                             ),
-                                    new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE))
-                            .addChild(
-                                    new VSplitPane()
-                                            .addChild(
-                                                    players[0],
-                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                            )
-                                            .addChild(
-                                                    players[1],
-                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                            )
-                                            .addChild(
-                                                    players[2],
-                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                            )
-                                            .addChild(
-                                                    players[3],
-                                                    new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
-                                            ),
-                                    new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
+                                    new HSplitPane.ElementOptions(372, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                             )
                     );
                 }

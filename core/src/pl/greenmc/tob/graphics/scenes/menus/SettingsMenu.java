@@ -8,23 +8,31 @@ import pl.greenmc.tob.graphics.scenes.Menu;
 import static pl.greenmc.tob.TourOfBusiness.TOB;
 
 public class SettingsMenu extends Menu {
+
+    private Button button1;
+    private PaddingPane menuPadding;
+    private PaddingPane padding1;
+
     @Override
     public void setup() {
         super.setup();
-        Button button1 = new Button("Wróć");
-        button1.setFontSize(20);
+        button1 = new Button("Wróć");
 
         button1.setClickCallback(this::onBack);
 
         HSplitPane menu = new HSplitPane()
                 .addChild(
                         button1,
-                        new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED)
+                        new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE)
+                )
+                .addChild(
+                        new TransparentColor(),
+                        new HSplitPane.ElementOptions(226, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                 );
         menu.setBackgroundColor(new Color(0, 0, 0, 0));
-        PaddingPane menuPadding = new PaddingPane(
+        menuPadding = new PaddingPane(
                 menu,
-                10
+                TOB.getFontBase() / 12
         );
         menuPadding.setColor(GlobalTheme.menuBackgroundColor);
         setElement(
@@ -37,18 +45,18 @@ public class SettingsMenu extends Menu {
                                 new HSplitPane()
                                         .addChild(
                                                 new TransparentColor(),
-                                                new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
+                                                new HSplitPane.ElementOptions(210, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                                         )
                                         .addChild(
-                                                new PaddingPane(
+                                                padding1 = new PaddingPane(
                                                         menuPadding,
-                                                        3
+                                                        TOB.getFontBase() / 40
                                                 ),
-                                                new HSplitPane.ElementOptions(300, HSplitPane.ElementOptions.HeightMode.FIXED)
+                                                new HSplitPane.ElementOptions(300, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                                         )
                                         .addChild(
                                                 new TransparentColor(),
-                                                new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE)
+                                                new HSplitPane.ElementOptions(210, HSplitPane.ElementOptions.HeightMode.VARIABLE)
                                         ),
                                 new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE)
                         )
@@ -57,9 +65,22 @@ public class SettingsMenu extends Menu {
                                 new VSplitPane.ElementOptions(2, VSplitPane.ElementOptions.WidthMode.VARIABLE)
                         )
         );
+        updateSizes();
     }
 
     private void onBack() {
         TOB.runOnGLThread(() -> TOB.changeScene(new MainMenu()));
+    }
+
+    private void updateSizes() {
+        if (button1 != null) button1.setFontSize((int) (TOB.getFontBase() / 6));
+        if (padding1 != null) padding1.setPadding(TOB.getFontBase() / 40);
+        if (menuPadding != null) menuPadding.setPadding(TOB.getFontBase() / 12);
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        updateSizes();
     }
 }

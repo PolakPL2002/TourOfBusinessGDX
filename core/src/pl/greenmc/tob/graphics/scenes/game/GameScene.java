@@ -38,6 +38,8 @@ import static pl.greenmc.tob.game.GameState.*;
 import static pl.greenmc.tob.game.util.Logger.*;
 import static pl.greenmc.tob.game.util.Utilities.makeMoney;
 
+//TODO Make dialogs responsive
+
 public class GameScene extends Scene implements Interactable {
     private final Object endGenerationLock = new Object();
     private final Map map;

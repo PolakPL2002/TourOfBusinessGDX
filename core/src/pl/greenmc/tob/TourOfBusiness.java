@@ -69,6 +69,10 @@ public class TourOfBusiness extends ApplicationAdapter implements InputProcessor
         overlay.setup();
     }
 
+    public float getFontBase() {
+        return Math.min(Gdx.graphics.getHeight() / 6f, Gdx.graphics.getWidth() / 10.666667f);
+    }
+
     public void changeScene(@NotNull Scene scene) {
         if (currentScene != null) currentScene.dispose();
         currentScene = scene;

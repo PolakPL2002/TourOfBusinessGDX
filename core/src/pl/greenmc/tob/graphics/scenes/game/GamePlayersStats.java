@@ -101,23 +101,12 @@ class GamePlayersStats extends Scene {
             float height = 0;
 
             for (Message message : messages) {
-                layout.setText(fontMessages, message.getMessage(), messagesColor, Gdx.graphics.getWidth() / 3f, Align.center, true);
+                layout.setText(fontMessages, message.getMessage(), Color.WHITE, Gdx.graphics.getWidth() / 3f, Align.center, true);
                 fontMessages.draw(batch, layout, Gdx.graphics.getWidth() / 3f, Gdx.graphics.getHeight() * 0.9f - height);
                 height += layout.height + 30;
             }
         }
         batch.end();
-    }
-
-    public void setNumPlayers(int num) {
-        synchronized (playersLock) {
-            PlayerInfo[] oldPI = players;
-            players = new PlayerInfo[num];
-            if (Math.min(oldPI.length, players.length) >= 0)
-                System.arraycopy(oldPI, 0, players, 0, Math.min(oldPI.length, players.length));
-            for (int i = Math.min(oldPI.length, players.length); i < players.length; i++)
-                players[i] = new PlayerInfo();
-        }
     }
 
     private void drawStats(@NotNull Rectangle pos, @NotNull PlayerInfo player, @NotNull Image image, boolean alignRight, boolean drawTimer) {
@@ -148,6 +137,17 @@ class GamePlayersStats extends Scene {
         }
     }
 
+    public void setNumPlayers(int num) {
+        synchronized (playersLock) {
+            PlayerInfo[] oldPI = players;
+            players = new PlayerInfo[num];
+            if (Math.min(oldPI.length, players.length) >= 0)
+                System.arraycopy(oldPI, 0, players, 0, Math.min(oldPI.length, players.length));
+            for (int i = Math.min(oldPI.length, players.length); i < players.length; i++)
+                players[i] = new PlayerInfo();
+        }
+    }
+
     public void setTimeout(long timeoutLeft, int timeoutTotal) {
         timeoutEnd = System.currentTimeMillis() + timeoutLeft - 150;
         this.timeoutTotal = timeoutTotal;
@@ -163,39 +163,51 @@ class GamePlayersStats extends Scene {
             images[i] = new Image(TOB.getGame().getAssetManager().get("textures/ui/game/player" + (i + 1) + ".png"), Image.Align.STRETCH);
             images[i].setup();
         }
-        float size = Math.min(Gdx.graphics.getHeight() / 6.0f / 3, Gdx.graphics.getWidth() / 3.0f / 4);
-        float h = size * 3;
-        batch = new SpriteBatch();
-        setMoneyFontSize((int) (h / 9));
-        setNamesFontSize((int) (h / 7));
-        setMessagesFontSize((int) (h / 7));
-        updatePositions();
         progressBar = new ProgressBar();
         progressBar.setup();
-        progressBar.setFontSize((int) (h * 0.08f));
         progressBar.setBackgroundColor(new Color(0, 0, 0, 0));
         progressBar.setBorderColor(Color.BLACK);
         progressBar.setTextMode(ProgressBar.TextMode.CUSTOM);
         progressBar.setValue(50);
+        resizeP();
+    }
+
+    private void resizeP() {
+        batch = new SpriteBatch();
+        setMoneyFontSize((int) (TOB.getFontBase() / 9));
+        setNamesFontSize((int) (TOB.getFontBase() / 7));
+        setMessagesFontSize(TOB.getFontBase() / 5);
+        progressBar.setFontSize((int) (TOB.getFontBase() * 0.08f));
+        updatePositions();
     }
 
     public void setMoneyFontSize(int size) {
+        if (size < 5) size = 5;
         parameter.size = size;
         parameter.characters = LATIN_EXTENDED;
+        parameter.borderWidth = 0;
+        parameter.color = Color.WHITE;
         if (fontMoney != null) fontMoney.dispose();
         fontMoney = generatorRegular.generateFont(parameter);
     }
 
-    public void setMessagesFontSize(int size) {
-        parameter.size = size;
+    public void setMessagesFontSize(float size) {
+        if (size < 5) size = 5;
+        parameter.size = (int) size;
         parameter.characters = LATIN_EXTENDED;
+        parameter.borderColor = Color.WHITE;
+        parameter.borderWidth = size / 8f;
+        parameter.color = messagesColor;
         if (fontMessages != null) fontMessages.dispose();
         fontMessages = generatorRegular.generateFont(parameter);
     }
 
     public void setNamesFontSize(int size) {
+        if (size < 5) size = 5;
         parameter.size = size;
         parameter.characters = LATIN_EXTENDED;
+        parameter.borderWidth = 0;
+        parameter.color = Color.WHITE;
         if (fontNames != null) fontNames.dispose();
         fontNames = generatorBold.generateFont(parameter);
     }
@@ -221,14 +233,9 @@ class GamePlayersStats extends Scene {
 
         if (batch != null) batch.dispose();
 
-        float size = Math.min(Gdx.graphics.getHeight() / 6.0f / 3, Gdx.graphics.getWidth() / 3.0f / 4);
-        float h = size * 3;
-        batch = new SpriteBatch();
-        setMoneyFontSize((int) (h / 9));
-        setNamesFontSize((int) (h / 7));
-        updatePositions();
         progressBar.resize(width, height);
-        progressBar.setFontSize((int) (h * 0.08f));
+
+        resizeP();
     }
 
     /**
@@ -243,6 +250,7 @@ class GamePlayersStats extends Scene {
         if (batch != null) batch.dispose();
         fontMoney.dispose();
         fontMessages.dispose();
+        fontNames.dispose();
         progressBar.dispose();
     }
 

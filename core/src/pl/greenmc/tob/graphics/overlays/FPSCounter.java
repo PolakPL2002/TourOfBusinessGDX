@@ -34,6 +34,7 @@ public class FPSCounter extends Overlay {
     }
 
     public void setFontSize(int size) {
+        if (size < 5) size = 5;
         parameter.size = size;
         font = generator.generateFont(parameter);
         layout = new GlyphLayout(font, "");

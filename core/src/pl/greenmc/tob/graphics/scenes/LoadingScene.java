@@ -67,6 +67,8 @@ public class LoadingScene extends Scene {
         float size = Math.min(width / 2, height / 2);
         batch.draw(logo, (width - size) / 2, (height - size) / 2, size, size);
         batch.end();
+        if (progressBar.getFontSize() != (int) (Gdx.graphics.getHeight() / 72.0))
+            progressBar.setFontSize((int) (Gdx.graphics.getHeight() / 72.0));
         progressBar.draw((width - size) / 2, (float) (height * 0.3), size, (float) (height / 36.0));
         frameBuffer.end();
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
