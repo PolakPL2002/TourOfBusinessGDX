@@ -16,4 +16,8 @@ public class CardDeck {
         cards.add(card);
         return this;
     }
+
+    public Card[] getCards() {
+        return cards.toArray(new Card[0]);
+    }
 }

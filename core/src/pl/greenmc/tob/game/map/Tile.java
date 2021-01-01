@@ -350,12 +350,14 @@ public class Tile {
         }
 
         public long getRent(int level) {
+            level--;
+            if (level < 0) level = 0;
             if (level >= rents.size()) return rents.get(rents.size() - 1);
             return rents.get(level);
         }
 
         public int getMaxLevel() {
-            return rents.size() - 1;
+            return rents.size();
         }
     }
 
@@ -432,12 +434,14 @@ public class Tile {
         }
 
         public long getMultiplier(int level) {
+            level--;
+            if (level < 0) level = 0;
             if (level >= multipliers.size()) return multipliers.get(multipliers.size() - 1);
             return multipliers.get(level);
         }
 
         public int getMaxLevel() {
-            return multipliers.size() - 1;
+            return multipliers.size();
         }
     }
 }

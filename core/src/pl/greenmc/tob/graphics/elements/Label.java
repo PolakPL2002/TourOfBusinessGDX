@@ -15,7 +15,7 @@ import pl.greenmc.tob.graphics.GlobalTheme;
 import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
 
 public class Label extends Element {
-    private final FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Regular.ttf"));
+    private final FreeTypeFontGenerator generator;
     private final FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
     private Color backgroundColor = new Color(0, 0, 0, 0);
     private SpriteBatch batch;
@@ -32,9 +32,17 @@ public class Label extends Element {
     private Color textColor = GlobalTheme.textColor;
 
     public Label(String text, int fontSize, boolean renderBorder) {
+        this(text, fontSize, renderBorder, false);
+    }
+
+    public Label(String text, int fontSize, boolean renderBorder, boolean italic) {
         this.text = text;
         this.fontSize = fontSize;
         this.renderBorder = renderBorder;
+        if (italic)
+            generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Italic.ttf"));
+        else
+            generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Regular.ttf"));
     }
 
     public void setOutlineColor(Color outlineColor) {

@@ -80,26 +80,6 @@ public class GameScene extends Scene implements Interactable {
         return playerNames.getOrDefault(playerID, "<Ładowanie...>");
     }
 
-    public void onPay(@Nullable Integer from, @Nullable Integer to, long amount) {
-        if (amount == 0) return;
-        if (from != null) {
-            gamePlayersStats.showMessage(getPlayerName(playerIDs[from]) + "\n" + makeMoney(-amount), 2500);
-        }
-        if (to != null) {
-            gamePlayersStats.showMessage(getPlayerName(playerIDs[to]) + "\n" + makeMoney(amount), 2500);
-        }
-    }
-
-    public static void onEndAction() {
-        try {
-            NettyClient.getInstance().getClientHandler().send(
-                    new EndGameTimeoutResetPacket(),
-                    new SentPacket.Callback.BlankCallback(), false);
-        } catch (ConnectionNotAliveException e) {
-            warning(e);
-        }
-    }
-
     public void onGameStateChanged(@NotNull GameState.Data data) {
         gameSettings = data.getGameSettings();
         playerBalances = data.getPlayerBalances();
@@ -181,12 +161,37 @@ public class GameScene extends Scene implements Interactable {
                 default:
                     TOB.runOnGLThread(() -> changeDialog(null));
             }
-        } else if (this.state != GameState.State.AUCTION) {
+        } else if (this.state != GameState.State.AUCTION && !(dialog != null && dialog instanceof PropertyDialog)) {
             TOB.runOnGLThread(() -> changeDialog(null));
         }
         if (this.state == GameState.State.AUCTION) {
             TOB.runOnGLThread(() -> changeDialog(new AuctionDialog()));
         }
+    }
+
+    public static void onEndAction() {
+        try {
+            NettyClient.getInstance().getClientHandler().send(
+                    new EndGameTimeoutResetPacket(),
+                    new SentPacket.Callback.BlankCallback(), false);
+        } catch (ConnectionNotAliveException e) {
+            warning(e);
+        }
+    }
+
+    private void updatePlayersStats() {
+        if (gamePlayersStats != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
+                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
+                gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
+                gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
+                gamePlayersStats.setPlayerCards(i, playerCards[i]);
+            }
+        if (game3D != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                game3D.setShowPlayer(i, !playerBankrupt[i]);
+            }
     }
 
     @Override
@@ -212,24 +217,6 @@ public class GameScene extends Scene implements Interactable {
             }
             if (!found) game3D.setSelectedTile((Integer) null);
         }
-    }
-
-    @Override
-    public void onMouseUp() {
-        if (game3D != null && clickOnTile != null && Objects.equals(clickOnTile, game3D.getSelectedTile()))
-            switch (tileClickAction) {
-                case SELECT:
-                    if (Objects.equals(tileOwners[clickOnTile], selfNum))
-                        game3D.toggleSelection(clickOnTile);
-                    if (dialog != null && dialog instanceof SellDialog)
-                        updateSellDialog();
-                    break;
-                case DETAILS:
-                    //TODO Open tile details if no other popup is shown (except end game)
-                    break;
-            }
-
-        if (dialog != null) dialog.onMouseUp();
     }
 
     private void updateSellDialog() {
@@ -271,21 +258,36 @@ public class GameScene extends Scene implements Interactable {
         }
     }
 
-    public void onRoll(int player, @NotNull int[] numbers) {
-        StringBuilder n = new StringBuilder();
-        int sum = 0;
-        for (int number : numbers) {
-            if (n.length() > 0) n.append(" + ");
-            n.append(number);
-            sum += number;
+    @Override
+    public void onMouseUp() {
+        if (game3D != null && clickOnTile != null && Objects.equals(clickOnTile, game3D.getSelectedTile()))
+            switch (tileClickAction) {
+                case SELECT:
+                    if (Objects.equals(tileOwners[clickOnTile], selfNum))
+                        game3D.toggleSelection(clickOnTile);
+                    if (dialog != null && dialog instanceof SellDialog)
+                        updateSellDialog();
+                    break;
+                case DETAILS:
+                    if (dialog == null) {
+                        TOB.runOnGLThread(() -> {
+                            Integer tileOwner = tileOwners[clickOnTile];
+                            changeDialog(new PropertyDialog(map, map.getTiles()[clickOnTile % map.getTiles().length], gameSettings, () -> TOB.runOnGLThread(() -> changeDialog(null)), tileOwner == null ? "Pole nie należy do nikogo" : "Pole należy do " + getPlayerName(playerIDs[tileOwner])));
+                        });
+                    }
+                    break;
+            }
+
+        if (dialog != null) dialog.onMouseUp();
+    }
+
+    public void onPay(@Nullable Integer from, @Nullable Integer to, long amount) {
+        if (amount == 0) return;
+        if (from != null) {
+            gamePlayersStats.showMessage(getPlayerName(playerIDs[from]) + "\n" + makeMoney(-amount), 2500);
         }
-        n.append(" = ").append(sum);
-        if (gamePlayersStats != null) {
-            gamePlayersStats.showMessage(getPlayerName(playerIDs[player]) + "\n" + n.toString(), 2500);
-            boolean draw = true;
-            for (int i = 0; i < numbers.length - 1 && draw; i++)
-                draw = numbers[i] == numbers[i + 1];
-            if (draw) gamePlayersStats.showMessage("Dublet!", 5000);
+        if (to != null) {
+            gamePlayersStats.showMessage(getPlayerName(playerIDs[to]) + "\n" + makeMoney(amount), 2500);
         }
     }
 
@@ -304,6 +306,29 @@ public class GameScene extends Scene implements Interactable {
         playerBankrupt[player] = state.isBankrupt();
         playerInJail[player] = state.isJailed();
         updatePlayersStats();
+    }
+
+    public void onRoll(int player, @NotNull int[] numbers) {
+        StringBuilder n = new StringBuilder();
+        int sum = 0;
+        for (int number : numbers) {
+            if (n.length() > 0) n.append(" + ");
+            n.append(number);
+            sum += number;
+        }
+        n.append(" = ").append(sum);
+        if (gamePlayersStats != null) {
+            gamePlayersStats.showMessage(getPlayerName(playerIDs[player]) + "\n" + n.toString(), 2500);
+            boolean draw = true;
+            for (int i = 0; i < numbers.length - 1 && draw; i++)
+                draw = numbers[i] == numbers[i + 1];
+            if (draw) gamePlayersStats.showMessage("Dublet!", 5000);
+        }
+    }
+
+    @Override
+    public void onScroll(float x, float y) {
+        if (dialog != null) dialog.onScroll(x, y);
     }
 
     public void onTileModified(int tile, Integer owner, int level) {
@@ -345,11 +370,6 @@ public class GameScene extends Scene implements Interactable {
     }
 
     @Override
-    public void onScroll(float x, float y) {
-        if (dialog != null) dialog.onScroll(x, y);
-    }
-
-    @Override
     public void setup() {
         batch = new SpriteBatch();
         frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), true);
@@ -358,21 +378,6 @@ public class GameScene extends Scene implements Interactable {
         gamePlayersStats = new GamePlayersStats();
         gamePlayersStats.setup();
         updateState();
-    }
-
-    private void updatePlayersStats() {
-        if (gamePlayersStats != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
-                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
-                gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
-                gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
-                gamePlayersStats.setPlayerCards(i, playerCards[i]);
-            }
-        if (game3D != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                game3D.setShowPlayer(i, !playerBankrupt[i]);
-            }
     }
 
     @Override

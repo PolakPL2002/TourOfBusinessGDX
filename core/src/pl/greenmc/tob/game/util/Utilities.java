@@ -12,7 +12,10 @@ import java.lang.reflect.Array;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -60,6 +63,24 @@ public class Utilities {
             }
         }
         return out.append("$").toString();
+    }
+
+    @NotNull
+    public static String makeShortMoney(long value) {
+        boolean negative = value < 0;
+        if (negative) value *= -1;
+        String s;
+        DecimalFormat decimalFormat = new DecimalFormat("0.0", DecimalFormatSymbols.getInstance(Locale.US));
+        if (value >= 1000000) {
+            s = decimalFormat.format(Math.round(value / 100000d) / 10d) + "M$";
+            if (s.charAt(s.length() - 3) == '0')
+                s = s.substring(0, s.length() - 4) + "M$";
+        } else if (value >= 1000) {
+            s = decimalFormat.format(Math.round(value / 100d) / 10d) + "k$";
+            if (s.charAt(s.length() - 3) == '0')
+                s = s.substring(0, s.length() - 4) + "k$";
+        } else s = value + "$";
+        return (negative ? "-" : "") + s;
     }
 
     /**

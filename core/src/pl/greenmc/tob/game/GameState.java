@@ -207,8 +207,34 @@ public class GameState {
     }
 
     private int getTileLevel(int tile) {
-        //TODO Return number of tiles in group bought for stations and utilities
-        return tileLevels[tile % map.getTiles().length];
+        Tile tile1 = map.getTiles()[tile % map.getTiles().length];
+        Tile.TileGroup tileGroup;
+        int num = 0;
+        Integer owner;
+        switch (tile1.getType()) {
+            case UTILITY:
+                Tile.UtilityTileData utilityTileData = (Tile.UtilityTileData) tile1.getData();
+                owner = getTileOwner(tile);
+                if (owner == null) return 0;
+                tileGroup = utilityTileData.getTileGroup();
+                for (Tile tile2 : tileGroup.getTiles()) {
+                    if (Objects.equals(getTileOwner(getTileNumber(tile2)), owner))
+                        num++;
+                }
+                return num;
+            case STATION:
+                Tile.StationTileData stationTileData = (Tile.StationTileData) tile1.getData();
+                owner = getTileOwner(tile);
+                if (owner == null) return 0;
+                tileGroup = stationTileData.getTileGroup();
+                for (Tile tile2 : tileGroup.getTiles()) {
+                    if (Objects.equals(getTileOwner(getTileNumber(tile2)), owner))
+                        num++;
+                }
+                return num;
+            default:
+                return tileLevels[tile % map.getTiles().length];
+        }
     }
 
     private int getTileNumber(@NotNull Tile tile) {
