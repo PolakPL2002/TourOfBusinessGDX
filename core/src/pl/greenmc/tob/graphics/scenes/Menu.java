@@ -86,7 +86,7 @@ public class Menu extends Scene implements Interactable {
         background = new ImageBackground(texture, Image.Align.CROP_ASPECT).setChild(new SolidBackground());
         background.setup();
         batch = new SpriteBatch();
-        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), true);
         setElement(new VSplitPane());
     }
 
@@ -102,7 +102,7 @@ public class Menu extends Scene implements Interactable {
         frameBuffer.dispose();
 
         batch = new SpriteBatch();
-        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), true);
 
         if (this.element != null) element.resize(width, height);
         background.resize(width, height);

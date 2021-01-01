@@ -80,7 +80,7 @@ public class LoadingScene extends Scene {
 
     @Override
     public void setup() {
-        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), false);
         batch = new SpriteBatch();
         logo = new Texture(Gdx.files.internal("logo.png"), true);
         logo.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear);
@@ -96,7 +96,7 @@ public class LoadingScene extends Scene {
         frameBuffer.dispose();
         batch.dispose();
 
-        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), false);
         batch = new SpriteBatch();
         progressBar.resize(width, height);
     }

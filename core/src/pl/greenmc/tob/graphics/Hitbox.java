@@ -24,6 +24,7 @@ public abstract class Hitbox {
      * @param h height
      * @return texture
      */
+    @Deprecated
     public Texture getHitboxOverlay(int x, int y, int w, int h) {
 //        int okPoints = 0;
         final FrameBuffer frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, w, h, false);

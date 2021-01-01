@@ -82,6 +82,17 @@ public class GameScene extends Scene implements Interactable {
         return playerNames.getOrDefault(playerID, "<Ładowanie...>");
     }
 
+    @Override
+    public void setup() {
+        batch = new SpriteBatch();
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), true);
+        game3D = new Game3D(map);
+        game3D.setup();
+        gamePlayersStats = new GamePlayersStats();
+        gamePlayersStats.setup();
+        updateState();
+    }
+
     public static void onEndAction() {
         try {
             NettyClient.getInstance().getClientHandler().send(
@@ -289,21 +300,6 @@ public class GameScene extends Scene implements Interactable {
         updatePlayersStats();
     }
 
-    private void updatePlayersStats() {
-        if (gamePlayersStats != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
-                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
-                gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
-                gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
-                gamePlayersStats.setPlayerCards(i, playerCards[i]);
-            }
-        if (game3D != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                game3D.setShowPlayer(i, !playerBankrupt[i]);
-            }
-    }
-
     public void onRoll(int player, @NotNull int[] numbers) {
         StringBuilder n = new StringBuilder();
         int sum = 0;
@@ -367,27 +363,31 @@ public class GameScene extends Scene implements Interactable {
     }
 
     @Override
-    public void setup() {
-        batch = new SpriteBatch();
-        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
-        game3D = new Game3D(map);
-        game3D.setup();
-        gamePlayersStats = new GamePlayersStats();
-        gamePlayersStats.setup();
-        updateState();
-    }
-
-    @Override
     public void resize(int width, int height) {
         batch.dispose();
         frameBuffer.dispose();
 
         batch = new SpriteBatch();
-        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), true);
 
         game3D.resize(width, height);
         gamePlayersStats.resize(width, height);
         if (dialog != null) dialog.resize(width, height);
+    }
+
+    private void updatePlayersStats() {
+        if (gamePlayersStats != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
+                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
+                gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
+                gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
+                gamePlayersStats.setPlayerCards(i, playerCards[i]);
+            }
+        if (game3D != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                game3D.setShowPlayer(i, !playerBankrupt[i]);
+            }
     }
 
     /**

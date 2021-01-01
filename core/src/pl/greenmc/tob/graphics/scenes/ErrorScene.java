@@ -76,7 +76,7 @@ public class ErrorScene extends Scene {
     @Override
     public void setup() {
         log("ErrorScene set up with message '" + error + "' and timeout " + timeout + "ms.");
-        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), false);
         batch = new SpriteBatch();
         timeStart = System.currentTimeMillis();
 
@@ -100,7 +100,7 @@ public class ErrorScene extends Scene {
         frameBuffer.dispose();
         batch.dispose();
 
-        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), false);
         batch = new SpriteBatch();
         timeStart = System.currentTimeMillis();
 
