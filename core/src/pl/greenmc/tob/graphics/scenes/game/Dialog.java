@@ -6,10 +6,10 @@ import pl.greenmc.tob.graphics.*;
 
 public abstract class Dialog extends Overlay implements Interactable {
     private final Element child;
-    private final float height;
-    private final float width;
+    private float height;
     private Hitbox hitbox;
     private boolean insideHitbox = false;
+    private float width;
 
     public Dialog(@NotNull Element child, float width, float height) {
         this.child = child;
@@ -57,8 +57,18 @@ public abstract class Dialog extends Overlay implements Interactable {
         return height;
     }
 
+    public void setHeight(float height) {
+        this.height = height;
+        hitbox = new RectangularHitbox((Gdx.graphics.getWidth() - width) / 2, (Gdx.graphics.getHeight() - height) / 2, width, height);
+    }
+
     public float getWidth() {
         return width;
+    }
+
+    public void setWidth(float width) {
+        this.width = width;
+        hitbox = new RectangularHitbox((Gdx.graphics.getWidth() - width) / 2, (Gdx.graphics.getHeight() - height) / 2, width, height);
     }
 
     @Override

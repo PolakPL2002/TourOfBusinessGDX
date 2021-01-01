@@ -12,7 +12,11 @@ import pl.greenmc.tob.graphics.scenes.game.Dialog;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static pl.greenmc.tob.TourOfBusiness.TOB;
+
 public class YesNoDialog extends Dialog {
+    private final Button yes, no;
+    private Label label;
     private long period = 0;
     private Runnable routine = null;
     private Timer timer = null;
@@ -28,7 +32,8 @@ public class YesNoDialog extends Dialog {
         super(new HSplitPane(), Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f);
         HSplitPane pane = (HSplitPane) getChild();
 
-        Button yes = new Button("Tak"), no = new Button("Nie");
+        yes = new Button("Tak");
+        no = new Button("Nie");
 
         yes.applyYesTheme();
         no.applyNoTheme();
@@ -40,10 +45,11 @@ public class YesNoDialog extends Dialog {
                 .addChild(yes, new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE))
                 .addChild(no, new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE));
 
-        Label label = new Label(query, 24, true);
+        label = new Label(query, (int) (TOB.getFontBase() / 5), true);
         label.setBackgroundColor(new Color(1, 1, 1, .75f));
-        pane.addChild(buttons, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED))
-                .addChild(label, new HSplitPane.ElementOptions(1, HSplitPane.ElementOptions.HeightMode.VARIABLE));
+        pane.addChild(buttons, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE))
+                .addChild(label, new HSplitPane.ElementOptions(310, HSplitPane.ElementOptions.HeightMode.VARIABLE));
+
     }
 
     /**
@@ -68,5 +74,15 @@ public class YesNoDialog extends Dialog {
                 }
             }, 0, period);
         }
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        setWidth(Gdx.graphics.getWidth() / 2f);
+        setHeight(Gdx.graphics.getHeight() / 2f);
+        label.setFontSize((int) (TOB.getFontBase() / 5));
+        yes.setFontSize((int) (TOB.getFontBase() / 6));
+        no.setFontSize((int) (TOB.getFontBase() / 6));
     }
 }

@@ -1,5 +1,6 @@
 package pl.greenmc.tob.graphics.scenes.game.dialogs;
 
+import com.badlogic.gdx.Gdx;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.netty.ConnectionNotAliveException;
 import pl.greenmc.tob.game.netty.SentPacket;
@@ -15,13 +16,15 @@ import static pl.greenmc.tob.game.util.Logger.warning;
 import static pl.greenmc.tob.graphics.scenes.game.GameScene.onEndAction;
 
 public class EndDialog extends Dialog {
+    private final Button end, manage, trade;
+
     public EndDialog(@NotNull Runnable manageCallback, @NotNull Runnable tradeCallback) {
-        super(new HSplitPane(), 300, 165);
+        super(new HSplitPane(), Gdx.graphics.getWidth() / 4f, Gdx.graphics.getHeight() * 0.23f);
         HSplitPane pane = (HSplitPane) getChild();
 
-        Button end = new Button("Zakończ turę");
-        Button manage = new Button("Zarządzaj posiadłościami");
-        Button trade = new Button("Wymień się");
+        end = new Button("Zakończ turę");
+        manage = new Button("Zarządzaj posiadłościami");
+        trade = new Button("Wymień się");
 
         end.applyNoTheme();
         end.setClickCallback(() -> TOB.runOnGLThread(() -> {
@@ -44,9 +47,23 @@ public class EndDialog extends Dialog {
             tradeCallback.run();
         });
 
-        pane.addChild(trade, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED));
-        pane.addChild(manage, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED));
-        pane.addChild(new TransparentColor(), new HSplitPane.ElementOptions(15, HSplitPane.ElementOptions.HeightMode.FIXED));
-        pane.addChild(end, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.FIXED));
+        pane.addChild(trade, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE));
+        pane.addChild(manage, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE));
+        pane.addChild(new TransparentColor(), new HSplitPane.ElementOptions(15, HSplitPane.ElementOptions.HeightMode.VARIABLE));
+        pane.addChild(end, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE));
+
+        end.setFontSize((int) (TOB.getFontBase() / 6));
+        manage.setFontSize((int) (TOB.getFontBase() / 6));
+        trade.setFontSize((int) (TOB.getFontBase() / 6));
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        setWidth(Gdx.graphics.getWidth() / 4f);
+        setHeight(Gdx.graphics.getHeight() * 0.23f);
+        end.setFontSize((int) (TOB.getFontBase() / 6));
+        manage.setFontSize((int) (TOB.getFontBase() / 6));
+        trade.setFontSize((int) (TOB.getFontBase() / 6));
     }
 }

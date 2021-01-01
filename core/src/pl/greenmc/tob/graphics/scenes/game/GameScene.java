@@ -38,8 +38,6 @@ import static pl.greenmc.tob.game.GameState.*;
 import static pl.greenmc.tob.game.util.Logger.*;
 import static pl.greenmc.tob.game.util.Utilities.makeMoney;
 
-//TODO Make dialogs responsive
-
 public class GameScene extends Scene implements Interactable {
     private final Object endGenerationLock = new Object();
     private final Map map;
@@ -82,15 +80,14 @@ public class GameScene extends Scene implements Interactable {
         return playerNames.getOrDefault(playerID, "<Ładowanie...>");
     }
 
-    @Override
-    public void setup() {
-        batch = new SpriteBatch();
-        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), true);
-        game3D = new Game3D(map);
-        game3D.setup();
-        gamePlayersStats = new GamePlayersStats();
-        gamePlayersStats.setup();
-        updateState();
+    public void onPay(@Nullable Integer from, @Nullable Integer to, long amount) {
+        if (amount == 0) return;
+        if (from != null) {
+            gamePlayersStats.showMessage(getPlayerName(playerIDs[from]) + "\n" + makeMoney(-amount), 2500);
+        }
+        if (to != null) {
+            gamePlayersStats.showMessage(getPlayerName(playerIDs[to]) + "\n" + makeMoney(amount), 2500);
+        }
     }
 
     public static void onEndAction() {
@@ -274,13 +271,15 @@ public class GameScene extends Scene implements Interactable {
         }
     }
 
-    public void onPay(@Nullable Integer from, @Nullable Integer to, long amount) {
-        if (from != null) {
-            gamePlayersStats.showMessage(getPlayerName(playerIDs[from]) + "\n" + makeMoney(-amount), 2500);
-        }
-        if (to != null) {
-            gamePlayersStats.showMessage(getPlayerName(playerIDs[to]) + "\n" + makeMoney(amount), 2500);
-        }
+    @Override
+    public void setup() {
+        batch = new SpriteBatch();
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), true);
+        game3D = new Game3D(map);
+        game3D.setup();
+        gamePlayersStats = new GamePlayersStats();
+        gamePlayersStats.setup();
+        updateState();
     }
 
     public void onPlayerMoved(int player, int position, boolean animate) {
@@ -337,6 +336,21 @@ public class GameScene extends Scene implements Interactable {
         });
     }
 
+    private void updatePlayersStats() {
+        if (gamePlayersStats != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
+                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
+                gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
+                gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
+                gamePlayersStats.setPlayerCards(i, playerCards[i]);
+            }
+        if (game3D != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                game3D.setShowPlayer(i, !playerBankrupt[i]);
+            }
+    }
+
     @Override
     public void render() {
         frameBuffer.begin();
@@ -373,21 +387,6 @@ public class GameScene extends Scene implements Interactable {
         game3D.resize(width, height);
         gamePlayersStats.resize(width, height);
         if (dialog != null) dialog.resize(width, height);
-    }
-
-    private void updatePlayersStats() {
-        if (gamePlayersStats != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
-                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
-                gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
-                gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
-                gamePlayersStats.setPlayerCards(i, playerCards[i]);
-            }
-        if (game3D != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                game3D.setShowPlayer(i, !playerBankrupt[i]);
-            }
     }
 
     /**
@@ -503,10 +502,10 @@ public class GameScene extends Scene implements Interactable {
                         }
                     }
                     TOB.runOnGLThread(() -> changeDialog(new EndManageDialog(
-                            () -> {
-                                endGamePage = EndGamePage.MAIN;
-                                changeEndDialog();
-                            },
+                            gameSettings, () -> {
+                        endGamePage = EndGamePage.MAIN;
+                        changeEndDialog();
+                    },
                             (@NotNull Tile tile) -> TOB.runOnGLThread(() -> changeDialog(new YesNoDialog(
                                     "Czy na pewno chcesz sprzedać " + getTileName(tile) + " za " + makeMoney(getPropertyValue(tile, tileLevels[getTileNumber(tile)], gameSettings)) + "?",
                                     () -> {
