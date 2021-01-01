@@ -271,15 +271,22 @@ public class GameScene extends Scene implements Interactable {
         }
     }
 
-    @Override
-    public void setup() {
-        batch = new SpriteBatch();
-        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), true);
-        game3D = new Game3D(map);
-        game3D.setup();
-        gamePlayersStats = new GamePlayersStats();
-        gamePlayersStats.setup();
-        updateState();
+    public void onRoll(int player, @NotNull int[] numbers) {
+        StringBuilder n = new StringBuilder();
+        int sum = 0;
+        for (int number : numbers) {
+            if (n.length() > 0) n.append(" + ");
+            n.append(number);
+            sum += number;
+        }
+        n.append(" = ").append(sum);
+        if (gamePlayersStats != null) {
+            gamePlayersStats.showMessage(getPlayerName(playerIDs[player]) + "\n" + n.toString(), 2500);
+            boolean draw = true;
+            for (int i = 0; i < numbers.length - 1 && draw; i++)
+                draw = numbers[i] == numbers[i + 1];
+            if (draw) gamePlayersStats.showMessage("Dublet!", 5000);
+        }
     }
 
     public void onPlayerMoved(int player, int position, boolean animate) {
@@ -299,28 +306,29 @@ public class GameScene extends Scene implements Interactable {
         updatePlayersStats();
     }
 
-    public void onRoll(int player, @NotNull int[] numbers) {
-        StringBuilder n = new StringBuilder();
-        int sum = 0;
-        for (int number : numbers) {
-            if (n.length() > 0) n.append(" + ");
-            n.append(number);
-            sum += number;
-        }
-        n.append(" = ").append(sum);
-        if (gamePlayersStats != null)
-            gamePlayersStats.showMessage(getPlayerName(playerIDs[player]) + "\n" + n.toString(), 2500);
-    }
-
-    @Override
-    public void onScroll(float x, float y) {
-        if (dialog != null) dialog.onScroll(x, y);
-    }
-
     public void onTileModified(int tile, Integer owner, int level) {
         if (game3D != null) {
             game3D.setTileOwner(tile, owner);
             game3D.setTileLevel(tile, level);
+        }
+        if (tileOwners[tile % map.getTiles().length] == null && owner != null) {
+            //Tile bought
+            if (gamePlayersStats != null)
+                gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[owner]) + " kupił " + getTileName(map.getTiles()[tile % map.getTiles().length]) + ".", 5000);
+        } else if (tileOwners[tile % map.getTiles().length] != null && owner == null) {
+            if (gamePlayersStats != null)
+                gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[tileOwners[tile % map.getTiles().length]]) + " sprzedał " + getTileName(map.getTiles()[tile % map.getTiles().length]) + ".", 5000);
+        }
+        if (tileLevels[tile % map.getTiles().length] != level) {
+            if (tileLevels[tile % map.getTiles().length] > level) {
+                //Tile downgraded
+                if (gamePlayersStats != null && tileOwners[tile % map.getTiles().length] != null)
+                    gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[tileOwners[tile % map.getTiles().length]]) + " odlepszył " + getTileName(map.getTiles()[tile % map.getTiles().length]) + " do poziomu " + level + ".", 5000);
+            } else {
+                //Tile upgraded
+                if (gamePlayersStats != null && tileOwners[tile % map.getTiles().length] != null)
+                    gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[tileOwners[tile % map.getTiles().length]]) + " ulepszył " + getTileName(map.getTiles()[tile % map.getTiles().length]) + " do poziomu " + level + ".", 5000);
+            }
         }
         tileOwners[tile % map.getTiles().length] = owner;
         tileLevels[tile % map.getTiles().length] = level;
@@ -334,6 +342,22 @@ public class GameScene extends Scene implements Interactable {
                 }
             }
         });
+    }
+
+    @Override
+    public void onScroll(float x, float y) {
+        if (dialog != null) dialog.onScroll(x, y);
+    }
+
+    @Override
+    public void setup() {
+        batch = new SpriteBatch();
+        frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), true);
+        game3D = new Game3D(map);
+        game3D.setup();
+        gamePlayersStats = new GamePlayersStats();
+        gamePlayersStats.setup();
+        updateState();
     }
 
     private void updatePlayersStats() {

@@ -169,6 +169,10 @@ class Game3D extends Scene {
         }
     }
 
+    public Integer getSelectedTile() {
+        return selectedTile;
+    }
+
     @Override
     public void setup() {
         modelBatch = new ModelBatch();
@@ -180,10 +184,6 @@ class Game3D extends Scene {
 
         setupModels();
         generateHitboxes();
-    }
-
-    public Integer getSelectedTile() {
-        return selectedTile;
     }
 
     private void setupCamera() {
@@ -393,6 +393,11 @@ class Game3D extends Scene {
         return targetMaterialL;
     }
 
+    public void setShowPlayer(int player, boolean showPlayer) {
+        if (showPlayers.length > 0)
+            showPlayers[player % showPlayers.length] = showPlayer;
+    }
+
     public void setSelectedTile(Integer selectedTile) {
         this.selectedTile = selectedTile;
     }
@@ -430,26 +435,6 @@ class Game3D extends Scene {
         playerPositions[player % playerPositions.length] = position;
     }
 
-    public void setShowPlayer(int player, boolean showPlayer) {
-        showPlayers[player % showPlayers.length] = showPlayer;
-    }
-
-    public void setNumPlayers(int num) {
-        int[] oldPP = playerPositions;
-        playerPositions = new int[Math.min(num, playerInstances.size())];
-        if (Math.min(oldPP.length, playerPositions.length) > 0)
-            System.arraycopy(oldPP, 0, playerPositions, 0, Math.min(oldPP.length, playerPositions.length));
-        for (int i = Math.min(oldPP.length, playerPositions.length); i < playerPositions.length; i++)
-            playerPositions[i] = 0;
-
-        boolean[] oldSP = showPlayers;
-        showPlayers = new boolean[Math.min(num, playerInstances.size())];
-        if (Math.min(oldSP.length, showPlayers.length) > 0)
-            System.arraycopy(oldSP, 0, showPlayers, 0, Math.min(oldSP.length, showPlayers.length));
-        for (int i = Math.min(oldSP.length, showPlayers.length); i < showPlayers.length; i++)
-            showPlayers[i] = true;
-    }
-
     @NotNull
     private Vector3 getTileLocation(int numTiles, float tileSizeBase, int idInRow, boolean bigTile, int row) {
         float offset = tileSizeBase * numTiles / 4 - idInRow * tileSizeBase * 2;
@@ -484,6 +469,22 @@ class Game3D extends Scene {
             z = tileSizeBase * (numTiles / 4.0f + 1) + 0.0025f;
         }
         return new Vector3(x, y, z);
+    }
+
+    public void setNumPlayers(int num) {
+        int[] oldPP = playerPositions;
+        playerPositions = new int[Math.min(num, playerInstances.size())];
+        if (Math.min(oldPP.length, playerPositions.length) > 0)
+            System.arraycopy(oldPP, 0, playerPositions, 0, Math.min(oldPP.length, playerPositions.length));
+        for (int i = Math.min(oldPP.length, playerPositions.length); i < playerPositions.length; i++)
+            playerPositions[i] = 0;
+
+        boolean[] oldSP = showPlayers;
+        showPlayers = new boolean[Math.min(num, playerInstances.size())];
+        if (Math.min(oldSP.length, showPlayers.length) > 0)
+            System.arraycopy(oldSP, 0, showPlayers, 0, Math.min(oldSP.length, showPlayers.length));
+        for (int i = Math.min(oldSP.length, showPlayers.length); i < showPlayers.length; i++)
+            showPlayers[i] = true;
     }
 
     private class PlayerMoveAnimation {

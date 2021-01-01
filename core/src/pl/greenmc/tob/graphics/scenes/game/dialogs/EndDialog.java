@@ -16,18 +16,31 @@ import static pl.greenmc.tob.game.util.Logger.warning;
 import static pl.greenmc.tob.graphics.scenes.game.GameScene.onEndAction;
 
 public class EndDialog extends Dialog {
-    private final Button end, manage, trade;
+    private final Button end, end2, manage, trade;
 
     public EndDialog(@NotNull Runnable manageCallback, @NotNull Runnable tradeCallback) {
-        super(new HSplitPane(), Gdx.graphics.getWidth() / 4f, Gdx.graphics.getHeight() * 0.23f);
+        super(new HSplitPane(), Gdx.graphics.getWidth() / 4f, Gdx.graphics.getHeight() / 3f);
         HSplitPane pane = (HSplitPane) getChild();
 
         end = new Button("Zakończ turę");
+        end2 = new Button("Zakończ turę");
         manage = new Button("Zarządzaj posiadłościami");
         trade = new Button("Wymień się");
 
         end.applyNoTheme();
         end.setClickCallback(() -> TOB.runOnGLThread(() -> {
+            onEndAction();
+            try {
+                NettyClient.getInstance().getClientHandler().send(
+                        new EndGameActionPacket(new EndGameActionPacket.ActionEndTurn()),
+                        new SentPacket.Callback.BlankCallback(), false);
+            } catch (ConnectionNotAliveException e) {
+                warning(e);
+            }
+        }));
+
+        end2.applyNoTheme();
+        end2.setClickCallback(() -> TOB.runOnGLThread(() -> {
             onEndAction();
             try {
                 NettyClient.getInstance().getClientHandler().send(
@@ -46,13 +59,15 @@ public class EndDialog extends Dialog {
             onEndAction();
             tradeCallback.run();
         });
-
+        pane.addChild(end2, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE));
+        pane.addChild(new TransparentColor(), new HSplitPane.ElementOptions(15, HSplitPane.ElementOptions.HeightMode.VARIABLE));
         pane.addChild(trade, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE));
         pane.addChild(manage, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE));
         pane.addChild(new TransparentColor(), new HSplitPane.ElementOptions(15, HSplitPane.ElementOptions.HeightMode.VARIABLE));
         pane.addChild(end, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE));
 
         end.setFontSize((int) (TOB.getFontBase() / 6));
+        end2.setFontSize((int) (TOB.getFontBase() / 6));
         manage.setFontSize((int) (TOB.getFontBase() / 6));
         trade.setFontSize((int) (TOB.getFontBase() / 6));
     }
@@ -63,6 +78,7 @@ public class EndDialog extends Dialog {
         setWidth(Gdx.graphics.getWidth() / 4f);
         setHeight(Gdx.graphics.getHeight() * 0.23f);
         end.setFontSize((int) (TOB.getFontBase() / 6));
+        end2.setFontSize((int) (TOB.getFontBase() / 6));
         manage.setFontSize((int) (TOB.getFontBase() / 6));
         trade.setFontSize((int) (TOB.getFontBase() / 6));
     }
