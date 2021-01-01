@@ -61,6 +61,8 @@ public class BuyDialog extends Dialog {
         doBuy.setClickCallback(makeRunnable(GameState.BuyDecision.BUY));
         doBuy.applyYesTheme();
         label.setBackgroundColor(new Color(1, 1, 1, 0.75f));
+        doBuy.setFontSize((int) (TOB.getFontBase() / 6));
+        dontBuy.setFontSize((int) (TOB.getFontBase() / 6));
     }
 
     @Override

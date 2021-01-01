@@ -49,7 +49,8 @@ public class YesNoDialog extends Dialog {
         label.setBackgroundColor(new Color(1, 1, 1, .75f));
         pane.addChild(buttons, new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE))
                 .addChild(label, new HSplitPane.ElementOptions(310, HSplitPane.ElementOptions.HeightMode.VARIABLE));
-
+        yes.setFontSize((int) (TOB.getFontBase() / 6));
+        no.setFontSize((int) (TOB.getFontBase() / 6));
     }
 
     /**
