@@ -422,7 +422,6 @@ class Game3D extends Scene {
             frameBufferMaterial.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
             models.add(frameBufferOverlay = createPlane(modelBuilder, tileSizeBase - 0.0025f, tileSizeBase - 0.0025f,
                     frameBufferMaterial));
-            models.add(frameBufferOverlay);
             modelInstance = new ModelInstance(frameBufferOverlay);
             modelInstance.transform.translate(tileLocation);
             if (row % 2 == 1 && !bigTile) {
