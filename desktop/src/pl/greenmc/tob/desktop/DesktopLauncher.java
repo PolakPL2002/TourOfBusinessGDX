@@ -14,7 +14,7 @@ import static pl.greenmc.tob.game.util.Logger.warning;
 
 public class DesktopLauncher {
     public static void main(String[] arg) {
-        boolean server = false, nextIP = false, nextPort = false, windowed = false;
+        boolean server = false, nextIP = false, nextPort = false, windowed = false, networkActivity = false, fps = false;
         String IP = null, port = null;
         for (String s : arg) {
             if (nextIP) {
@@ -34,6 +34,10 @@ public class DesktopLauncher {
                 nextIP = true;
             } else if (s.equalsIgnoreCase("--port")) {
                 nextPort = true;
+            } else if (s.equalsIgnoreCase("--network-activity")) {
+                networkActivity = true;
+            } else if (s.equalsIgnoreCase("--fps")) {
+                fps = true;
             }
         }
         if (IP != null) {
@@ -68,7 +72,7 @@ public class DesktopLauncher {
             }
             config.pauseWhenMinimized = false;
             config.samples = 16;
-            new LwjglApplication(new TourOfBusiness(), config);
+            new LwjglApplication(new TourOfBusiness(fps, networkActivity), config);
         }
     }
 }

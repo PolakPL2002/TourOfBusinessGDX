@@ -2,7 +2,7 @@
   <configuration default="false" name="Client 1" type="JarApplication">
     <option name="JAR_PATH" value="$PROJECT_DIR$/desktop/build/libs/desktop-1.0.jar" />
     <option name="VM_PARAMETERS" value="-Dfile.encoding=UTF-8" />
-    <option name="PROGRAM_PARAMETERS" value="--windowed" />
+    <option name="PROGRAM_PARAMETERS" value="--windowed --network-activity --fps" />
     <option name="WORKING_DIRECTORY" value="C:\Users\Szymon\IdeaProjects\TourOfBusinessGDX\client1" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="ALTERNATIVE_JRE_PATH" value="11" />

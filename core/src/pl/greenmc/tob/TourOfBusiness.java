@@ -29,11 +29,18 @@ public class TourOfBusiness extends ApplicationAdapter implements InputProcessor
     private final int GL_MULTISAMPLE = 32925;
     private final ArrayList<Overlay> overlays = new ArrayList<>();
     private final ArrayList<Rectangle> scissors = new ArrayList<>();
+    private final boolean showFPS;
+    private final boolean showNetworkActivity;
     private final ArrayList<Runnable> tasksToExecute = new ArrayList<>();
     private boolean LMBPressed = false;
     private Scene currentScene = null;
     private TourOfBusinessGame game;
     private Vector2 lastMousePosition = null;
+
+    public TourOfBusiness(boolean showFPS, boolean showNetworkActivity) {
+        this.showFPS = showFPS;
+        this.showNetworkActivity = showNetworkActivity;
+    }
 
     public Scene getScene() {
         return currentScene;
@@ -49,30 +56,15 @@ public class TourOfBusiness extends ApplicationAdapter implements InputProcessor
     public void create() {
         TOB = this;
         changeScene(new LoadingScene());
-        addOverlay(new FPSCounter(16, 60));
-        addOverlay(new NetworkActivityOverlay(1000));
+        if (showFPS) addOverlay(new FPSCounter(16, 60));
+        if (showNetworkActivity) addOverlay(new NetworkActivityOverlay(1000));
         game = new TourOfBusinessGame(false);
         Gdx.input.setInputProcessor(this);
-//        File original = new File("C:\\Users\\Szymon\\IdeaProjects\\TourOfBusinessGDX\\core\\assets\\x.wav");
-//        for (int i = 100; i <110; i++) {
-//            File copied = new File(
-//                    "C:\\Users\\Szymon\\IdeaProjects\\TourOfBusinessGDX\\core\\assets\\" + i + ".wav");
-//            try {
-//                FileUtils.copyFile(original, copied);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-
     }
 
     public void addOverlay(@NotNull Overlay overlay) {
         overlays.add(overlay);
         overlay.setup();
-    }
-
-    public float getFontBase() {
-        return Math.min(Gdx.graphics.getHeight() / 6f, Gdx.graphics.getWidth() / 10.666667f);
     }
 
     public void changeScene(@NotNull Scene scene) {
@@ -85,6 +77,10 @@ public class TourOfBusiness extends ApplicationAdapter implements InputProcessor
         if (currentScene != null && currentScene instanceof Interactable)
             ((Interactable) currentScene).onMouseMove(x, y);
         lastMousePosition = new Vector2(x, y);
+    }
+
+    public float getFontBase() {
+        return Math.min(Gdx.graphics.getHeight() / 6f, Gdx.graphics.getWidth() / 10.666667f);
     }
 
     public TourOfBusinessGame getGame() {
