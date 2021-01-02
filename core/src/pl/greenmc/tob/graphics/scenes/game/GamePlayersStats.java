@@ -185,7 +185,8 @@ class GamePlayersStats extends Scene {
         if (size < 5) size = 5;
         parameter.size = size;
         parameter.characters = LATIN_EXTENDED;
-        parameter.borderWidth = 0;
+        parameter.borderWidth = size / 9.333333f;
+        parameter.borderColor = Color.BLACK;
         parameter.color = Color.WHITE;
         if (fontMoney != null) fontMoney.dispose();
         fontMoney = generatorRegular.generateFont(parameter);
@@ -206,7 +207,8 @@ class GamePlayersStats extends Scene {
         if (size < 5) size = 5;
         parameter.size = size;
         parameter.characters = LATIN_EXTENDED;
-        parameter.borderWidth = 0;
+        parameter.borderWidth = size / 12f;
+        parameter.borderColor = Color.BLACK;
         parameter.color = Color.WHITE;
         if (fontNames != null) fontNames.dispose();
         fontNames = generatorBold.generateFont(parameter);

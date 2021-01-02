@@ -124,7 +124,7 @@ public class TourOfBusinessServer {
                             }
                             lobby = getLobbyByID(((JoinLobbyPacket) packet).getLobbyID());
                             boolean success = true;
-                            if (lobby == null)
+                            if (lobby == null || lobby.getLobbyState() != Lobby.LobbyState.CONFIGURING)
                                 success = false;
                             else {
                                 final Integer[] players = lobby.getPlayers();

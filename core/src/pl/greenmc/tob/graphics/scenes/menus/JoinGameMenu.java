@@ -12,6 +12,7 @@ import pl.greenmc.tob.game.netty.SentPacket;
 import pl.greenmc.tob.game.netty.client.NettyClient;
 import pl.greenmc.tob.game.netty.packets.game.lobby.GetLobbiesPacket;
 import pl.greenmc.tob.game.netty.packets.game.lobby.GetLobbiesResponse;
+import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.elements.*;
 import pl.greenmc.tob.graphics.scenes.Menu;
 
@@ -107,6 +108,16 @@ public class JoinGameMenu extends Menu {
         );
     }
 
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        updateSizes();
+    }
+
+    private void updateSizes() {
+        if (button1 != null) button1.setFontSize((int) (TOB.getFontBase() / 6));
+    }
+
     private void reloadLobbies() {
         synchronized (reloadLock) {
             reloadInProgress = true;
@@ -132,15 +143,40 @@ public class JoinGameMenu extends Menu {
                             synchronized (reloadLock) {
                                 List<Lobby> lobbies = Arrays.asList(JoinGameMenu.this.lobbies);
                                 Collections.reverse(lobbies);
+                                boolean first = true;
                                 for (Lobby lobby : lobbies) {
                                     Player owner = getPlayerByID(lobby.getOwner());
                                     String name;
                                     if (owner != null)
-                                        name = owner.getName() + "'s lobby";
-                                    else name = "Lobby of unknown player";
-                                    Button button = new Button(name);
-                                    button.setClickCallback(() -> joinLobby(lobby));
-                                    JoinGameMenu.this.element.addChild(button, 100);
+                                        name = "Lobby gracza " + owner.getName();
+                                    else name = "Lobby nieznanego gracza";
+                                    HSplitPane lobbyElement = new HSplitPane();
+
+                                    VSplitPane topRow = new VSplitPane();
+                                    VSplitPane bottomRow = new VSplitPane();
+
+                                    lobbyElement.addChild(bottomRow, new HSplitPane.ElementOptions(60, HSplitPane.ElementOptions.HeightMode.FIXED));
+                                    lobbyElement.addChild(topRow, new HSplitPane.ElementOptions(40, HSplitPane.ElementOptions.HeightMode.FIXED));
+
+                                    topRow.addChild(new Label(name, 24, false), new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE));
+
+                                    Button button = new Button("Dołącz");
+
+                                    if (lobby.getLobbyState() != Lobby.LobbyState.CONFIGURING || lobby.getPlayers().length > 6)
+                                        button.applyDisabledTheme();
+                                    else {
+                                        button.applyYesTheme();
+                                        button.setClickCallback(() -> joinLobby(lobby));
+                                    }
+
+                                    bottomRow.addChild(new Label("Stan: " + lobby.getLobbyState().name() + "\nGraczy: " + (lobby.getPlayers().length + 1) + "/8", 20, false, true), new VSplitPane.ElementOptions(1, VSplitPane.ElementOptions.WidthMode.VARIABLE));
+                                    bottomRow.addChild(button, new VSplitPane.ElementOptions(100, VSplitPane.ElementOptions.WidthMode.FIXED));
+
+                                    lobbyElement.setDrawBackground(true);
+                                    lobbyElement.setBackgroundColor(first ? GlobalTheme.scheme.color200() : GlobalTheme.scheme.color300());
+                                    first = !first;
+
+                                    JoinGameMenu.this.element.addChild(lobbyElement, 100);
                                 }
                             }
                         });
@@ -195,15 +231,5 @@ public class JoinGameMenu extends Menu {
 
     private void onBack() {
         TOB.runOnGLThread(() -> TOB.changeScene(new GameMenu()));
-    }
-
-    @Override
-    public void resize(int width, int height) {
-        super.resize(width, height);
-        updateSizes();
-    }
-
-    private void updateSizes() {
-        if (button1 != null) button1.setFontSize((int) (TOB.getFontBase() / 6));
     }
 }

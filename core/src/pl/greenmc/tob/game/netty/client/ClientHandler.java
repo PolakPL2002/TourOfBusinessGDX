@@ -227,6 +227,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                     keyPair = (KeyPair) o;
                 }
                 ois.close();
+                log("Loaded identity.");
             } catch (ClassNotFoundException e) {
                 warning("Failed to load stored key!");
                 warning(e);
@@ -253,6 +254,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
             oos.writeObject(keyPair);
             oos.flush();
             oos.close();
+            log("Created identity.");
         } catch (IOException e) {
             warning("Failed to save key! (Unable to delete existing file)");
             warning(e);
