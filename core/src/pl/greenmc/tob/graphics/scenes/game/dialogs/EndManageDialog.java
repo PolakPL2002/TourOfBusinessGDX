@@ -148,7 +148,7 @@ public class EndManageDialog extends Dialog {
 
             if (tile.getType() == Tile.TileType.CITY) {
                 boolean ok;
-                if (gameSettings.requireAllTilesInGroupToUpdate()) {
+                if (gameSettings.requireAllTilesInGroupToUpgrade()) {
                     ok = true;
                     for (Tile tile1 : ((Tile.CityTileData) tile.getData()).getTileGroup().getTiles()) {
                         int tileID = Utilities.getTileNumber(map, tile1);
@@ -171,17 +171,17 @@ public class EndManageDialog extends Dialog {
                     Label lvl = new Label(String.valueOf(tileLevel), (int) (TOB.getFontBase() / 5), false);
                     lvlDown.applyDisabledTheme();
                     lvlUp.applyDisabledTheme();
-                    if (tileLevel > 0)
+                    if (tileLevel > 0) {
                         lvlDown.applyDefaultTheme();
-                    else
                         lvlDown.setClickCallback(() -> onLevel.run(tile, false));
+                    }
                     topRow.addChild(lvlDown, new VSplitPane.ElementOptions(TOB.getFontBase() / 2, VSplitPane.ElementOptions.WidthMode.FIXED));
                     topRow.addChild(lvl, new VSplitPane.ElementOptions(TOB.getFontBase() / 2, VSplitPane.ElementOptions.WidthMode.FIXED));
                     topRow.addChild(lvlUp, new VSplitPane.ElementOptions(TOB.getFontBase() / 2, VSplitPane.ElementOptions.WidthMode.FIXED));
-                    if (tileLevel < ((Tile.CityTileData) tile.getData()).getMaxLevel())
+                    if (tileLevel < ((Tile.CityTileData) tile.getData()).getMaxLevel()) {
                         lvlUp.applyDefaultTheme();
-                    else
                         lvlUp.setClickCallback(() -> onLevel.run(tile, true));
+                    }
                 }
             }
 

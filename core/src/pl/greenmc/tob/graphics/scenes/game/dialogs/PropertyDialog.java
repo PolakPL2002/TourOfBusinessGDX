@@ -26,7 +26,7 @@ public class PropertyDialog extends Dialog {
     private final Map map;
     @NotNull
     private final Tile tile;
-    private final Label upgradeCost, group, name, owner;
+    private final Label upgradeCost, group, name, owner, cost;
     private VScrollPane rents;
 
     public PropertyDialog(@NotNull Map map, @NotNull Tile tile, @NotNull GameState.GameSettings gameSettings, @NotNull Runnable onClose, @Nullable String owner) {
@@ -42,6 +42,20 @@ public class PropertyDialog extends Dialog {
         pane.addChild(closeButton = new Button("Zamknij"), new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE));
         closeButton.setClickCallback(onClose);
         closeButton.setFontSize((int) (TOB.getFontBase() / 6));
+        long cost = 0;
+
+        switch (tile.getType()) {
+            case CITY:
+                cost = ((Tile.CityTileData) tile.getData()).getValue();
+                break;
+            case UTILITY:
+                cost = ((Tile.UtilityTileData) tile.getData()).getValue();
+                break;
+            case STATION:
+                cost = ((Tile.StationTileData) tile.getData()).getValue();
+                break;
+        }
+
         if (tile.getType() == Tile.TileType.CITY)
             pane.addChild(upgradeCost = new Label("Koszt ulepszenia: " + makeMoney(getPropertyImprovementCost(tile, gameSettings)), (int) (TOB.getFontBase() / 8), false), new HSplitPane.ElementOptions(30, HSplitPane.ElementOptions.HeightMode.VARIABLE));
         else
@@ -49,10 +63,14 @@ public class PropertyDialog extends Dialog {
 
         String groupName = getTileGroupName(tile);
 
-        pane.addChild(rents = new VScrollPane(), new HSplitPane.ElementOptions(350 + (upgradeCost == null ? 30 : 0) + (groupName.equals("") ? 30 : 0) + (owner == null ? 30 : 0), HSplitPane.ElementOptions.HeightMode.VARIABLE));
+        pane.addChild(rents = new VScrollPane(), new HSplitPane.ElementOptions(320 + (upgradeCost == null ? 30 : 0) + (groupName.equals("") ? 30 : 0) + (owner == null ? 30 : 0) + (cost == 0 ? 30 : 0), HSplitPane.ElementOptions.HeightMode.VARIABLE));
 
         updateRents();
 
+        if (cost > 0)
+            pane.addChild(this.cost = new Label("Cena: " + makeMoney(cost), (int) (TOB.getFontBase() / 8), false), new HSplitPane.ElementOptions(30, HSplitPane.ElementOptions.HeightMode.VARIABLE));
+        else
+            this.cost = null;
         if (owner != null)
             pane.addChild(this.owner = new Label(owner, (int) (TOB.getFontBase() / 8), false), new HSplitPane.ElementOptions(30, HSplitPane.ElementOptions.HeightMode.VARIABLE));
         else
@@ -192,6 +210,7 @@ public class PropertyDialog extends Dialog {
         if (upgradeCost != null) upgradeCost.setFontSize((int) (TOB.getFontBase() / 8));
         if (group != null) group.setFontSize((int) (TOB.getFontBase() / 8));
         if (owner != null) owner.setFontSize((int) (TOB.getFontBase() / 8));
+        if (cost != null) cost.setFontSize((int) (TOB.getFontBase() / 8));
         updateRents();
     }
 }

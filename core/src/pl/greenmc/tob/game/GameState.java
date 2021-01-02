@@ -125,7 +125,7 @@ public class GameState {
             if (Objects.equals(getTileOwner(tile), turnOf) && tile > -1) {
                 boolean allow = true;
                 Tile tile1 = getTile(tile);
-                if (gameSettings.requireAllTilesInGroupToUpdate()) {
+                if (gameSettings.requireAllTilesInGroupToUpgrade()) {
                     if (tile1.getType() == Tile.TileType.CITY) {
                         Tile.CityTileData data = (Tile.CityTileData) tile1.getData();
                         for (Tile tile2 : data.getTileGroup().getTiles()) {
@@ -207,6 +207,10 @@ public class GameState {
     }
 
     private int getTileLevel(int tile) {
+        return getTileLevel(tile, map, tileLevels, tileOwners);
+    }
+
+    public static int getTileLevel(int tile, @NotNull Map map, int[] tileLevels, Integer[] tileOwners) {
         Tile tile1 = map.getTiles()[tile % map.getTiles().length];
         Tile.TileGroup tileGroup;
         int num = 0;
@@ -214,21 +218,21 @@ public class GameState {
         switch (tile1.getType()) {
             case UTILITY:
                 Tile.UtilityTileData utilityTileData = (Tile.UtilityTileData) tile1.getData();
-                owner = getTileOwner(tile);
+                owner = getTileOwner(tile, tileOwners, map);
                 if (owner == null) return 0;
                 tileGroup = utilityTileData.getTileGroup();
                 for (Tile tile2 : tileGroup.getTiles()) {
-                    if (Objects.equals(getTileOwner(getTileNumber(tile2)), owner))
+                    if (Objects.equals(getTileOwner(Utilities.getTileNumber(map, tile2), tileOwners, map), owner))
                         num++;
                 }
                 return num;
             case STATION:
                 Tile.StationTileData stationTileData = (Tile.StationTileData) tile1.getData();
-                owner = getTileOwner(tile);
+                owner = getTileOwner(tile, tileOwners, map);
                 if (owner == null) return 0;
                 tileGroup = stationTileData.getTileGroup();
                 for (Tile tile2 : tileGroup.getTiles()) {
-                    if (Objects.equals(getTileOwner(getTileNumber(tile2)), owner))
+                    if (Objects.equals(getTileOwner(Utilities.getTileNumber(map, tile2), tileOwners, map), owner))
                         num++;
                 }
                 return num;
@@ -242,13 +246,17 @@ public class GameState {
     }
 
     private Integer getTileOwner(int tile) {
+        return getTileOwner(tile, tileOwners, map);
+    }
+
+    public static Integer getTileOwner(int tile, @NotNull Integer[] tileOwners, @NotNull Map map) {
         return tileOwners[tile % map.getTiles().length];
     }
 
     public void onSellPacket(int playerID, int tile) {
         if (Objects.equals(getPlayerNumFromID(playerID), turnOf) && state == State.END_ROUND) {
             if (Objects.equals(getTileOwner(tile), turnOf) && tile > -1) {
-                if (gameSettings.requireAllTilesInGroupToUpdate()) {
+                if (gameSettings.requireAllTilesInGroupToUpgrade()) {
                     Tile tile1 = getTile(tile);
                     if (tile1.getType() == Tile.TileType.CITY) {
                         Tile.CityTileData data = (Tile.CityTileData) tile1.getData();
@@ -396,7 +404,7 @@ public class GameState {
     private void setTileOwner(int tile, Integer owner) {
         tileOwners[tile % map.getTiles().length] = owner;
         if (owner == null) {
-            if (gameSettings.requireAllTilesInGroupToUpdate()) {
+            if (gameSettings.requireAllTilesInGroupToUpgrade()) {
                 Tile tile1 = getTile(tile);
                 if (tile1.getType() == Tile.TileType.CITY) {
                     for (Tile tile2 : ((Tile.CityTileData) tile1.getData()).getTileGroup().getTiles()) {
@@ -1602,7 +1610,7 @@ public class GameState {
         private int numDices = 2;
         private float priceModifier = 1f;
         private float rentModifier = 1f;
-        private boolean requireAllTilesInGroupToUpdate = true;
+        private boolean requireAllTilesInGroupToUpgrade = true;
         private boolean startAuctionOnDontBuy = true;
         private boolean startAuctionOnInsufficientFunds = true;
         private float startStandMultiplier = 2.0f;
@@ -1672,7 +1680,7 @@ public class GameState {
 
                         JsonElement requireAllTilesInGroupToUpdate = jsonObject.get("requireAllTilesInGroupToUpdate");
                         if (requireAllTilesInGroupToUpdate != null && requireAllTilesInGroupToUpdate.isJsonPrimitive())
-                            this.requireAllTilesInGroupToUpdate = requireAllTilesInGroupToUpdate.getAsBoolean();
+                            this.requireAllTilesInGroupToUpgrade = requireAllTilesInGroupToUpdate.getAsBoolean();
                         else throw new InvalidPacketException();
 
                         JsonElement startAuctionOnDontBuy = jsonObject.get("startAuctionOnDontBuy");
@@ -1724,7 +1732,7 @@ public class GameState {
             out.addProperty("numDices", numDices);
             out.addProperty("priceModifier", priceModifier);
             out.addProperty("rentModifier", rentModifier);
-            out.addProperty("requireAllTilesInGroupToUpdate", requireAllTilesInGroupToUpdate);
+            out.addProperty("requireAllTilesInGroupToUpdate", requireAllTilesInGroupToUpgrade);
             out.addProperty("startAuctionOnDontBuy", startAuctionOnDontBuy);
             out.addProperty("startAuctionOnInsufficientFunds", startAuctionOnInsufficientFunds);
             out.addProperty("startingBalance", startingBalance);
@@ -1822,12 +1830,12 @@ public class GameState {
             this.numDices = numDices;
         }
 
-        public boolean requireAllTilesInGroupToUpdate() {
-            return requireAllTilesInGroupToUpdate;
+        public boolean requireAllTilesInGroupToUpgrade() {
+            return requireAllTilesInGroupToUpgrade;
         }
 
-        public void setRequireAllTilesInGroupToUpdate(boolean requireAllTilesInGroupToUpdate) {
-            this.requireAllTilesInGroupToUpdate = requireAllTilesInGroupToUpdate;
+        public void setRequireAllTilesInGroupToUpgrade(boolean requireAllTilesInGroupToUpgrade) {
+            this.requireAllTilesInGroupToUpgrade = requireAllTilesInGroupToUpgrade;
         }
 
         public boolean startAuctionOnDontBuy() {

@@ -72,14 +72,14 @@ public class Utilities {
         String s;
         DecimalFormat decimalFormat = new DecimalFormat("0.0", DecimalFormatSymbols.getInstance(Locale.US));
         if (value >= 1000000) {
-            s = decimalFormat.format(Math.round(value / 100000d) / 10d) + "M$";
-            if (s.charAt(s.length() - 3) == '0')
-                s = s.substring(0, s.length() - 4) + "M$";
+            s = decimalFormat.format(Math.round(value / 100000d) / 10d) + "M";
+            if (s.charAt(s.length() - 2) == '0')
+                s = s.substring(0, s.length() - 3) + "M";
         } else if (value >= 1000) {
-            s = decimalFormat.format(Math.round(value / 100d) / 10d) + "k$";
-            if (s.charAt(s.length() - 3) == '0')
-                s = s.substring(0, s.length() - 4) + "k$";
-        } else s = value + "$";
+            s = decimalFormat.format(Math.round(value / 100d) / 10d) + "k";
+            if (s.charAt(s.length() - 2) == '0')
+                s = s.substring(0, s.length() - 3) + "k";
+        } else s = String.valueOf(value);
         return (negative ? "-" : "") + s;
     }
 

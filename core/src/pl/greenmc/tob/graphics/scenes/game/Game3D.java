@@ -2,19 +2,22 @@ package pl.greenmc.tob.graphics.scenes.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.math.Quaternion;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.math.*;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.map.Map;
 import pl.greenmc.tob.game.map.Tile;
+import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.Hitbox;
 import pl.greenmc.tob.graphics.PolygonHitbox;
 import pl.greenmc.tob.graphics.Scene;
@@ -36,6 +39,8 @@ class Game3D extends Scene {
     private final ArrayList<ModelInstance> playerInstances = new ArrayList<>();
     private final ArrayList<HashMap<Tile, Vector3>> playerTileLocations = new ArrayList<>();
     private final ArrayList<Integer> selectedTiles = new ArrayList<>();
+    private final HashMap<Tile, ModelInstance> tileFrameBufferOverlay = new HashMap<>();
+    private final HashMap<Tile, FrameBuffer> tileFrameBuffers = new HashMap<>();
     private final HashMap<Tile, ArrayList<ArrayList<ModelInstance>>> tileLevelModels = new HashMap<>(); //tile,level,models
     private final HashMap<Tile, Integer> tileLevels = new HashMap<>();
     private final HashMap<Tile, Integer> tileOwners = new HashMap<>();
@@ -61,6 +66,42 @@ class Game3D extends Scene {
             selectedTiles.remove((Integer) tile);
         else
             selectedTiles.add(tile);
+    }
+
+    public void updateTileText(@NotNull Tile tile, @NotNull String text, @NotNull Color textColor, @NotNull Color outlineColor, float outlineWidth) {
+        FrameBuffer frameBuffer = tileFrameBuffers.get(tile);
+        frameBuffer.begin();
+        Gdx.gl.glClearColor(0, 0, 0, 0);
+        Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/Nunito-Regular.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.borderColor = outlineColor;
+        parameter.borderWidth = outlineWidth;
+        parameter.color = textColor;
+        if (text.length() > 0)
+            parameter.size = 800 / text.length();
+        else {
+            generator.dispose();
+            frameBuffer.end();
+            return;
+        }
+        parameter.size = 200;
+        parameter.characters = text;
+        BitmapFont font = generator.generateFont(parameter);
+
+        GlyphLayout layout = new GlyphLayout(font, text, Color.WHITE, frameBuffer.getWidth(), 1, false);
+        SpriteBatch batch = new SpriteBatch();
+        batch.setProjectionMatrix(new Matrix4().setToOrtho2D(0, frameBuffer.getHeight(), frameBuffer.getWidth(), -frameBuffer.getHeight()));
+        batch.begin();
+
+        font.draw(batch, layout, 0, layout.height + 32);
+        batch.end();
+        batch.dispose();
+        font.dispose();
+        generator.dispose();
+        frameBuffer.end();
     }
 
     public void clearSelectedTiles() {
@@ -95,6 +136,7 @@ class Game3D extends Scene {
             hitboxesFor = new Rectangle(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         }
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        Gdx.gl.glClearColor(GlobalTheme.backgroundColor.r, GlobalTheme.backgroundColor.g, GlobalTheme.backgroundColor.b, GlobalTheme.backgroundColor.a);
         Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         modelBatch.begin(cam);
         Gdx.gl.glEnable(GL20.GL_BLEND);
@@ -131,6 +173,8 @@ class Game3D extends Scene {
 
         for (int selectedTile : selectedTiles)
             modelBatch.render(tileTargetOverlay.get(map.getTiles()[selectedTile]), environment);
+        for (ModelInstance overlay : tileFrameBufferOverlay.values())
+            modelBatch.render(overlay, environment);
         modelBatch.end();
     }
 
@@ -169,8 +213,32 @@ class Game3D extends Scene {
         }
     }
 
+    public void setSelectedTile(Integer selectedTile) {
+        this.selectedTile = selectedTile;
+    }
+
     public Integer getSelectedTile() {
         return selectedTile;
+    }
+
+    public void setSelectedTile(Tile selectedTile) {
+        Tile[] tiles = map.getTiles();
+        for (int i = 0; i < tiles.length; i++) {
+            Tile tile = tiles[i];
+            if (tile == selectedTile) {
+                this.selectedTile = i;
+                return;
+            }
+        }
+        this.selectedTile = null;
+    }
+
+    @Override
+    public void dispose() {
+        modelBatch.dispose();
+        boardModel.dispose();
+        models.forEach(Model::dispose);
+        tileFrameBuffers.values().forEach(FrameBuffer::dispose);
     }
 
     @Override
@@ -343,6 +411,24 @@ class Game3D extends Scene {
                 }
                 tileLevelModels.get(tile).add(models);
             }
+
+            //FrameBuffer
+            FrameBuffer frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, 512, 512, false);
+            tileFrameBuffers.put(tile, frameBuffer);
+            Model frameBufferOverlay;
+            Material frameBufferMaterial = new Material(TextureAttribute.createDiffuse(frameBuffer.getColorBufferTexture()));
+            frameBufferMaterial.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+            models.add(frameBufferOverlay = createPlane(modelBuilder, tileSizeBase - 0.0025f, tileSizeBase - 0.0025f,
+                    frameBufferMaterial));
+            models.add(frameBufferOverlay);
+            modelInstance = new ModelInstance(frameBufferOverlay);
+            modelInstance.transform.translate(tileLocation);
+            if (row % 2 == 1 && !bigTile) {
+                modelInstance.transform.translate(0, 0.0158f, tileSizeBase);
+                modelInstance.transform.rotate(new Vector3(0, 1, 0), 90);
+            } else
+                modelInstance.transform.translate(-tileSizeBase, 0.0158f, 0);
+            tileFrameBufferOverlay.put(tile, modelInstance);
         }
         for (int j = 0; j < playerColors.length; j++) {
             Material material = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
@@ -386,56 +472,6 @@ class Game3D extends Scene {
     }
 
     @NotNull
-    private Material getMaterialWithTransparency(String s) {
-        Material targetMaterialL = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
-                .get(s)));
-        targetMaterialL.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
-        return targetMaterialL;
-    }
-
-    public void setShowPlayer(int player, boolean showPlayer) {
-        if (showPlayers.length > 0)
-            showPlayers[player % showPlayers.length] = showPlayer;
-    }
-
-    public void setSelectedTile(Integer selectedTile) {
-        this.selectedTile = selectedTile;
-    }
-
-    public void setSelectedTile(Tile selectedTile) {
-        Tile[] tiles = map.getTiles();
-        for (int i = 0; i < tiles.length; i++) {
-            Tile tile = tiles[i];
-            if (tile == selectedTile) {
-                this.selectedTile = i;
-                return;
-            }
-        }
-        this.selectedTile = null;
-    }
-
-    @Override
-    public void resize(int width, int height) {
-        modelBatch.dispose();
-        modelBatch = new ModelBatch();
-        generateHitboxes();
-        setupCamera();
-    }
-
-    @Override
-    public void dispose() {
-        modelBatch.dispose();
-        boardModel.dispose();
-        models.forEach(Model::dispose);
-    }
-
-    public void movePlayer(int player, int position, boolean animate) {
-        if (animate)
-            playerMoveAnimation = new PlayerMoveAnimation(player % playerPositions.length, playerPositions[player % playerPositions.length], position, 150);
-        playerPositions[player % playerPositions.length] = position;
-    }
-
-    @NotNull
     private Vector3 getTileLocation(int numTiles, float tileSizeBase, int idInRow, boolean bigTile, int row) {
         float offset = tileSizeBase * numTiles / 4 - idInRow * tileSizeBase * 2;
         float x = 0, y = 0.065f, z = 0;
@@ -469,6 +505,33 @@ class Game3D extends Scene {
             z = tileSizeBase * (numTiles / 4.0f + 1) + 0.0025f;
         }
         return new Vector3(x, y, z);
+    }
+
+    public void setShowPlayer(int player, boolean showPlayer) {
+        if (showPlayers.length > 0)
+            showPlayers[player % showPlayers.length] = showPlayer;
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        modelBatch.dispose();
+        modelBatch = new ModelBatch();
+        generateHitboxes();
+        setupCamera();
+    }
+
+    @NotNull
+    private Material getMaterialWithTransparency(String s) {
+        Material material = new Material(TextureAttribute.createDiffuse((Texture) TOB.getGame().getAssetManager()
+                .get(s)));
+        material.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+        return material;
+    }
+
+    public void movePlayer(int player, int position, boolean animate) {
+        if (animate)
+            playerMoveAnimation = new PlayerMoveAnimation(player % playerPositions.length, playerPositions[player % playerPositions.length], position, 150);
+        playerPositions[player % playerPositions.length] = position;
     }
 
     public void setNumPlayers(int num) {

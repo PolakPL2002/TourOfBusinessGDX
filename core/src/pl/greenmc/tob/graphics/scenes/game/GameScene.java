@@ -37,6 +37,7 @@ import static pl.greenmc.tob.TourOfBusiness.TOB;
 import static pl.greenmc.tob.game.GameState.*;
 import static pl.greenmc.tob.game.util.Logger.*;
 import static pl.greenmc.tob.game.util.Utilities.makeMoney;
+import static pl.greenmc.tob.game.util.Utilities.makeShortMoney;
 
 public class GameScene extends Scene implements Interactable {
     private final Object endGenerationLock = new Object();
@@ -64,8 +65,8 @@ public class GameScene extends Scene implements Interactable {
     private int startingPlayerNum;
     private GameState.State state;
     private TileClickAction tileClickAction = TileClickAction.DETAILS;
-    private int[] tileLevels;
-    private Integer[] tileOwners;
+    private int[] tileLevels = new int[0];
+    private Integer[] tileOwners = new Integer[0];
 
     public GameScene(Map map) {
         this.map = map;
@@ -78,6 +79,16 @@ public class GameScene extends Scene implements Interactable {
 
     private String getPlayerName(int playerID) {
         return playerNames.getOrDefault(playerID, "<Ładowanie...>");
+    }
+
+    public static void onEndAction() {
+        try {
+            NettyClient.getInstance().getClientHandler().send(
+                    new EndGameTimeoutResetPacket(),
+                    new SentPacket.Callback.BlankCallback(), false);
+        } catch (ConnectionNotAliveException e) {
+            warning(e);
+        }
     }
 
     public void onGameStateChanged(@NotNull GameState.Data data) {
@@ -93,6 +104,25 @@ public class GameScene extends Scene implements Interactable {
         GameState.State previousState = this.state;
         this.state = data.getState();
         sellAmount = data.getSellAmount();
+        boolean modified = false;
+        if (tileLevels.length == data.getTileLevels().length) {
+            for (int i = 0; i < tileLevels.length; i++) {
+                if (tileLevels[i] != data.getTileLevels()[i]) {
+                    modified = true;
+                    break;
+                }
+            }
+        } else
+            modified = true;
+        if (!modified && tileOwners.length == data.getTileOwners().length) {
+            for (int i = 0; i < tileOwners.length; i++) {
+                if (!Objects.equals(tileOwners[i], data.getTileOwners()[i])) {
+                    modified = true;
+                    break;
+                }
+            }
+        } else
+            modified = true;
         tileLevels = data.getTileLevels();
         tileOwners = data.getTileOwners();
         playerCards = data.getPlayerCards();
@@ -167,16 +197,9 @@ public class GameScene extends Scene implements Interactable {
         if (this.state == GameState.State.AUCTION) {
             TOB.runOnGLThread(() -> changeDialog(new AuctionDialog()));
         }
-    }
-
-    public static void onEndAction() {
-        try {
-            NettyClient.getInstance().getClientHandler().send(
-                    new EndGameTimeoutResetPacket(),
-                    new SentPacket.Callback.BlankCallback(), false);
-        } catch (ConnectionNotAliveException e) {
-            warning(e);
-        }
+        if (modified)
+            for (Tile tile : map.getTiles())
+                updateTileText(tile);
     }
 
     private void updatePlayersStats() {
@@ -219,6 +242,34 @@ public class GameScene extends Scene implements Interactable {
         }
     }
 
+    private void updateTileText(@NotNull Tile tile) {
+        Color color = Color.BLACK;
+        String text = "";
+        if (tile.getType() == Tile.TileType.CITY || tile.getType() == Tile.TileType.STATION) {
+            if (getTileOwner(getTileNumber(tile)) != null) {
+                text = makeShortMoney(getPropertyRent(tile, getTileLevel(getTileNumber(tile)), new int[0], gameSettings));
+            } else {
+                color = GlobalTheme.scheme.color900();
+                text = makeShortMoney(getPropertyPrice(tile, gameSettings));
+            }
+        } else if (tile.getType() == Tile.TileType.UTILITY) {
+            if (getTileOwner(getTileNumber(tile)) == null) {
+                color = GlobalTheme.scheme.color900();
+                text = makeShortMoney(getPropertyPrice(tile, gameSettings));
+            }
+        } else if (tile.getType() == Tile.TileType.START) {
+            text = makeShortMoney(((Tile.StartTileData) tile.getData()).getStartMoney());
+            color = GlobalTheme.scheme.color900();
+        } else if (tile.getType() == Tile.TileType.LUXURY_TAX) {
+            text = makeShortMoney(((Tile.LuxuryTaxTileData) tile.getData()).getCost());
+        } else if (tile.getType() == Tile.TileType.INCOME_TAX) {
+            text = makeShortMoney(((Tile.IncomeTaxTileData) tile.getData()).getCost());
+        }
+        final String finalText = text;
+        final Color finalColor = color;
+        TOB.runOnGLThread(() -> game3D.updateTileText(tile, finalText, finalColor, Color.GRAY, 0));
+    }
+
     private void updateSellDialog() {
         long totalValue = 0;
         if (game3D != null) {
@@ -256,29 +307,6 @@ public class GameScene extends Scene implements Interactable {
             newDialog.setup();
             if (lastMousePos != null) newDialog.onMouseMove((int) lastMousePos.x, (int) lastMousePos.y);
         }
-    }
-
-    @Override
-    public void onMouseUp() {
-        if (game3D != null && clickOnTile != null && Objects.equals(clickOnTile, game3D.getSelectedTile()))
-            switch (tileClickAction) {
-                case SELECT:
-                    if (Objects.equals(tileOwners[clickOnTile], selfNum))
-                        game3D.toggleSelection(clickOnTile);
-                    if (dialog != null && dialog instanceof SellDialog)
-                        updateSellDialog();
-                    break;
-                case DETAILS:
-                    if (dialog == null) {
-                        TOB.runOnGLThread(() -> {
-                            Integer tileOwner = tileOwners[clickOnTile];
-                            changeDialog(new PropertyDialog(map, map.getTiles()[clickOnTile % map.getTiles().length], gameSettings, () -> TOB.runOnGLThread(() -> changeDialog(null)), tileOwner == null ? "Pole nie należy do nikogo" : "Pole należy do " + getPlayerName(playerIDs[tileOwner])));
-                        });
-                    }
-                    break;
-            }
-
-        if (dialog != null) dialog.onMouseUp();
     }
 
     public void onPay(@Nullable Integer from, @Nullable Integer to, long amount) {
@@ -331,42 +359,8 @@ public class GameScene extends Scene implements Interactable {
         if (dialog != null) dialog.onScroll(x, y);
     }
 
-    public void onTileModified(int tile, Integer owner, int level) {
-        if (game3D != null) {
-            game3D.setTileOwner(tile, owner);
-            game3D.setTileLevel(tile, level);
-        }
-        if (tileOwners[tile % map.getTiles().length] == null && owner != null) {
-            //Tile bought
-            if (gamePlayersStats != null)
-                gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[owner]) + " kupił " + getTileName(map.getTiles()[tile % map.getTiles().length]) + ".", 5000);
-        } else if (tileOwners[tile % map.getTiles().length] != null && owner == null) {
-            if (gamePlayersStats != null)
-                gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[tileOwners[tile % map.getTiles().length]]) + " sprzedał " + getTileName(map.getTiles()[tile % map.getTiles().length]) + ".", 5000);
-        }
-        if (tileLevels[tile % map.getTiles().length] != level) {
-            if (tileLevels[tile % map.getTiles().length] > level) {
-                //Tile downgraded
-                if (gamePlayersStats != null && tileOwners[tile % map.getTiles().length] != null)
-                    gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[tileOwners[tile % map.getTiles().length]]) + " odlepszył " + getTileName(map.getTiles()[tile % map.getTiles().length]) + " do poziomu " + level + ".", 5000);
-            } else {
-                //Tile upgraded
-                if (gamePlayersStats != null && tileOwners[tile % map.getTiles().length] != null)
-                    gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[tileOwners[tile % map.getTiles().length]]) + " ulepszył " + getTileName(map.getTiles()[tile % map.getTiles().length]) + " do poziomu " + level + ".", 5000);
-            }
-        }
-        tileOwners[tile % map.getTiles().length] = owner;
-        tileLevels[tile % map.getTiles().length] = level;
-        //Synchronized to await end of generation
-        TOB.runOnGLThread(() -> {
-            synchronized (endGenerationLock) {
-                if (dialog != null)
-                    log(dialog.toString());
-                if (dialog != null && dialog instanceof EndManageDialog) {
-                    changeEndDialog();
-                }
-            }
-        });
+    private int getTileLevel(int tile) {
+        return GameState.getTileLevel(tile, map, tileLevels, tileOwners);
     }
 
     @Override
@@ -492,6 +486,72 @@ public class GameScene extends Scene implements Interactable {
                 return ((Tile.GoToJailTileData) tile.getData()).getTileGroup().getName();
         }
         return "";
+    }
+
+    private Integer getTileOwner(int tile) {
+        return GameState.getTileOwner(tile, tileOwners, map);
+    }
+
+    @Override
+    public void onMouseUp() {
+        if (game3D != null && clickOnTile != null && Objects.equals(clickOnTile, game3D.getSelectedTile()))
+            switch (tileClickAction) {
+                case SELECT:
+                    if (Objects.equals(tileOwners[clickOnTile], selfNum))
+                        game3D.toggleSelection(clickOnTile);
+                    if (dialog != null && dialog instanceof SellDialog)
+                        updateSellDialog();
+                    break;
+                case DETAILS:
+                    if (dialog == null) {
+                        TOB.runOnGLThread(() -> {
+                            Integer tileOwner = tileOwners[clickOnTile];
+                            changeDialog(new PropertyDialog(map, map.getTiles()[clickOnTile % map.getTiles().length], gameSettings, () -> TOB.runOnGLThread(() -> changeDialog(null)), tileOwner == null ? "Pole nie należy do nikogo" : "Pole należy do " + getPlayerName(playerIDs[tileOwner])));
+                        });
+                    }
+                    break;
+            }
+
+        if (dialog != null) dialog.onMouseUp();
+    }
+
+    public void onTileModified(int tile, Integer owner, int level) {
+        if (game3D != null) {
+            game3D.setTileOwner(tile, owner);
+            game3D.setTileLevel(tile, level);
+        }
+        if (tileOwners[tile % map.getTiles().length] == null && owner != null) {
+            //Tile bought
+            if (gamePlayersStats != null)
+                gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[owner]) + " kupił " + getTileName(map.getTiles()[tile % map.getTiles().length]) + ".", 5000);
+        } else if (tileOwners[tile % map.getTiles().length] != null && owner == null) {
+            if (gamePlayersStats != null)
+                gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[tileOwners[tile % map.getTiles().length]]) + " sprzedał " + getTileName(map.getTiles()[tile % map.getTiles().length]) + ".", 5000);
+        }
+        if (tileLevels[tile % map.getTiles().length] != level) {
+            if (tileLevels[tile % map.getTiles().length] > level) {
+                //Tile downgraded
+                if (gamePlayersStats != null && tileOwners[tile % map.getTiles().length] != null)
+                    gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[tileOwners[tile % map.getTiles().length]]) + " odlepszył " + getTileName(map.getTiles()[tile % map.getTiles().length]) + " do poziomu " + level + ".", 5000);
+            } else {
+                //Tile upgraded
+                if (gamePlayersStats != null && tileOwners[tile % map.getTiles().length] != null)
+                    gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[tileOwners[tile % map.getTiles().length]]) + " ulepszył " + getTileName(map.getTiles()[tile % map.getTiles().length]) + " do poziomu " + level + ".", 5000);
+            }
+        }
+        tileOwners[tile % map.getTiles().length] = owner;
+        tileLevels[tile % map.getTiles().length] = level;
+        updateTileText(map.getTiles()[tile % map.getTiles().length]);
+        //Synchronized to await end of generation
+        TOB.runOnGLThread(() -> {
+            synchronized (endGenerationLock) {
+                if (dialog != null)
+                    log(dialog.toString());
+                if (dialog != null && dialog instanceof EndManageDialog) {
+                    changeEndDialog();
+                }
+            }
+        });
     }
 
     private void changeEndDialog() {
