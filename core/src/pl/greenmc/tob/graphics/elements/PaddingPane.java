@@ -8,6 +8,7 @@ import pl.greenmc.tob.graphics.*;
 
 import static com.badlogic.gdx.graphics.GL20.GL_SCISSOR_TEST;
 import static pl.greenmc.tob.TourOfBusiness.TOB;
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
 
 public class PaddingPane extends Element implements Interactable {
     private SolidColor background;
@@ -95,7 +96,7 @@ public class PaddingPane extends Element implements Interactable {
     }
 
     public void setChild(@NotNull Element child) {
-        this.child.dispose();
+        disposeObject(this.child);
         this.child = child;
         child.setup();
     }
@@ -167,7 +168,7 @@ public class PaddingPane extends Element implements Interactable {
 
     @Override
     public void dispose() {
-        child.dispose();
-        background.dispose();
+        disposeObject(child);
+        disposeObject(background);
     }
 }

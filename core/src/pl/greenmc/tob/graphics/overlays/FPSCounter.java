@@ -12,6 +12,8 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
+
 public class FPSCounter extends Overlay {
     private SpriteBatch batch;
     private final DecimalFormat decimalFormat = new DecimalFormat("0.0", DecimalFormatSymbols.getInstance(Locale.US));
@@ -73,14 +75,14 @@ public class FPSCounter extends Overlay {
 
     @Override
     public void resize(int width, int height) {
-        batch.dispose();
+        disposeObject(batch);
         batch = new SpriteBatch();
     }
 
     @Override
     public void dispose() {
-        batch.dispose();
-        generator.dispose();
-        if (font != null) font.dispose();
+        disposeObject(batch);
+        disposeObject(generator);
+        disposeObject(font);
     }
 }

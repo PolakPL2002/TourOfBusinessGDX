@@ -21,6 +21,7 @@ import java.util.Locale;
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static pl.greenmc.tob.game.util.Logger.log;
 import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
 
 public class ErrorScene extends Scene {
     private final DecimalFormat decimalFormat = new DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.US));
@@ -89,7 +90,7 @@ public class ErrorScene extends Scene {
 
         parameter.size = Gdx.graphics.getHeight() / 36;
         parameter.characters = LATIN_EXTENDED;
-        if (font != null) font.dispose();
+        disposeObject(font);
         font = generator.generateFont(parameter);
 
         layout = new GlyphLayout(font, error);
@@ -97,8 +98,8 @@ public class ErrorScene extends Scene {
 
     @Override
     public void resize(int width, int height) {
-        frameBuffer.dispose();
-        batch.dispose();
+        disposeObject(frameBuffer);
+        disposeObject(batch);
 
         frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), false);
         batch = new SpriteBatch();
@@ -109,10 +110,10 @@ public class ErrorScene extends Scene {
 
     @Override
     public void dispose() {
-        frameBuffer.dispose();
-        progressBar.dispose();
-        generator.dispose();
-        font.dispose();
-        batch.dispose();
+        disposeObject(frameBuffer);
+        disposeObject(progressBar);
+        disposeObject(generator);
+        disposeObject(font);
+        disposeObject(batch);
     }
 }

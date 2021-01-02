@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import pl.greenmc.tob.graphics.Element;
 import pl.greenmc.tob.graphics.GlobalTheme;
 
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
+
 public class SolidColor extends Element {
     private Color color = GlobalTheme.backgroundColor;
     private ShapeRenderer renderer;
@@ -39,12 +41,12 @@ public class SolidColor extends Element {
 
     @Override
     public void resize(int width, int height) {
-        renderer.dispose();
+        disposeObject(renderer);
         renderer = new ShapeRenderer();
     }
 
     @Override
     public void dispose() {
-        renderer.dispose();
+        disposeObject(renderer);
     }
 }

@@ -10,7 +10,7 @@ public class SolidBackground extends Background {
 
     @Override
     public void draw(float x, float y, float w, float h) {
-
+        Gdx.gl.glClearColor(color.r, color.g, color.b, color.a);
     }
 
     @Override
@@ -31,6 +31,6 @@ public class SolidBackground extends Background {
      */
     @Override
     public void dispose() {
-        Gdx.gl.glClearColor(color.r, color.g, color.b, color.a);
+
     }
 }

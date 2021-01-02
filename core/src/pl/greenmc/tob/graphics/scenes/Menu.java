@@ -19,6 +19,7 @@ import pl.greenmc.tob.graphics.elements.VSplitPane;
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
 import static pl.greenmc.tob.TourOfBusiness.TOB;
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
 
 public class Menu extends Scene implements Interactable {
     protected boolean disposed = false;
@@ -55,8 +56,8 @@ public class Menu extends Scene implements Interactable {
         }
     }
 
-    public void setBackground(Background background) {
-        if (this.background != null) this.background.dispose();
+    public void setBackground(@NotNull Background background) {
+        disposeObject(this.background);
         this.background = background;
         background.setup();
     }
@@ -91,15 +92,15 @@ public class Menu extends Scene implements Interactable {
     }
 
     public void setElement(@NotNull Element element) {
-        if (this.element != null) this.element.dispose();
+        disposeObject(this.element);
         this.element = element;
         this.element.setup();
     }
 
     @Override
     public void resize(int width, int height) {
-        batch.dispose();
-        frameBuffer.dispose();
+        disposeObject(batch);
+        disposeObject(frameBuffer);
 
         batch = new SpriteBatch();
         frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), true);
@@ -111,8 +112,8 @@ public class Menu extends Scene implements Interactable {
     @Override
     public void dispose() {
         disposed = true;
-        batch.dispose();
-        frameBuffer.dispose();
-        if (this.element != null) element.dispose();
+        disposeObject(batch);
+        disposeObject(frameBuffer);
+        disposeObject(element);
     }
 }

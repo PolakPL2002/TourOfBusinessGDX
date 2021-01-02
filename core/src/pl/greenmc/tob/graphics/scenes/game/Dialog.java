@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.graphics.*;
 
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
+
 public abstract class Dialog extends Overlay implements Interactable {
     private final Element child;
     private float height;
@@ -92,7 +94,7 @@ public abstract class Dialog extends Overlay implements Interactable {
      */
     @Override
     public void dispose() {
-        child.dispose();
+        disposeObject(child);
     }
 
     protected Element getChild() {

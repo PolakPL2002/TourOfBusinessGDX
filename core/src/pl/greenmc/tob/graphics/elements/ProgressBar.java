@@ -16,6 +16,7 @@ import java.util.Locale;
 
 import static com.badlogic.gdx.graphics.GL20.*;
 import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
 
 public class ProgressBar extends Element {
     private final DecimalFormat decimalFormat = new DecimalFormat("0.0", DecimalFormatSymbols.getInstance(Locale.US));
@@ -53,15 +54,15 @@ public class ProgressBar extends Element {
         if (size < 5) size = 5;
         parameter.size = size;
         parameter.characters = LATIN_EXTENDED;
-        if (font != null) font.dispose();
+        disposeObject(font);
         font = generator.generateFont(parameter);
         layout = new GlyphLayout(font, text);
     }
 
     @Override
     public void resize(int width, int height) {
-        if (renderer != null) renderer.dispose();
-        if (batch != null) batch.dispose();
+        disposeObject(renderer);
+        disposeObject(batch);
 
         batch = new SpriteBatch();
         renderer = new ShapeRenderer();
@@ -211,10 +212,10 @@ public class ProgressBar extends Element {
     }
 
     public void dispose() {
-        generator.dispose();
-        if (renderer != null) renderer.dispose();
-        if (batch != null) batch.dispose();
-        font.dispose();
+        disposeObject(generator);
+        disposeObject(renderer);
+        disposeObject(batch);
+        disposeObject(font);
     }
 
     public enum TextMode {

@@ -13,6 +13,7 @@ import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.elements.ProgressBar;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
 
 public class LoadingScene extends Scene {
     private final Color backgroundColor = GlobalTheme.backgroundColor;
@@ -93,8 +94,8 @@ public class LoadingScene extends Scene {
 
     @Override
     public void resize(int width, int height) {
-        frameBuffer.dispose();
-        batch.dispose();
+        disposeObject(frameBuffer);
+        disposeObject(batch);
 
         frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Math.max(Gdx.graphics.getWidth(), 1), Math.max(Gdx.graphics.getHeight(), 1), false);
         batch = new SpriteBatch();
@@ -103,10 +104,10 @@ public class LoadingScene extends Scene {
 
     @Override
     public void dispose() {
-        frameBuffer.dispose();
-        batch.dispose();
-        logo.dispose();
-        progressBar.dispose();
+        disposeObject(frameBuffer);
+        disposeObject(batch);
+        disposeObject(logo);
+        disposeObject(progressBar);
     }
 
     public void updateText(String text) {

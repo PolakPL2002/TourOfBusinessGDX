@@ -5,6 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.graphics.Background;
 import pl.greenmc.tob.graphics.elements.Image;
 
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
+
 public class ImageBackground extends Background {
     private final Image.Align align;
     private final Texture texture;
@@ -39,12 +41,12 @@ public class ImageBackground extends Background {
      */
     @Override
     public void dispose() {
-        image.dispose();
-        if (child != null) child.dispose();
+        disposeObject(image);
+        disposeObject(child);
     }
 
     public ImageBackground setChild(@NotNull Background background) {
-        if (child != null) child.dispose();
+        disposeObject(child);
         child = background;
         child.setup();
         return this;

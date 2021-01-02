@@ -3,6 +3,7 @@ package pl.greenmc.tob.graphics.elements;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import pl.greenmc.tob.game.util.Utilities;
 import pl.greenmc.tob.graphics.Element;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.Hitbox;
@@ -10,6 +11,8 @@ import pl.greenmc.tob.graphics.Interactable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
 
 public abstract class SplitPane extends Element implements Interactable {
     protected final ArrayList<Element> children = new ArrayList<>();
@@ -104,9 +107,9 @@ public abstract class SplitPane extends Element implements Interactable {
     @Override
     public void dispose() {
         synchronized (children) {
-            children.forEach(Element::dispose);
+            children.forEach(Utilities::disposeObject);
         }
-        if (renderer != null) renderer.dispose();
+        disposeObject(renderer);
     }
 
     @Override
@@ -118,7 +121,7 @@ public abstract class SplitPane extends Element implements Interactable {
 
     @Override
     public void resize(int width, int height) {
-        renderer.dispose();
+        disposeObject(renderer);
 
         renderer = new ShapeRenderer();
         synchronized (children) {

@@ -17,6 +17,7 @@ import com.badlogic.gdx.math.*;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.map.Map;
 import pl.greenmc.tob.game.map.Tile;
+import pl.greenmc.tob.game.util.Utilities;
 import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.Hitbox;
 import pl.greenmc.tob.graphics.PolygonHitbox;
@@ -29,6 +30,7 @@ import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
 import static pl.greenmc.tob.TourOfBusiness.TOB;
 import static pl.greenmc.tob.game.util.Utilities.boundInt;
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
 import static pl.greenmc.tob.graphics.GlobalTheme.playerColors;
 
 class Game3D extends Scene {
@@ -83,7 +85,7 @@ class Game3D extends Scene {
         if (text.length() > 0)
             parameter.size = 800 / text.length();
         else {
-            generator.dispose();
+            disposeObject(generator);
             frameBuffer.end();
             return;
         }
@@ -98,9 +100,9 @@ class Game3D extends Scene {
 
         font.draw(batch, layout, 0, layout.height + 32);
         batch.end();
-        batch.dispose();
-        font.dispose();
-        generator.dispose();
+        disposeObject(batch);
+        disposeObject(font);
+        disposeObject(generator);
         frameBuffer.end();
     }
 
@@ -235,10 +237,10 @@ class Game3D extends Scene {
 
     @Override
     public void dispose() {
-        modelBatch.dispose();
-        boardModel.dispose();
-        models.forEach(Model::dispose);
-        tileFrameBuffers.values().forEach(FrameBuffer::dispose);
+        disposeObject(modelBatch);
+        disposeObject(boardModel);
+        models.forEach(Utilities::disposeObject);
+        tileFrameBuffers.values().forEach(Utilities::disposeObject);
     }
 
     @Override
@@ -514,7 +516,7 @@ class Game3D extends Scene {
 
     @Override
     public void resize(int width, int height) {
-        modelBatch.dispose();
+        disposeObject(modelBatch);
         modelBatch = new ModelBatch();
         generateHitboxes();
         setupCamera();

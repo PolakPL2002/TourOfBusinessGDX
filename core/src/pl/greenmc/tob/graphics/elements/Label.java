@@ -13,6 +13,7 @@ import pl.greenmc.tob.graphics.Element;
 import pl.greenmc.tob.graphics.GlobalTheme;
 
 import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
 
 public class Label extends Element {
     private final FreeTypeFontGenerator generator;
@@ -59,7 +60,7 @@ public class Label extends Element {
             parameter.color = textColor;
             parameter.borderColor = outlineColor;
             parameter.borderWidth = outlineWidth;
-            if (font != null) font.dispose();
+            disposeObject(font);
             font = generator.generateFont(parameter);
             layout = new GlyphLayout(font, text);
         }
@@ -89,8 +90,8 @@ public class Label extends Element {
 
     @Override
     public void resize(int width, int height) {
-        if (renderer != null) renderer.dispose();
-        if (batch != null) batch.dispose();
+        disposeObject(renderer);
+        disposeObject(batch);
         batch = new SpriteBatch();
         renderer = new ShapeRenderer();
     }
@@ -163,9 +164,9 @@ public class Label extends Element {
     }
 
     public void dispose() {
-        generator.dispose();
-        if (renderer != null) renderer.dispose();
-        if (batch != null) batch.dispose();
-        font.dispose();
+        disposeObject(generator);
+        disposeObject(renderer);
+        disposeObject(batch);
+        disposeObject(font);
     }
 }

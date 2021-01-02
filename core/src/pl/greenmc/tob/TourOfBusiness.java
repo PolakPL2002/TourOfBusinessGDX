@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector2;
 import org.jetbrains.annotations.NotNull;
 import pl.greenmc.tob.game.TourOfBusinessGame;
 import pl.greenmc.tob.game.util.Logger;
+import pl.greenmc.tob.game.util.Utilities;
 import pl.greenmc.tob.graphics.Interactable;
 import pl.greenmc.tob.graphics.Overlay;
 import pl.greenmc.tob.graphics.Scene;
@@ -21,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.badlogic.gdx.graphics.GL20.*;
 import static pl.greenmc.tob.game.util.Logger.log;
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
 
 public class TourOfBusiness extends ApplicationAdapter implements InputProcessor {
     public static TourOfBusiness TOB;
@@ -74,7 +76,7 @@ public class TourOfBusiness extends ApplicationAdapter implements InputProcessor
     }
 
     public void changeScene(@NotNull Scene scene) {
-        if (currentScene != null) currentScene.dispose();
+        disposeObject(currentScene);
         currentScene = scene;
         scene.setup();
 
@@ -167,8 +169,8 @@ public class TourOfBusiness extends ApplicationAdapter implements InputProcessor
 
     @Override
     public void dispose() {
-        if (currentScene != null) currentScene.dispose();
-        overlays.forEach(Overlay::dispose);
+        disposeObject(currentScene);
+        overlays.forEach(Utilities::disposeObject);
         Logger.flushLog();
     }
 

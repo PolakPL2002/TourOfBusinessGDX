@@ -22,8 +22,7 @@ import java.util.Locale;
 
 import static com.badlogic.gdx.graphics.GL20.*;
 import static pl.greenmc.tob.TourOfBusiness.TOB;
-import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
-import static pl.greenmc.tob.game.util.Utilities.makeMoney;
+import static pl.greenmc.tob.game.util.Utilities.*;
 
 class GamePlayersStats extends Scene {
     private final int PLAYER_SLOTS = 8;
@@ -188,7 +187,7 @@ class GamePlayersStats extends Scene {
         parameter.borderWidth = size / 9.333333f;
         parameter.borderColor = Color.BLACK;
         parameter.color = Color.WHITE;
-        if (fontMoney != null) fontMoney.dispose();
+        disposeObject(fontMoney);
         fontMoney = generatorRegular.generateFont(parameter);
     }
 
@@ -199,7 +198,7 @@ class GamePlayersStats extends Scene {
         parameter.borderColor = Color.WHITE;
         parameter.borderWidth = size / 8f;
         parameter.color = messagesColor;
-        if (fontMessages != null) fontMessages.dispose();
+        disposeObject(fontMessages);
         fontMessages = generatorRegular.generateFont(parameter);
     }
 
@@ -210,7 +209,7 @@ class GamePlayersStats extends Scene {
         parameter.borderWidth = size / 12f;
         parameter.borderColor = Color.BLACK;
         parameter.color = Color.WHITE;
-        if (fontNames != null) fontNames.dispose();
+        disposeObject(fontNames);
         fontNames = generatorBold.generateFont(parameter);
     }
 
@@ -233,7 +232,7 @@ class GamePlayersStats extends Scene {
         for (int i = 0; i < PLAYER_SLOTS; i++)
             images[i].resize(width, height);
 
-        if (batch != null) batch.dispose();
+        disposeObject(batch);
 
         progressBar.resize(width, height);
 
@@ -246,14 +245,14 @@ class GamePlayersStats extends Scene {
     @Override
     public void dispose() {
         for (int i = 0; i < PLAYER_SLOTS; i++)
-            images[i].dispose();
-        generatorRegular.dispose();
-        generatorBold.dispose();
-        if (batch != null) batch.dispose();
-        fontMoney.dispose();
-        fontMessages.dispose();
-        fontNames.dispose();
-        progressBar.dispose();
+            disposeObject(images[i]);
+        disposeObject(generatorRegular);
+        disposeObject(generatorBold);
+        disposeObject(batch);
+        disposeObject(fontMoney);
+        disposeObject(fontMessages);
+        disposeObject(fontNames);
+        disposeObject(progressBar);
     }
 
     private static class Message {

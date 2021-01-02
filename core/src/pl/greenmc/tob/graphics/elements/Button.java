@@ -13,6 +13,7 @@ import pl.greenmc.tob.graphics.GlobalTheme;
 import pl.greenmc.tob.graphics.Interactable;
 
 import static pl.greenmc.tob.game.util.Utilities.LATIN_EXTENDED;
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
 
 public class Button extends Element implements Interactable {
     private final FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/OpenSans-Regular.ttf"));
@@ -116,7 +117,7 @@ public class Button extends Element implements Interactable {
         if (renderer != null) {
             parameter.size = size;
             parameter.characters = LATIN_EXTENDED;
-            if (font != null) font.dispose();
+            disposeObject(font);
             font = generator.generateFont(parameter);
             layout = new GlyphLayout(font, text);
         }
@@ -124,8 +125,8 @@ public class Button extends Element implements Interactable {
 
     @Override
     public void resize(int width, int height) {
-        if (renderer != null) renderer.dispose();
-        if (batch != null) batch.dispose();
+        disposeObject(renderer);
+        disposeObject(batch);
         batch = new SpriteBatch();
         renderer = new ShapeRenderer();
     }
@@ -205,9 +206,9 @@ public class Button extends Element implements Interactable {
     }
 
     public void dispose() {
-        generator.dispose();
-        if (renderer != null) renderer.dispose();
-        if (batch != null) batch.dispose();
-        font.dispose();
+        disposeObject(generator);
+        disposeObject(renderer);
+        disposeObject(batch);
+        disposeObject(font);
     }
 }

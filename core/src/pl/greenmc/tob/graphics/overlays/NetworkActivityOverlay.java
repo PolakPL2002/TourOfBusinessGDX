@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import pl.greenmc.tob.game.netty.client.NettyClient;
 import pl.greenmc.tob.graphics.Overlay;
 
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
+
 public class NetworkActivityOverlay extends Overlay {
     private final int period;
     private SpriteBatch batch;
@@ -38,7 +40,7 @@ public class NetworkActivityOverlay extends Overlay {
 
     @Override
     public void resize(int width, int height) {
-        batch.dispose();
+        disposeObject(batch);
         batch = new SpriteBatch();
     }
 
@@ -47,6 +49,6 @@ public class NetworkActivityOverlay extends Overlay {
      */
     @Override
     public void dispose() {
-        batch.dispose();
+        disposeObject(batch);
     }
 }

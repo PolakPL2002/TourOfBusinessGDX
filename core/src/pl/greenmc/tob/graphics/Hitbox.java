@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
 
 public abstract class Hitbox {
     public boolean testMouseCoordinates(int x, int y) {
@@ -26,7 +27,6 @@ public abstract class Hitbox {
      */
     @Deprecated
     public Texture getHitboxOverlay(int x, int y, int w, int h) {
-//        int okPoints = 0;
         final FrameBuffer frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, w, h, false);
         frameBuffer.begin();
         Gdx.gl.glClearColor(0, 0, 0, 0);
@@ -37,7 +37,6 @@ public abstract class Hitbox {
         for (int x1 = x; x1 < x + w; x1++) {
             for (int y1 = y; y1 < y + h; y1++) {
                 if (testCoordinates(x1, y1)) {
-//                    okPoints++;
                     shapeRenderer.circle(x1, y1, 1);
                 }
             }
@@ -45,9 +44,7 @@ public abstract class Hitbox {
         shapeRenderer.end();
         frameBuffer.end();
         Texture out = frameBuffer.getColorBufferTexture();
-        shapeRenderer.dispose();
-//        frameBuffer.dispose();
-//        log(okPoints + "/" + w * h);
+        disposeObject(shapeRenderer);
         return out;
     }
 }

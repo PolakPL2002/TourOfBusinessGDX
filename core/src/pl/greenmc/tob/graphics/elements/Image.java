@@ -4,6 +4,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import pl.greenmc.tob.graphics.Element;
 
+import static pl.greenmc.tob.game.util.Utilities.disposeObject;
+
 public class Image extends Element {
     private final Align alignMode;
     private final Texture texture;
@@ -55,13 +57,13 @@ public class Image extends Element {
 
     @Override
     public void resize(int width, int height) {
-        batch.dispose();
+        disposeObject(batch);
         batch = new SpriteBatch();
     }
 
     @Override
     public void dispose() {
-        batch.dispose();
+        disposeObject(batch);
     }
 
     public enum Align {

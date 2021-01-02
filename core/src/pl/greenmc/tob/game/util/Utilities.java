@@ -2,9 +2,11 @@ package pl.greenmc.tob.game.util;
 
 
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.utils.Disposable;
 import com.google.common.io.ByteStreams;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import pl.greenmc.tob.game.map.Tile;
 
 import java.io.*;
@@ -21,6 +23,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static pl.greenmc.tob.game.util.Logger.debug;
+import static pl.greenmc.tob.game.util.Logger.warning;
 
 /**
  * Utilities
@@ -81,6 +84,16 @@ public class Utilities {
                 s = s.substring(0, s.length() - 3) + "k";
         } else s = String.valueOf(value);
         return (negative ? "-" : "") + s;
+    }
+
+    public static void disposeObject(@Nullable Disposable object) {
+        if (object == null) return;
+        try {
+            object.dispose();
+        } catch (Exception e) {
+            warning("Failed to dispose object! " + object);
+            warning(e);
+        }
     }
 
     /**
