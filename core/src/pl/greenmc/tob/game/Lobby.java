@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Lobby {
-    public static String TYPE = "LOBBY";
+    public static final String TYPE = "LOBBY";
     private final int ID;
     private final int owner;
     private final ArrayList<Integer> players = new ArrayList<>();

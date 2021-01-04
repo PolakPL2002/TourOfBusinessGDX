@@ -353,6 +353,16 @@ public class TourOfBusinessGame {
                         final CardGrantedEvent cardGrantedEvent = (CardGrantedEvent) packet;
                         ((GameScene) scene).onCardGranted(cardGrantedEvent.getPlayer(), cardGrantedEvent.getCard());
                     }
+                } else if (packet instanceof IncomingTradePacket) {
+                    if (scene instanceof GameScene) {
+                        IncomingTradePacket incomingTradePacket = (IncomingTradePacket) packet;
+                        ((GameScene) scene).onIncomingTrade(incomingTradePacket.getPlayerID(), incomingTradePacket.getPlayer1Offer(), incomingTradePacket.getPlayer2Offer());
+                    }
+                } else if (packet instanceof OnTradeResponsePacket) {
+                    if (scene instanceof GameScene) {
+                        OnTradeResponsePacket onTradeResponsePacket = (OnTradeResponsePacket) packet;
+                        ((GameScene) scene).onTradeResponse(onTradeResponsePacket.getPlayerID(), onTradeResponsePacket.getResponse());
+                    }
                 }
                 //There are no packets that require data response from client
                 try {

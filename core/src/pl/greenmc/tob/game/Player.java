@@ -8,7 +8,7 @@ import pl.greenmc.tob.game.netty.InvalidPacketException;
 import java.util.HashMap;
 
 public class Player {
-    public static String TYPE = "PLAYER";
+    public static final String TYPE = "PLAYER";
 
     private final int ID;
     @NotNull

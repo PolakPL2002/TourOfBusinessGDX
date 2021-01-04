@@ -39,7 +39,7 @@ public class JailDialog extends Dialog {
         }
         pane.addChild(roll = new Button("Wyrzuć tą samą liczbę na wszystkich kościach"), new HSplitPane.ElementOptions(50, HSplitPane.ElementOptions.HeightMode.VARIABLE));
         roll.setClickCallback(makeRunnable(GameState.JailDecision.ROLL));
-        roll.setFontSize((int) (TOB.getFontBase() / 6));
+        roll.setFontSize((int) (TOB.getFontBase() / 8));
         if (pay != null) pay.setFontSize((int) (TOB.getFontBase() / 6));
         if (card != null) card.setFontSize((int) (TOB.getFontBase() / 6));
     }
@@ -61,7 +61,7 @@ public class JailDialog extends Dialog {
         super.resize(width, height);
         setWidth(Gdx.graphics.getWidth() / 4f);
         setHeight(Gdx.graphics.getHeight() / 5f);
-        roll.setFontSize((int) (TOB.getFontBase() / 6));
+        roll.setFontSize((int) (TOB.getFontBase() / 8));
         if (pay != null) pay.setFontSize((int) (TOB.getFontBase() / 6));
         if (card != null) card.setFontSize((int) (TOB.getFontBase() / 6));
     }

@@ -118,28 +118,35 @@ public class TourOfBusinessServer {
                             Player player = getPlayerFromHandler(client);
                             if (player == null) return;
                             Lobby lobby = getLobbyByPlayer(player.getID());
+                            boolean rejoining = false;
                             if (lobby != null) {
-                                lobby.removePlayer(player.getID());
-                                onPlayerLeftLobby(lobby, player);
+                                if (lobby.getID() == ((JoinLobbyPacket) packet).getLobbyID()) {
+                                    rejoining = true;
+                                } else {
+                                    lobby.removePlayer(player.getID());
+                                    onPlayerLeftLobby(lobby, player);
+                                }
                             }
-                            lobby = getLobbyByID(((JoinLobbyPacket) packet).getLobbyID());
                             boolean success = true;
-                            if (lobby == null || lobby.getLobbyState() != Lobby.LobbyState.CONFIGURING)
-                                success = false;
-                            else {
-                                final Integer[] players = lobby.getPlayers();
-
-                                boolean playerInLobby = false;
-                                for (int pl : players)
-                                    if (pl == player.getID()) {
-                                        playerInLobby = true;
-                                        break;
-                                    }
-
-                                if (players.length >= LOBBY_MAX_PLAYERS || playerInLobby)
+                            if (!rejoining) {
+                                lobby = getLobbyByID(((JoinLobbyPacket) packet).getLobbyID());
+                                if (lobby == null || lobby.getLobbyState() != Lobby.LobbyState.CONFIGURING)
                                     success = false;
-                                else
-                                    lobby.addPlayer(player.getID());
+                                else {
+                                    final Integer[] players = lobby.getPlayers();
+
+                                    boolean playerInLobby = false;
+                                    for (int pl : players)
+                                        if (pl == player.getID()) {
+                                            playerInLobby = true;
+                                            break;
+                                        }
+
+                                    if (players.length >= LOBBY_MAX_PLAYERS || playerInLobby)
+                                        success = false;
+                                    else
+                                        lobby.addPlayer(player.getID());
+                                }
                             }
                             if (success) {
                                 log("Player " + player.getName() + " has joined lobby#" + lobby.getID() + " of player#" + lobby.getOwner());
@@ -267,6 +274,32 @@ public class TourOfBusinessServer {
                                 data = null;
 
                             client.send(new ResponsePacket(container.messageUUID, true, true, GetGameStatePacket.generateResponse(data)), null, false);
+                        }
+                    } catch (ConnectionNotAliveException e) {
+                        warning("Failed to send response packet.");
+                        warning(e);
+                    } catch (SQLException e) {
+                        warning("Failed to get player from database.");
+                        warning(e);
+                    }
+                } else if (packet instanceof TradePacket) {
+                    try {
+                        final ServerHandler client = NettyServer.getInstance().getClient(identity);
+                        if (client != null) {
+                            Player player = getPlayerFromHandler(client);
+                            if (player == null) return;
+                            Lobby lobby = getLobbyByPlayer(player.getID());
+                            GameState gameState = null;
+                            if (lobby != null) {
+                                gameState = lobby.getGameState();
+                            }
+                            boolean valid = false;
+                            if (gameState != null) {
+                                TradePacket tradePacket = (TradePacket) packet;
+                                valid = gameState.onTradePacket(player.getID(), tradePacket.getPlayerID(), tradePacket.getPlayer1Offer(), tradePacket.getPlayer2Offer());
+                            }
+
+                            client.send(new ResponsePacket(container.messageUUID, true, true, TradePacket.generateResponse(valid)), null, false);
                         }
                     } catch (ConnectionNotAliveException e) {
                         warning("Failed to send response packet.");
@@ -437,6 +470,25 @@ public class TourOfBusinessServer {
                             Lobby lobby = getLobbyByPlayer(player.getID());
                             if (lobby != null && lobby.getGameState() != null) {
                                 lobby.getGameState().onBuyDecision(player.getID(), ((SetBuyDecisionPacket) packet).getDecision());
+                            }
+                            client.send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
+                        }
+                    } catch (ConnectionNotAliveException e) {
+                        warning("Failed to send response packet.");
+                        warning(e);
+                    } catch (SQLException e) {
+                        warning("Failed to get player from database.");
+                        warning(e);
+                    }
+                } else if (packet instanceof TradeResponsePacket) {
+                    try {
+                        final ServerHandler client = NettyServer.getInstance().getClient(identity);
+                        if (client != null) {
+                            Player player = getPlayerFromHandler(client);
+                            if (player == null) return;
+                            Lobby lobby = getLobbyByPlayer(player.getID());
+                            if (lobby != null && lobby.getGameState() != null) {
+                                lobby.getGameState().onTradeResponse(player.getID(), ((TradeResponsePacket) packet).getResponse());
                             }
                             client.send(new ConfirmationPacket(container.messageUUID, true, true), null, false);
                         }

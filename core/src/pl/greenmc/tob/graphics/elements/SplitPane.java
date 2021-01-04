@@ -112,6 +112,14 @@ public abstract class SplitPane extends Element implements Interactable {
         disposeObject(renderer);
     }
 
+    public void clearChildren() {
+        synchronized (children) {
+            children.forEach(Utilities::disposeObject);
+            children.clear();
+            hitboxes.clear();
+        }
+    }
+
     @Override
     public void setup() {
         if (setUp) return;

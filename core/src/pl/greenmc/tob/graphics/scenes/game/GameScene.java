@@ -28,6 +28,9 @@ import pl.greenmc.tob.graphics.Hitbox;
 import pl.greenmc.tob.graphics.Interactable;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.scenes.game.dialogs.*;
+import pl.greenmc.tob.graphics.scenes.game.dialogs.trade.IncomingTradeDialog;
+import pl.greenmc.tob.graphics.scenes.game.dialogs.trade.SelectPlayerDialog;
+import pl.greenmc.tob.graphics.scenes.game.dialogs.trade.TradeDialog;
 
 import java.util.*;
 
@@ -66,6 +69,7 @@ public class GameScene extends Scene implements Interactable {
     private TileClickAction tileClickAction = TileClickAction.DETAILS;
     private int[] tileLevels = new int[0];
     private Integer[] tileOwners = new Integer[0];
+    private Trade trade = null;
 
     public GameScene(Map map) {
         this.map = map;
@@ -78,29 +82,6 @@ public class GameScene extends Scene implements Interactable {
 
     private String getPlayerName(int playerID) {
         return playerNames.getOrDefault(playerID, "<Ładowanie...>");
-    }
-
-    @Override
-    public void onMouseUp() {
-        if (game3D != null && clickOnTile != null && Objects.equals(clickOnTile, game3D.getSelectedTile()))
-            switch (tileClickAction) {
-                case SELECT:
-                    if (Objects.equals(tileOwners[clickOnTile], selfNum))
-                        game3D.toggleSelection(clickOnTile);
-                    if (dialog != null && dialog instanceof SellDialog)
-                        updateSellDialog();
-                    break;
-                case DETAILS:
-                    if (dialog == null) {
-                        TOB.runOnGLThread(() -> {
-                            Integer tileOwner = tileOwners[clickOnTile];
-                            changeDialog(new PropertyDialog(map, map.getTiles()[clickOnTile % map.getTiles().length], gameSettings, () -> TOB.runOnGLThread(() -> changeDialog(null)), tileOwner == null ? "Pole nie należy do nikogo" : "Pole należy do " + getPlayerName(playerIDs[tileOwner])));
-                        });
-                    }
-                    break;
-            }
-
-        if (dialog != null) dialog.onMouseUp();
     }
 
     public static void onEndAction() {
@@ -171,7 +152,7 @@ public class GameScene extends Scene implements Interactable {
             //TODO Leave game
         }
         tileClickAction = TileClickAction.DETAILS;
-        if (data.getTurnOf() == selfNum) {
+        if (data.getTurnOf() == selfNum || (trade != null && data.getState() == State.AWAITING_TRADE)) {
             //TODO Show auction dialog
             switch (this.state) {
                 case AWAITING_JAIL:
@@ -210,6 +191,31 @@ public class GameScene extends Scene implements Interactable {
                         changeEndDialog();
                     }
                     break;
+                case AWAITING_TRADE:
+                    log(String.valueOf(trade));
+                    if (trade != null)
+                        TOB.runOnGLThread(() -> changeDialog(new IncomingTradeDialog(trade,
+                                () -> {
+                                    try {
+                                        NettyClient.getInstance().getClientHandler().send(new TradeResponsePacket(TradeResponsePacket.TradeResponse.ACCEPT), new SentPacket.Callback.BlankCallback(), false);
+                                    } catch (ConnectionNotAliveException e) {
+                                        error(e);
+                                    }
+                                },
+                                () -> {
+                                    try {
+                                        NettyClient.getInstance().getClientHandler().send(new TradeResponsePacket(TradeResponsePacket.TradeResponse.REJECT), new SentPacket.Callback.BlankCallback(), false);
+                                    } catch (ConnectionNotAliveException e) {
+                                        error(e);
+                                    }
+                                },
+                                map, getPlayerName(trade.getPlayer1ID()), getPlayerName(trade.getPlayer2ID()))));
+                    else {
+                        TOB.runOnGLThread(() -> changeDialog(null));
+                        if (gamePlayersStats != null)
+                            gamePlayersStats.showMessage("Oczekiwanie na wymianę...", 5000);
+                    }
+                    break;
                 default:
                     TOB.runOnGLThread(() -> changeDialog(null));
             }
@@ -222,6 +228,33 @@ public class GameScene extends Scene implements Interactable {
         if (modified)
             for (Tile tile : map.getTiles())
                 updateTileText(tile);
+    }
+
+    public void onIncomingTrade(int playerID, @NotNull TradeDialog.Property[] player1Offer, @NotNull TradeDialog.Property[] player2Offer) {
+        trade = new GameState.Trade(playerID, playerIDs[selfNum], player1Offer, player2Offer);
+    }
+
+    @Override
+    public void onMouseUp() {
+        if (game3D != null && clickOnTile != null && Objects.equals(clickOnTile, game3D.getSelectedTile()))
+            switch (tileClickAction) {
+                case SELECT:
+                    if (Objects.equals(tileOwners[clickOnTile], selfNum))
+                        game3D.toggleSelection(clickOnTile);
+                    if (dialog != null && dialog instanceof SellDialog)
+                        updateSellDialog();
+                    break;
+                case DETAILS:
+                    if (dialog == null) {
+                        TOB.runOnGLThread(() -> {
+                            Integer tileOwner = tileOwners[clickOnTile];
+                            changeDialog(new PropertyDialog(map, map.getTiles()[clickOnTile % map.getTiles().length], gameSettings, () -> TOB.runOnGLThread(() -> changeDialog(null)), tileOwner == null ? "Pole nie należy do nikogo" : "Pole należy do " + getPlayerName(playerIDs[tileOwner])));
+                        });
+                    }
+                    break;
+            }
+
+        if (dialog != null) dialog.onMouseUp();
     }
 
     @Override
@@ -301,7 +334,7 @@ public class GameScene extends Scene implements Interactable {
             if (gamePlayersStats != null)
                 gamePlayersStats.showMessage("Gracz " + getPlayerName(playerIDs[tileOwners[tile % map.getTiles().length]]) + " sprzedał " + getTileName(map.getTiles()[tile % map.getTiles().length]) + ".", 5000);
         }
-        if (tileLevels[tile % map.getTiles().length] != level) {
+        if (map.getTiles()[tile % map.getTiles().length].getType() == Tile.TileType.CITY && tileLevels[tile % map.getTiles().length] != level) {
             if (tileLevels[tile % map.getTiles().length] > level) {
                 //Tile downgraded
                 if (gamePlayersStats != null && tileOwners[tile % map.getTiles().length] != null)
@@ -315,14 +348,11 @@ public class GameScene extends Scene implements Interactable {
         tileOwners[tile % map.getTiles().length] = owner;
         tileLevels[tile % map.getTiles().length] = level;
         updateTileText(map.getTiles()[tile % map.getTiles().length]);
-        //Synchronized to await end of generation
         TOB.runOnGLThread(() -> {
-            synchronized (endGenerationLock) {
-                if (dialog != null)
-                    log(dialog.toString());
-                if (dialog != null && dialog instanceof EndManageDialog) {
-                    changeEndDialog();
-                }
+            if (dialog != null)
+                log(dialog.toString());
+            if (dialog != null && dialog instanceof EndManageDialog) {
+                changeEndDialog();
             }
         });
     }
@@ -377,32 +407,22 @@ public class GameScene extends Scene implements Interactable {
         if (dialog != null) dialog.onScroll(x, y);
     }
 
-    private void updateTileText(@NotNull Tile tile) {
-        Color color = Color.BLACK;
-        String text = "";
-        if (tile.getType() == Tile.TileType.CITY || tile.getType() == Tile.TileType.STATION) {
-            if (getTileOwner(getTileNumber(tile)) != null) {
-                text = makeShortMoney(getPropertyRent(tile, getTileLevel(getTileNumber(tile)), new int[0], gameSettings));
-            } else {
-                color = GlobalTheme.scheme.color900();
-                text = makeShortMoney(getPropertyPrice(tile, gameSettings));
-            }
-        } else if (tile.getType() == Tile.TileType.UTILITY) {
-            if (getTileOwner(getTileNumber(tile)) == null) {
-                color = GlobalTheme.scheme.color900();
-                text = makeShortMoney(getPropertyPrice(tile, gameSettings));
-            }
-        } else if (tile.getType() == Tile.TileType.START) {
-            text = makeShortMoney(((Tile.StartTileData) tile.getData()).getStartMoney());
-            color = GlobalTheme.scheme.color900();
-        } else if (tile.getType() == Tile.TileType.LUXURY_TAX) {
-            text = makeShortMoney(((Tile.LuxuryTaxTileData) tile.getData()).getCost());
-        } else if (tile.getType() == Tile.TileType.INCOME_TAX) {
-            text = makeShortMoney(((Tile.IncomeTaxTileData) tile.getData()).getCost());
-        }
-        final String finalText = text;
-        final Color finalColor = color;
-        TOB.runOnGLThread(() -> game3D.updateTileText(tile, finalText, finalColor, Color.GRAY, 0));
+    public void onTradeResponse(int playerID, @NotNull TradeResponsePacket.TradeResponse response) {
+        trade = null;
+        if (gamePlayersStats != null)
+            gamePlayersStats.showMessage("Gracz " + getPlayerName(playerID) + " " + (response == TradeResponsePacket.TradeResponse.ACCEPT ? "zaakceptował" : "odrzucił") + " wymianę.", 5000);
+    }
+
+    /**
+     * Releases all resources of this object.
+     */
+    @Override
+    public void dispose() {
+        disposeObject(batch);
+        disposeObject(frameBuffer);
+        disposeObject(game3D);
+        disposeObject(gamePlayersStats);
+        disposeObject(dialog);
     }
 
     @Override
@@ -441,10 +461,6 @@ public class GameScene extends Scene implements Interactable {
         batch.end();
     }
 
-    private int getTileLevel(int tile) {
-        return GameState.getTileLevel(tile, map, tileLevels, tileOwners);
-    }
-
     @Override
     public void resize(int width, int height) {
         disposeObject(batch);
@@ -456,6 +472,21 @@ public class GameScene extends Scene implements Interactable {
         game3D.resize(width, height);
         gamePlayersStats.resize(width, height);
         if (dialog != null) dialog.resize(width, height);
+    }
+
+    private void updatePlayersStats() {
+        if (gamePlayersStats != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
+                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
+                gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
+                gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
+                gamePlayersStats.setPlayerCards(i, playerCards[i]);
+            }
+        if (game3D != null)
+            for (int i = 0; i < playerBalances.length; i++) {
+                game3D.setShowPlayer(i, !playerBankrupt[i]);
+            }
     }
 
     public static String getTileName(@NotNull Tile tile) {
@@ -522,31 +553,36 @@ public class GameScene extends Scene implements Interactable {
         return "";
     }
 
-    /**
-     * Releases all resources of this object.
-     */
-    @Override
-    public void dispose() {
-        disposeObject(batch);
-        disposeObject(frameBuffer);
-        disposeObject(game3D);
-        disposeObject(gamePlayersStats);
-        disposeObject(dialog);
+    private void updateTileText(@NotNull Tile tile) {
+        Color color = Color.BLACK;
+        String text = "";
+        if (tile.getType() == Tile.TileType.CITY || tile.getType() == Tile.TileType.STATION) {
+            if (getTileOwner(getTileNumber(tile)) != null) {
+                text = makeShortMoney(getPropertyRent(tile, getTileLevel(getTileNumber(tile)), new int[0], gameSettings));
+            } else {
+                color = GlobalTheme.scheme.color900();
+                text = makeShortMoney(getPropertyPrice(tile, gameSettings));
+            }
+        } else if (tile.getType() == Tile.TileType.UTILITY) {
+            if (getTileOwner(getTileNumber(tile)) == null) {
+                color = GlobalTheme.scheme.color900();
+                text = makeShortMoney(getPropertyPrice(tile, gameSettings));
+            }
+        } else if (tile.getType() == Tile.TileType.START) {
+            text = makeShortMoney(((Tile.StartTileData) tile.getData()).getStartMoney());
+            color = GlobalTheme.scheme.color900();
+        } else if (tile.getType() == Tile.TileType.LUXURY_TAX) {
+            text = makeShortMoney(((Tile.LuxuryTaxTileData) tile.getData()).getCost());
+        } else if (tile.getType() == Tile.TileType.INCOME_TAX) {
+            text = makeShortMoney(((Tile.IncomeTaxTileData) tile.getData()).getCost());
+        }
+        final String finalText = text;
+        final Color finalColor = color;
+        TOB.runOnGLThread(() -> game3D.updateTileText(tile, finalText, finalColor, Color.GRAY, 0));
     }
 
-    private void updatePlayersStats() {
-        if (gamePlayersStats != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                gamePlayersStats.setPlayerBalance(i, playerBalances[i]);
-                gamePlayersStats.setPlayerName(i, getPlayerName(playerIDs[i]));
-                gamePlayersStats.setPlayerInJail(i, playerInJail[i]);
-                gamePlayersStats.setPlayerBankrupt(i, playerBankrupt[i]);
-                gamePlayersStats.setPlayerCards(i, playerCards[i]);
-            }
-        if (game3D != null)
-            for (int i = 0; i < playerBalances.length; i++) {
-                game3D.setShowPlayer(i, !playerBankrupt[i]);
-            }
+    private int getTileLevel(int tile) {
+        return GameState.getTileLevel(tile, map, tileLevels, tileOwners);
     }
 
     private Integer getTileOwner(int tile) {
@@ -617,6 +653,87 @@ public class GameScene extends Scene implements Interactable {
                                         }
                                     }, this::changeEndDialog, GameScene::onEndAction, 3000))),
                             map, tileGroups.toArray(new Tile.TileGroup[0]), tiles.toArray(new Tile[0]), tileLevels)));
+                    break;
+                case TRADE:
+                    HashMap<String, Integer> names = new HashMap<>();
+                    for (int playerID : playerIDs) {
+                        if (playerID == playerIDs[selfNum]) continue;
+                        names.put(getPlayerName(playerID), getPlayerByID(playerID));
+                    }
+                    TOB.runOnGLThread(() -> changeDialog(new SelectPlayerDialog(names, () -> {
+                        endGamePage = EndGamePage.MAIN;
+                        changeEndDialog();
+                    }, (int playerNum) -> {
+                        final ArrayList<TradeDialog.Property> player1Properties = new ArrayList<>(),
+                                player2Properties = new ArrayList<>();
+
+                        player1Properties.add(new TradeDialog.Property(TradeDialog.Property.PropertyType.MONEY, playerBalances[selfNum], new long[0], 0));
+                        player2Properties.add(new TradeDialog.Property(TradeDialog.Property.PropertyType.MONEY, playerBalances[playerNum], new long[0], 0));
+
+                        for (int tile = 0; tile < map.getTiles().length; tile++) {
+                            long[] group;
+                            if (gameSettings.requireAllTilesInGroupToUpgrade() && map.getTiles()[tile].getType() == Tile.TileType.CITY) {
+                                ArrayList<Long> tmp = new ArrayList<>();
+                                Tile.TileGroup tileGroup = ((Tile.CityTileData) map.getTiles()[tile].getData()).getTileGroup();
+                                boolean anyUpgraded = false;
+                                for (Tile tile1 : tileGroup.getTiles()) {
+                                    int tileNumber = getTileNumber(tile1);
+                                    anyUpgraded |= tileLevels[tileNumber] > 0;
+                                    if (tileNumber != tile)
+                                        tmp.add((long) tileNumber);
+                                }
+                                if (anyUpgraded)
+                                    group = ArrayUtils.toPrimitive(tmp.toArray(new Long[0]));
+                                else
+                                    group = new long[0];
+                            } else
+                                group = new long[0];
+                            if (Objects.equals(tileOwners[tile], selfNum))
+                                player1Properties.add(new TradeDialog.Property(TradeDialog.Property.PropertyType.TILE, tile, group, getPropertyValue(map.getTiles()[tile], tileLevels[tile], gameSettings)));
+                            else if (Objects.equals(tileOwners[tile], playerNum))
+                                player2Properties.add(new TradeDialog.Property(TradeDialog.Property.PropertyType.TILE, tile, group, getPropertyValue(map.getTiles()[tile], tileLevels[tile], gameSettings)));
+                        }
+
+                        changeDialog(new TradeDialog(map, getPlayerName(playerIDs[selfNum]),
+                                getPlayerName(playerIDs[playerNum]), player1Properties.toArray(new TradeDialog.Property[0]), player2Properties.toArray(new TradeDialog.Property[0]), () -> {
+                            endGamePage = EndGamePage.MAIN;
+                            changeEndDialog();
+                        }, ((player1Offer, player2Offer) -> {
+                            endGamePage = EndGamePage.MAIN;
+                            changeEndDialog();
+                            try {
+                                NettyClient.getInstance().getClientHandler().send(new TradePacket(playerIDs[playerNum], player1Offer, player2Offer),
+                                        new SentPacket.Callback() {
+                                            @Override
+                                            public void success(@NotNull UUID uuid, @Nullable JsonObject response) {
+                                                if (response == null) {
+                                                    error("Null response.");
+                                                    return;
+                                                }
+                                                try {
+                                                    boolean valid = TradePacket.parseResponse(response);
+                                                    if (!valid) {
+                                                        if (gamePlayersStats != null)
+                                                            gamePlayersStats.showMessage("Invalid trade.", 5000);
+                                                    }
+                                                } catch (InvalidPacketException e) {
+                                                    error(e);
+                                                }
+                                            }
+
+                                            @Override
+                                            public void failure(@NotNull UUID uuid, @NotNull SentPacket.FailureReason reason) {
+                                                if (gamePlayersStats != null)
+                                                    gamePlayersStats.showMessage("Failed to send trade.", 5000);
+                                            }
+                                        }, false);
+                            } catch (ConnectionNotAliveException e) {
+                                if (gamePlayersStats != null)
+                                    gamePlayersStats.showMessage("Failed to send trade.", 5000);
+                                error(e);
+                            }
+                        })));
+                    })));
                     break;
             }
         }

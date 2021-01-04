@@ -76,7 +76,7 @@ public class EndDialog extends Dialog {
     public void resize(int width, int height) {
         super.resize(width, height);
         setWidth(Gdx.graphics.getWidth() / 4f);
-        setHeight(Gdx.graphics.getHeight() * 0.23f);
+        setHeight(Gdx.graphics.getHeight() / 3f);
         end.setFontSize((int) (TOB.getFontBase() / 6));
         end2.setFontSize((int) (TOB.getFontBase() / 6));
         manage.setFontSize((int) (TOB.getFontBase() / 6));
