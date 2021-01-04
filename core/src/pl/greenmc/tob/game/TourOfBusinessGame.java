@@ -18,6 +18,7 @@ import pl.greenmc.tob.game.netty.packets.game.events.*;
 import pl.greenmc.tob.game.netty.packets.game.events.lobby.*;
 import pl.greenmc.tob.game.netty.packets.game.lobby.GetLobbyPacket;
 import pl.greenmc.tob.game.netty.packets.game.lobby.GetSelfLobbyPacket;
+import pl.greenmc.tob.game.util.Version;
 import pl.greenmc.tob.graphics.Scene;
 import pl.greenmc.tob.graphics.scenes.ErrorScene;
 import pl.greenmc.tob.graphics.scenes.LoadingScene;
@@ -35,6 +36,7 @@ import static pl.greenmc.tob.TourOfBusiness.TOB;
 import static pl.greenmc.tob.game.util.Logger.*;
 
 public class TourOfBusinessGame {
+    public static final Version VERSION = Version.fromString("0.1.0");
     private final AssetManager assetManager = new AssetManager();
     private final ArrayList<String> musicToLoad = new ArrayList<>();
     private final ArrayList<String> soundsToLoad = new ArrayList<>();
@@ -376,6 +378,13 @@ public class TourOfBusinessGame {
     }
 
     private void connectionLost() {
+        Version serverVersion = NettyClient.getInstance().getClientHandler().getServerVersion();
+        if (serverVersion != null &&
+                serverVersion.compareTo(VERSION) != 0) {
+            TOB.runOnGLThread(() -> TOB.changeScene(new ErrorScene("Wersja klienta i serwera nie są zgodne:\nKlient: " + VERSION.toString() +
+                    "\nSerwer: " + serverVersion.toString() + "\nPobierz odpowiednią wersję i spróbuj ponownie.", 30000)));
+            return;
+        }
         if (loadState == LoadState.CONNECTING) {
             if (connectRetriesLeft == 0) {
                 error("Failed to connect!");

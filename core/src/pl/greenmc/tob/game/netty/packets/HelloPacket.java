@@ -75,8 +75,9 @@ public class HelloPacket extends Packet {
      * @return Response
      */
     @NotNull
-    public static JsonObject generateResponse(byte[] challengeData) {
+    public static JsonObject generateResponse(String version, byte[] challengeData) {
         JsonObject response = new JsonObject();
+        response.addProperty("version", version);
         response.addProperty("challenge", Base64.getEncoder().encodeToString(challengeData));
         return response;
     }
@@ -96,6 +97,12 @@ public class HelloPacket extends Packet {
             challengeData = Base64.getDecoder().decode(challenge.getAsString());
         else throw new InvalidPacketException();
 
-        return new HelloResponse(challengeData);
+        String v;
+        JsonElement version = response.get("version");
+        if (version != null && version.isJsonPrimitive())
+            v = version.getAsString();
+        else throw new InvalidPacketException();
+
+        return new HelloResponse(v, challengeData);
     }
 }

@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.greenmc.tob.game.netty.*;
 import pl.greenmc.tob.game.netty.packets.*;
+import pl.greenmc.tob.game.util.Version;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
@@ -15,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.*;
 import java.util.*;
 
+import static pl.greenmc.tob.game.TourOfBusinessGame.VERSION;
 import static pl.greenmc.tob.game.util.Logger.*;
 
 /**
@@ -35,10 +37,16 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     private boolean authenticated = false;
     private ChannelHandlerContext ctx;
     private KeyPair keyPair = null;
+    private Version serverVersion = null;
 
     public ClientHandler(@Nullable Runnable onAuthenticated, @Nullable PacketReceivedHandler packetReceivedHandler) {
         this.onAuthenticated = onAuthenticated;
         this.packetReceivedHandler = packetReceivedHandler;
+    }
+
+    @Nullable
+    public Version getServerVersion() {
+        return serverVersion;
     }
 
     @Override
@@ -61,6 +69,11 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                     }
                     try {
                         final HelloResponse helloResponse = HelloPacket.parseResponse(response);
+                        serverVersion = Version.fromString(helloResponse.getServerVersion());
+                        if (serverVersion.compareTo(VERSION) != 0) {
+                            ctx.close();
+                            return;
+                        }
                         final byte[] challengeData = helloResponse.getChallengeData();
                         Signature sig = Signature.getInstance("SHA512withRSA");
                         sig.initSign(getPrivateKey());
@@ -194,6 +207,10 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
         log("[Netty] Channel inactive!");
     }
 
+    public boolean isTransmitting() {
+        return sentPackets.size() > 0;
+    }
+
     private String getClientID() throws IOException, NoSuchAlgorithmException {
         return Base64.getEncoder().encodeToString(getPublicKey().getEncoded());
     }
@@ -320,10 +337,6 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                         , TIMEOUT);
             }
         } else throw new ConnectionNotAliveException();
-    }
-
-    public boolean isTransmitting() {
-        return sentPackets.size() > 0;
     }
 }
 

@@ -20,6 +20,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.sql.SQLException;
 import java.util.*;
 
+import static pl.greenmc.tob.game.TourOfBusinessGame.VERSION;
 import static pl.greenmc.tob.game.util.Logger.*;
 
 /**
@@ -142,7 +143,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
                         log("Authentication of " + player.getName() + " (unauthenticated) started.");
                         new SecureRandom().nextBytes(challengeData);
                         try {
-                            send(new ResponsePacket(container.messageUUID, true, authenticated, HelloPacket.generateResponse(challengeData)), null, true);
+                            send(new ResponsePacket(container.messageUUID, true, authenticated, HelloPacket.generateResponse(VERSION.toString(), challengeData)), null, true);
                         } catch (ConnectionNotAliveException e) {
                             warning("Failed to send confirmation packet.");
                             warning(e);
