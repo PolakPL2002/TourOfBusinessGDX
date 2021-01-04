@@ -255,7 +255,7 @@ public class TourOfBusinessGame {
                         if (response == null) throw new InvalidPacketException();
                         self = GetSelfPacket.parseResponse(response);
                         if (self != null)
-                            TOB.runOnGLThread(() -> Gdx.graphics.setTitle("TourOfBusiness - " + self.getName()));
+                            TOB.runOnGLThread(() -> Gdx.graphics.setTitle("TourOfBusiness v" + VERSION.toString() + " - " + self.getName()));
                         if (self == null) throw new InvalidPacketException();
                         log("Got self data: name=" + self.getName() + ", id=" + self.getID());
                     } catch (InvalidPacketException e) {

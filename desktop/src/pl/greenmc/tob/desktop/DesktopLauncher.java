@@ -9,6 +9,7 @@ import pl.greenmc.tob.game.netty.server.NettyServer;
 
 import java.awt.*;
 
+import static pl.greenmc.tob.game.TourOfBusinessGame.VERSION;
 import static pl.greenmc.tob.game.util.Logger.log;
 import static pl.greenmc.tob.game.util.Logger.warning;
 
@@ -70,6 +71,7 @@ public class DesktopLauncher {
                 config.height = 720;
                 config.width = 1280;
             }
+            config.title = "TourOfBusiness v" + VERSION.toString();
             config.pauseWhenMinimized = false;
             config.samples = 16;
             new LwjglApplication(new TourOfBusiness(fps, networkActivity), config);
