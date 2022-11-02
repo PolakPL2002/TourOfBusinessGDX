@@ -7,6 +7,7 @@ Build the project with gradle. Artifact in the desktop subproject should be runn
 ***Do not*** run this code with any kind of privileges, it might (and probably does) contain security vulnerabilities.
 
 Command line options:
+
 ```
 --fps                  Adds fps overlay to the client
 --ip <ip>              IP of the server (only used in client)
@@ -16,14 +17,23 @@ Command line options:
 --windowed             Start game in window
 ```
 
+## Screenshots
+
+![Screenshot](screenshot1.png)
+![Screenshot](screenshot2.png)
+
 ## Attributions
+
 <a href="https://www.flaticon.com/free-icons/chest" title="chest icons">Chest icons created by Smashicons - Flaticon</a>
 
-<a href="https://www.flaticon.com/free-icons/thunder" title="thunder icons">Thunder icons created by Vectors Market - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/thunder" title="thunder icons">Thunder icons created by Vectors Market -
+Flaticon</a>
 
-<a href="https://www.flaticon.com/free-icons/policeman" title="policeman icons">Policeman icons created by Roundicons - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/policeman" title="policeman icons">Policeman icons created by Roundicons -
+Flaticon</a>
 
-<a href="https://www.flaticon.com/free-icons/money" title="money icons">Money icons created by Dimitry Miroliubov - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/money" title="money icons">Money icons created by Dimitry Miroliubov -
+Flaticon</a>
 
 <a href="https://www.flaticon.com/free-icons/jail" title="jail icons">Jail icons created by Flat Icons - Flaticon</a>
 
